@@ -4,6 +4,8 @@ export interface CreateDocumentoInput {
   clinicaId: string;
   pacienteId: string;
   prontuarioId?: string;
+  feridaId?: string;
+  avaliacaoFeridaId?: string;
   nome: string;
   tipo: TipoDocumento;
   mimeType: AllowedDocumentMimeType;
@@ -17,6 +19,8 @@ export interface ListDocumentoInput {
   clinicaId: string;
   pacienteId?: string;
   prontuarioId?: string;
+  feridaId?: string;
+  avaliacaoFeridaId?: string;
 }
 
 export interface DocumentoRepository {

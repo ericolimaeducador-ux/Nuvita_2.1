@@ -3,6 +3,7 @@ export enum TipoDocumento {
   RECEITA = 'receita',
   LAUDO = 'laudo',
   TERMO = 'termo',
+  FOTO_FERIDA = 'foto_ferida',
   OUTRO = 'outro',
 }
 
@@ -10,6 +11,8 @@ export const ALLOWED_DOCUMENT_MIME_TYPES = [
   'application/pdf',
   'image/jpeg',
   'image/png',
+  'image/webp',
+  'image/heic',
   'application/dicom',
 ] as const;
 
@@ -20,6 +23,8 @@ export interface Documento {
   clinicaId: string;
   pacienteId: string;
   prontuarioId?: string;
+  feridaId?: string;
+  avaliacaoFeridaId?: string;
   nome: string;
   tipo: TipoDocumento;
   mimeType: AllowedDocumentMimeType;

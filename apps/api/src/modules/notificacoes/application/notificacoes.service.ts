@@ -123,6 +123,22 @@ export class NotificacoesService {
     }
   }
 
+  async notificarRiscoFerida(clinicaId: string, pacienteId: string, nomePaciente: string): Promise<void> {
+    try {
+      const rendered = this.templates.render(TipoNotificacao.RISCO_FERIDA_ALTO, { nome: nomePaciente, hora: '', medico: '', link: '', documento: '' });
+      await this.notificacoes.create({
+        clinicaId,
+        destinatarioId: pacienteId,
+        tipo: TipoNotificacao.RISCO_FERIDA_ALTO,
+        canal: CanalNotificacao.EMAIL,
+        conteudo: { ...rendered, destino: 'interno' },
+      });
+      // Not enqueued: internal notification visible no dashboard, sem envio externo
+    } catch {
+      // notification is non-critical
+    }
+  }
+
   async updateOptOut(
     pacienteId: string,
     dto: UpdateOptOutDto,

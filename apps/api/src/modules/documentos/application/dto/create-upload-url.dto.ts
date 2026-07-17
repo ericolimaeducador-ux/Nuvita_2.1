@@ -17,6 +17,14 @@ export class CreateUploadUrlDto {
   @IsMongoId()
   prontuarioId?: string;
 
+  @IsOptional()
+  @IsMongoId()
+  feridaId?: string;
+
+  @IsOptional()
+  @IsMongoId()
+  avaliacaoFeridaId?: string;
+
   @IsString()
   nome!: string;
 

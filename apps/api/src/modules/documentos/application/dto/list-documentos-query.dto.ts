@@ -12,4 +12,12 @@ export class ListDocumentosQueryDto {
   @IsOptional()
   @IsMongoId()
   prontuarioId?: string;
+
+  @IsOptional()
+  @IsMongoId()
+  feridaId?: string;
+
+  @IsOptional()
+  @IsMongoId()
+  avaliacaoFeridaId?: string;
 }

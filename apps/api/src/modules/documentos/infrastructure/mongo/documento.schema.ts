@@ -19,6 +19,12 @@ export class DocumentoMongo {
   @Prop({ index: true })
   prontuarioId?: string;
 
+  @Prop({ index: true })
+  feridaId?: string;
+
+  @Prop({ index: true })
+  avaliacaoFeridaId?: string;
+
   @Prop({ required: true })
   nome!: string;
 
@@ -57,3 +63,4 @@ export const DocumentoSchema = SchemaFactory.createForClass(DocumentoMongo);
 DocumentoSchema.index({ clinicaId: 1, _id: 1 });
 DocumentoSchema.index({ clinicaId: 1, pacienteId: 1, criadoEm: -1 });
 DocumentoSchema.index({ clinicaId: 1, prontuarioId: 1, criadoEm: -1 });
+DocumentoSchema.index({ clinicaId: 1, feridaId: 1, criadoEm: -1 });

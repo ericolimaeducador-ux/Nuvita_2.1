@@ -60,6 +60,8 @@ export class DocumentosService {
       clinicaId,
       pacienteId: dto.pacienteId,
       prontuarioId: dto.prontuarioId,
+      feridaId: dto.feridaId,
+      avaliacaoFeridaId: dto.avaliacaoFeridaId,
       nome: dto.nome,
       tipo: dto.tipo,
       mimeType: dto.mimeType,
@@ -73,6 +75,8 @@ export class DocumentosService {
       clinicaId,
       pacienteId: dto.pacienteId,
       prontuarioId: dto.prontuarioId,
+      feridaId: dto.feridaId,
+      avaliacaoFeridaId: dto.avaliacaoFeridaId,
       documentoId: documento.id,
       tamanho: dto.tamanho,
       mimeType: dto.mimeType,
@@ -120,6 +124,8 @@ export class DocumentosService {
       clinicaId,
       pacienteId: query.pacienteId,
       prontuarioId: query.prontuarioId,
+      feridaId: query.feridaId,
+      avaliacaoFeridaId: query.avaliacaoFeridaId,
     });
 
     await this.audit(AuditEvent.DOCUMENT_LISTED, context, {

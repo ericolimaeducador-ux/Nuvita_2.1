@@ -17,6 +17,7 @@ export enum TipoNotificacao {
   LINK_TELECONSULTA = 'link_teleconsulta',
   RESULTADO_DISPONIVEL = 'resultado_disponivel',
   ELEGIBILIDADE_CONFIRMADA = 'elegibilidade_confirmada',
+  RISCO_FERIDA_ALTO = 'risco_ferida_alto',
 }
 
 export interface ConteudoNotificacao {

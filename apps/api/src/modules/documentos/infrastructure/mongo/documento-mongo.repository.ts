@@ -36,6 +36,8 @@ export class DocumentoMongoRepository implements DocumentoRepository {
         clinicaId: input.clinicaId,
         ...(input.pacienteId ? { pacienteId: input.pacienteId } : {}),
         ...(input.prontuarioId ? { prontuarioId: input.prontuarioId } : {}),
+        ...(input.feridaId ? { feridaId: input.feridaId } : {}),
+        ...(input.avaliacaoFeridaId ? { avaliacaoFeridaId: input.avaliacaoFeridaId } : {}),
         excluidoEm: { $exists: false },
       })
       .sort({ criadoEm: -1 })
@@ -78,6 +80,8 @@ export class DocumentoMongoRepository implements DocumentoRepository {
       clinicaId: object.clinicaId,
       pacienteId: object.pacienteId,
       prontuarioId: object.prontuarioId,
+      feridaId: object.feridaId,
+      avaliacaoFeridaId: object.avaliacaoFeridaId,
       nome: object.nome,
       tipo: object.tipo,
       mimeType: object.mimeType,
