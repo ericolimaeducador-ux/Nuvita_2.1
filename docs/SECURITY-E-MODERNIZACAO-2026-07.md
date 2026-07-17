@@ -27,7 +27,7 @@
 
 ### ALTO
 
-**A1 — `confirmUpload` não verifica o objeto no storage**
+**A1 — `confirmUpload` não verifica o objeto no storage** · ✅ **CORRIGIDO em `f7e2ad1` (2026-07-17):** confirm baixa o objeto e valida existência+tamanho+sha256+magic bytes; reprovação audita `DOCUMENT_UPLOAD_REJECTED`, soft-deleta o registro e limpa o objeto.
 `documentos.service.ts:99` — o confirm apenas gera thumbnail e audita. Não
 há verificação de que o PUT aconteceu, nem de que o conteúdo bate com o
 sha256 declarado: o hash vai como metadata assinada (`x-amz-meta-sha256`),
@@ -39,7 +39,7 @@ metadata por checksum nativo (`ChecksumSHA256` no presign do S3/R2, que o
 storage valida no PUT); validar magic bytes ao gerar o thumbnail (o
 protótipo woundcare-ai já fazia isso — portar a ideia).
 
-**A2 — Permissões por módulo não são aplicadas no backend**
+**A2 — Permissões por módulo não são aplicadas no backend** · ✅ **CORRIGIDO em `584de84` (2026-07-17):** permissões efetivas no JWT + `PermissoesGuard`/`@RequerModulo` nos 13 controllers tenantizados; revogação vale no próximo refresh (TTL curto do access token).
 `resolvePermissoes()` (concessões/revogações por usuário do painel
 super-admin) só gateia menu e rotas do **frontend**. A API usa apenas
 `RolesGuard` por papel: um MEDICO com módulo FERIDAS revogado continua
