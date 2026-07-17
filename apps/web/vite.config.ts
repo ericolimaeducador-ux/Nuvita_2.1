@@ -31,10 +31,15 @@ export default defineConfig(({ command }) => ({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./src/test/setup.ts'],
+  },
   server: {
     port: 5173,
     proxy: {
-      '^/(auth|clinicas|pacientes|agendamentos|prontuarios|documentos|notificacoes|financeiro|telemedicina|super-admin|analytics|produtos|health|checklist-documentos|observacoes-paciente)(?=$|[/?])':
+      '^/(auth|clinicas|pacientes|agendamentos|prontuarios|documentos|notificacoes|financeiro|telemedicina|super-admin|analytics|produtos|health|checklist-documentos|observacoes-paciente|feridas)(?=$|[/?])':
         apiProxy,
     },
   },

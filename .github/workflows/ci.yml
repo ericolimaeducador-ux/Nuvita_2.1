@@ -23,9 +23,12 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Dependency audit (informativo)
+        run: npm audit --audit-level=high || true
+
       - name: Lint
         working-directory: apps/api
-        run: npx eslint "src/**/*.ts" --max-warnings 0 || true
+        run: npx eslint "src/**/*.ts" --max-warnings 0
 
       - name: Type check
         working-directory: apps/api
@@ -54,6 +57,10 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+
+      - name: Tests
+        working-directory: apps/web
+        run: npm run test
 
       - name: Type check & build
         working-directory: apps/web
