@@ -1,0 +1,25 @@
+node_modules/
+dist/
+.next/
+coverage/
+.env
+.env.*
+!.env.example
+*.log
+tmp/
+*.tsbuildinfo
+
+# Cloud Run — arquivo de env gerado a partir de apps/api/.env (contém segredos)
+cloudrun.env.yaml
+.DS_Store
+Thumbs.db
+
+# Claude Code – configurações locais/pessoais
+.claude/settings.local.json
+
+# Graphify – artefatos locais (caminhos absolutos, não portáveis)
+.graphify/
+
+# INPI – documentos particulares de registro e pacotes gerados para depósito
+docs/inpi/
+inpi-deposito/

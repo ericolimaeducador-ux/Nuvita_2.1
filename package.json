@@ -1,0 +1,23 @@
+{
+  "name": "nuvita-2-1",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "api:dev": "npm run start:dev --workspace=apps/api",
+    "api:build": "npm run build --workspace=apps/api",
+    "api:start": "npm run start --workspace=apps/api",
+    "gcp:init-secrets": "node scripts/init-gcp-secrets.mjs",
+    "gcp:rotate-secrets": "node scripts/rotate-secrets-worker.mjs"
+  },
+  "devDependencies": {
+    "chalk": "^5.3.0",
+    "mongodb": "^7.3.0"
+  },
+  "overrides": {
+    "@nestjs/core": "10.4.22"
+  }
+}

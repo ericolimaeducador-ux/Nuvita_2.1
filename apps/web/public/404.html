@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <title>Nuvita</title>
+    <!-- SPA fallback p/ GitHub Pages (rafgraph/spa-github-pages).
+         Converte /pacientes em /?/pacientes e o index.html restaura a rota.
+         pathSegmentsToKeep = 0 porque servimos em domínio próprio (www.nuvita.app.br)
+         na raiz. Se voltar a servir em /<repo>/ (project pages), use 1. -->
+    <script type="text/javascript">
+      var pathSegmentsToKeep = 0;
+      var l = window.location;
+      l.replace(
+        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+        l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
+        l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
+        (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+        l.hash
+      );
+    </script>
+  </head>
+  <body></body>
+</html>
