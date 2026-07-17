@@ -4,6 +4,9 @@ import { CurrentUser } from '../../auth/presentation/decorators/current-user.dec
 import { Roles } from '../../auth/presentation/decorators/roles.decorator';
 import { JwtAuthGuard } from '../../auth/presentation/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/presentation/guards/roles.guard';
+import { PermissoesGuard } from '../../auth/presentation/guards/permissoes.guard';
+import { RequerModulo } from '../../auth/presentation/decorators/requer-modulo.decorator';
+import { Modulo } from '../../../../../../packages/shared/src/auth';
 import { TenantRequiredGuard } from '../../../common/tenancy/tenant-required.guard';
 import { ChecklistDocumentosService } from '../application/checklist-documentos.service';
 import { CreateChecklistDocumentoDto } from '../application/dto/create-checklist-documento.dto';
@@ -16,7 +19,8 @@ import { CriarChecklistPadraoDto } from '../application/dto/criar-checklist-padr
 const LEITURA_CHECKLIST = [...PAPEIS_PROFISSIONAIS, Papel.ADMIN, Papel.SECRETARIA];
 
 @Controller('checklist-documentos')
-@UseGuards(JwtAuthGuard, TenantRequiredGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, TenantRequiredGuard, RolesGuard, PermissoesGuard)
+@RequerModulo(Modulo.DOCUMENTOS)
 export class ChecklistDocumentosController {
   constructor(private readonly service: ChecklistDocumentosService) {}
 

@@ -6,6 +6,9 @@ import { CurrentUser } from '../../auth/presentation/decorators/current-user.dec
 import { Roles } from '../../auth/presentation/decorators/roles.decorator';
 import { JwtAuthGuard } from '../../auth/presentation/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/presentation/guards/roles.guard';
+import { PermissoesGuard } from '../../auth/presentation/guards/permissoes.guard';
+import { RequerModulo } from '../../auth/presentation/decorators/requer-modulo.decorator';
+import { Modulo } from '../../../../../../packages/shared/src/auth';
 import { TenantRequiredGuard } from '../../../common/tenancy/tenant-required.guard';
 import { CreateAvaliacaoFeridaDto } from '../application/dto/create-avaliacao-ferida.dto';
 import { AvaliacaoFeridaRequestContext, AvaliacaoFeridaService } from '../application/avaliacao-ferida.service';
@@ -15,7 +18,8 @@ const MUTACAO_FERIDAS = [Papel.MEDICO, Papel.ENFERMEIRO, Papel.ADMIN];
 
 /** Só POST/GET — avaliação é imutável por construção, sem PATCH/DELETE (ver AvaliacaoFerida no domínio). */
 @Controller('feridas/:feridaId/avaliacoes')
-@UseGuards(JwtAuthGuard, TenantRequiredGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, TenantRequiredGuard, RolesGuard, PermissoesGuard)
+@RequerModulo(Modulo.FERIDAS)
 export class AvaliacaoFeridaController {
   constructor(private readonly service: AvaliacaoFeridaService) {}
 

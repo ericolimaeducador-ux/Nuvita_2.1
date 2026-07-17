@@ -118,6 +118,8 @@ describe('AuthService — fluxo de autenticação', () => {
     const accessPayload = await new JwtService().verifyAsync(refreshResult.accessToken, {
       secret: JWT_ACCESS_SECRET,
     });
+    // Permissões efetivas viajam no token (consumidas pelo PermissoesGuard)
+    expect(accessPayload.permissoes).toEqual(expect.arrayContaining(['PACIENTES', 'PRONTUARIOS']));
     await service.logout(accessPayload, refreshResult.refreshToken, context);
     expect(auditLogs.create).toHaveBeenCalledWith(expect.objectContaining({ event: 'LOGOUT' }));
   });

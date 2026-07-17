@@ -4,12 +4,16 @@ import { CurrentUser } from '../../auth/presentation/decorators/current-user.dec
 import { Roles } from '../../auth/presentation/decorators/roles.decorator';
 import { JwtAuthGuard } from '../../auth/presentation/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/presentation/guards/roles.guard';
+import { PermissoesGuard } from '../../auth/presentation/guards/permissoes.guard';
+import { RequerModulo } from '../../auth/presentation/decorators/requer-modulo.decorator';
+import { Modulo } from '../../../../../../packages/shared/src/auth';
 import { TenantRequiredGuard } from '../../../common/tenancy/tenant-required.guard';
 import { AnalyticsService } from '../application/analytics.service';
 import { AnalyticsQueryDto } from '../application/dto/analytics-query.dto';
 
 @Controller('analytics')
-@UseGuards(JwtAuthGuard, TenantRequiredGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, TenantRequiredGuard, RolesGuard, PermissoesGuard)
+@RequerModulo(Modulo.ANALYTICS)
 @Roles(Papel.ADMIN, Papel.SECRETARIA)
 export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}

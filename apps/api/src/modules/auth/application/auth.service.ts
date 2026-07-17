@@ -14,6 +14,7 @@ import {
   AuthTokenPayload,
   exigeTwoFactor,
   Papel,
+  resolvePermissoes,
 } from '../../../../../../packages/shared/src/auth';
 import {
   ACCESS_TOKEN_TTL,
@@ -256,6 +257,7 @@ export class AuthService {
       clinicaId: user.clinicaId,
       nome: user.nome,
       registroProfissional: user.registroProfissional,
+      permissoes: resolvePermissoes(user.papel, user.modulosConcedidos, user.modulosRevogados),
     };
 
     const [accessToken, refreshToken] = await Promise.all([
