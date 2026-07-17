@@ -16,6 +16,8 @@ import { AtendimentoTelemedicinaPage } from '@/pages/AtendimentoTelemedicinaPage
 import { ClinicaPage } from '@/pages/ClinicaPage';
 import { ProntuarioImpressaoPage } from '@/pages/ProntuarioImpressaoPage';
 import { AtendimentoPsicologicoPage } from '@/pages/AtendimentoPsicologicoPage';
+import { FeridasPage } from '@/pages/FeridasPage';
+import { FeridaDetailPage } from '@/pages/FeridaDetailPage';
 import { SuperAdminPage } from '@/pages/SuperAdminPage';
 import { Modulo, Papel } from '@/types';
 
@@ -57,6 +59,10 @@ export function AppRoutes() {
           </Route>
           <Route element={<ProtectedRoute modulo={Modulo.FINANCEIRO} />}>
             <Route path="/financeiro" element={<FinanceiroPage />} />
+          </Route>
+          <Route element={<ProtectedRoute modulo={Modulo.FERIDAS} />}>
+            <Route path="/feridas" element={<FeridasPage />} />
+            <Route path="/feridas/:id" element={<FeridaDetailPage />} />
           </Route>
           <Route element={<ProtectedRoute modulo={Modulo.TELEMEDICINA} />}>
             <Route path="/telemedicina" element={<TelemedicinaPage />} />

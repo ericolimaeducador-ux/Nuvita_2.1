@@ -7,10 +7,11 @@ import { z } from 'zod';
 import dayjs from 'dayjs';
 import {
   ArrowLeft, User, Download, Plus, FileText, CalendarClock, ChevronDown, Stethoscope,
-  ListChecks, Trash2, Pencil,
+  ListChecks, Trash2, Pencil, Bandage,
 } from 'lucide-react';
 import { ProntuarioDetailDialog, NovoAtendimentoDialog } from '@/components/ProntuarioDialogs';
 import { NovoDocumentoDialog } from '@/components/NovoDocumentoDialog';
+import { NovaFeridaDialog } from '@/components/FeridaDialogs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,7 +26,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/components/ui/use-toast';
 import { useAuth } from '@/auth/AuthContext';
 import {
-  pacientesApi, prontuariosApi, agendaApi, documentosApi,
+  pacientesApi, prontuariosApi, agendaApi, documentosApi, feridasApi,
   checklistDocumentosApi,
   observacoesPacienteApi,
 } from '@/api/resources';
@@ -35,6 +36,7 @@ import {
   Sexo, SEXO_LABEL, ProjetoPaciente, PROJETO_LABEL, STATUS_AGENDAMENTO_LABEL, TIPO_ATENDIMENTO_LABEL,
   Modulo, Papel,
   StatusChecklistDocumento, STATUS_CHECKLIST_DOCUMENTO_LABEL, TIPO_DOCUMENTO_LABEL,
+  ETIOLOGIA_LABEL, STATUS_FERIDA_LABEL, StatusFerida,
   StatusAgendamento, TipoAtendimento, TIPO_ATENDIMENTO_POR_AGENDAMENTO,
   type Agendamento, type Prontuario, type Documento, type Paciente,
 } from '@/types';
@@ -280,6 +282,9 @@ export function PacienteDetailPage() {
         )}
       </Secao>
 
+      {/* Feridas */}
+      {!ehPsicologo && permissoes.includes(Modulo.FERIDAS) && <FeridasSecao pacienteId={id} />}
+
       {/* Observações gerais — campo livre p/ qualquer profissional de atendimento (fora do escopo do psicólogo) */}
       {!ehPsicologo && <ObservacoesSecao pacienteId={id} observacoesAtuais={p.observacoes} />}
 
@@ -415,6 +420,72 @@ export function PacienteDetailPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+const STATUS_FERIDA_VARIANT: Record<StatusFerida, 'default' | 'success' | 'secondary'> = {
+  [StatusFerida.ATIVA]: 'default',
+  [StatusFerida.CICATRIZADA]: 'success',
+  [StatusFerida.INATIVA]: 'secondary',
+};
+
+function FeridasSecao({ pacienteId }: { pacienteId: string }) {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [novaOpen, setNovaOpen] = useState(false);
+
+  const listQ = useQuery({
+    queryKey: ['feridas', pacienteId],
+    queryFn: () => feridasApi.listByPaciente(pacienteId),
+  });
+  const feridas = listQ.data ?? [];
+
+  return (
+    <Secao
+      icon={<Bandage className="h-4 w-4" />}
+      titulo="Feridas"
+      contagem={feridas.length}
+      defaultOpen={false}
+      acao={
+        <Button size="sm" variant="outline" onClick={() => setNovaOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" /> Nova ferida
+        </Button>
+      }
+    >
+      {listQ.isLoading ? (
+        <div className="space-y-3">{[1, 2].map((i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
+      ) : feridas.length === 0 ? (
+        <Vazio>Nenhuma ferida registrada.</Vazio>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Rótulo</TableHead>
+              <TableHead>Etiologia</TableHead>
+              <TableHead>Localização</TableHead>
+              <TableHead>Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {feridas.map((f) => (
+              <TableRow key={f.id} className="cursor-pointer" onClick={() => navigate(`/feridas/${f.id}`)}>
+                <TableCell className="font-medium">{f.rotulo}</TableCell>
+                <TableCell>{ETIOLOGIA_LABEL[f.etiologia]}</TableCell>
+                <TableCell>{f.localizacao}</TableCell>
+                <TableCell><Badge variant={STATUS_FERIDA_VARIANT[f.status]}>{STATUS_FERIDA_LABEL[f.status]}</Badge></TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
+      <NovaFeridaDialog
+        open={novaOpen}
+        onOpenChange={setNovaOpen}
+        pacienteId={pacienteId}
+        clinicaId={user?.clinicaId}
+        onCreated={() => listQ.refetch()}
+      />
+    </Secao>
   );
 }
 

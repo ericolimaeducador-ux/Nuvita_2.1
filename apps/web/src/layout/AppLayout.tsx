@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   LayoutDashboard, Users, Calendar, Bell, DollarSign,
-  Video, Building2, LogOut, ChevronLeft, ChevronRight, Shield, Brain, Wallet,
+  Video, Building2, LogOut, ChevronLeft, ChevronRight, Shield, Brain, Wallet, Bandage,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -23,6 +23,7 @@ const navItems: { to: string; icon: React.ElementType; label: string; modulo: Mo
   { to: '/atendimento-psicologico', icon: Brain, label: 'Atend. Psicológico', modulo: Modulo.ATENDIMENTO_PSICOLOGICO },
   { to: '/financeiro-psicologia', icon: Wallet, label: 'Financeiro (Psi)', modulo: Modulo.FINANCEIRO_PSICOLOGIA },
   { to: '/agenda', icon: Calendar, label: 'Agenda', modulo: Modulo.AGENDA },
+  { to: '/feridas', icon: Bandage, label: 'Feridas', modulo: Modulo.FERIDAS },
   { to: '/notificacoes', icon: Bell, label: 'Notificações', modulo: Modulo.NOTIFICACOES },
   { to: '/financeiro', icon: DollarSign, label: 'Financeiro', modulo: Modulo.FINANCEIRO },
   { to: '/telemedicina', icon: Video, label: 'Telemedicina', modulo: Modulo.TELEMEDICINA },

@@ -509,6 +509,7 @@ export enum TipoDocumento {
   RECEITA = 'receita',
   LAUDO = 'laudo',
   TERMO = 'termo',
+  FOTO_FERIDA = 'foto_ferida',
   OUTRO = 'outro',
 }
 export const TIPO_DOCUMENTO_LABEL: Record<TipoDocumento, string> = {
@@ -516,10 +517,13 @@ export const TIPO_DOCUMENTO_LABEL: Record<TipoDocumento, string> = {
   [TipoDocumento.RECEITA]: 'Receita',
   [TipoDocumento.LAUDO]: 'Laudo',
   [TipoDocumento.TERMO]: 'Termo',
+  [TipoDocumento.FOTO_FERIDA]: 'Foto de ferida',
   [TipoDocumento.OUTRO]: 'Outro',
 };
 
-export const ALLOWED_DOCUMENT_MIME_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'application/dicom'] as const;
+export const ALLOWED_DOCUMENT_MIME_TYPES = [
+  'application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/heic', 'application/dicom',
+] as const;
 export type AllowedDocumentMimeType = (typeof ALLOWED_DOCUMENT_MIME_TYPES)[number];
 
 export interface Documento {
@@ -527,6 +531,8 @@ export interface Documento {
   clinicaId: string;
   pacienteId: string;
   prontuarioId?: string;
+  feridaId?: string;
+  avaliacaoFeridaId?: string;
   nome: string;
   tipo: TipoDocumento;
   mimeType: AllowedDocumentMimeType;
@@ -553,6 +559,165 @@ export interface PresignUploadResponse {
   uploadUrl: string;
   expiresInSeconds: number;
   requiredHeaders: Record<string, string>;
+}
+
+// ---------- Feridas ----------
+
+export enum Etiologia {
+  PRESSAO = 'pressao',
+  PE_DIABETICO = 'pe_diabetico',
+  VENOSA = 'venosa',
+  ARTERIAL = 'arterial',
+  CIRURGICA = 'cirurgica',
+  TRAUMATICA = 'traumatica',
+  QUEIMADURA = 'queimadura',
+  MISTA = 'mista',
+  DESCONHECIDA = 'desconhecida',
+}
+export const ETIOLOGIA_LABEL: Record<Etiologia, string> = {
+  [Etiologia.PRESSAO]: 'Pressão',
+  [Etiologia.PE_DIABETICO]: 'Pé diabético',
+  [Etiologia.VENOSA]: 'Venosa',
+  [Etiologia.ARTERIAL]: 'Arterial',
+  [Etiologia.CIRURGICA]: 'Cirúrgica',
+  [Etiologia.TRAUMATICA]: 'Traumática',
+  [Etiologia.QUEIMADURA]: 'Queimadura',
+  [Etiologia.MISTA]: 'Mista',
+  [Etiologia.DESCONHECIDA]: 'Desconhecida',
+};
+
+export enum StatusFerida {
+  ATIVA = 'ativa',
+  CICATRIZADA = 'cicatrizada',
+  INATIVA = 'inativa',
+}
+export const STATUS_FERIDA_LABEL: Record<StatusFerida, string> = {
+  [StatusFerida.ATIVA]: 'Ativa',
+  [StatusFerida.CICATRIZADA]: 'Cicatrizada',
+  [StatusFerida.INATIVA]: 'Inativa',
+};
+
+export enum NivelExsudato {
+  NENHUM = 'nenhum',
+  BAIXO = 'baixo',
+  MODERADO = 'moderado',
+  ALTO = 'alto',
+}
+export const NIVEL_EXSUDATO_LABEL: Record<NivelExsudato, string> = {
+  [NivelExsudato.NENHUM]: 'Nenhum',
+  [NivelExsudato.BAIXO]: 'Baixo',
+  [NivelExsudato.MODERADO]: 'Moderado',
+  [NivelExsudato.ALTO]: 'Alto',
+};
+
+export enum NivelRisco {
+  BAIXO = 'baixo',
+  MODERADO = 'moderado',
+  ALTO = 'alto',
+  URGENTE = 'urgente',
+}
+export const NIVEL_RISCO_LABEL: Record<NivelRisco, string> = {
+  [NivelRisco.BAIXO]: 'Baixo',
+  [NivelRisco.MODERADO]: 'Moderado',
+  [NivelRisco.ALTO]: 'Alto',
+  [NivelRisco.URGENTE]: 'Urgente',
+};
+
+export enum AchadoPerilesional {
+  ERITEMA = 'eritema',
+  MACERACAO = 'maceracao',
+  EDEMA = 'edema',
+  CALOR = 'calor',
+  DERMATITE = 'dermatite',
+  INDURACAO = 'induracao',
+  CREPITACAO = 'crepitacao',
+}
+export const ACHADO_PERILESIONAL_LABEL: Record<AchadoPerilesional, string> = {
+  [AchadoPerilesional.ERITEMA]: 'Eritema',
+  [AchadoPerilesional.MACERACAO]: 'Maceração',
+  [AchadoPerilesional.EDEMA]: 'Edema',
+  [AchadoPerilesional.CALOR]: 'Calor',
+  [AchadoPerilesional.DERMATITE]: 'Dermatite',
+  [AchadoPerilesional.INDURACAO]: 'Induração',
+  [AchadoPerilesional.CREPITACAO]: 'Crepitação',
+};
+
+export interface Ferida {
+  id: string;
+  clinicaId: string;
+  pacienteId: string;
+  rotulo: string;
+  etiologia: Etiologia;
+  localizacao: string;
+  status: StatusFerida;
+  dataInicio?: string;
+  observacoes?: string;
+  criadoEm: string;
+  atualizadoEm: string;
+}
+
+export interface Medicao {
+  comprimentoCm: number;
+  larguraCm: number;
+  profundidadeCm: number;
+  areaCm2?: number;
+}
+
+export interface PerfilTecidual {
+  granulacaoPct: number;
+  epitelizacaoPct: number;
+  esfaceloPct: number;
+  necrosePct: number;
+}
+
+export interface RecomendacaoClinica {
+  risco: NivelRisco;
+  titulo: string;
+  justificativa: string;
+  acao: string;
+  regraId: string;
+  exigeRevisaoHumana: true;
+}
+
+export interface AvaliacaoFerida {
+  id: string;
+  feridaId: string;
+  clinicaId: string;
+  profissionalId: string;
+  medicao: Medicao;
+  tecido: PerfilTecidual;
+  exsudato: NivelExsudato;
+  escalaDor: number;
+  odor: boolean;
+  achadosPerilesionais: AchadoPerilesional[];
+  sinaisSistemicos: boolean;
+  perfusaoRuim: boolean;
+  ossoOuTendaoExposto: boolean;
+  pioraAreaPct30Dias?: number;
+  diasCicatrizacaoEstagnada?: number;
+  recomendacoes: RecomendacaoClinica[];
+  motorClinico: string;
+  criadoEm: string;
+}
+
+export interface PontoTimelineFerida {
+  avaliacaoId: string;
+  criadoEm: string;
+  areaCm2?: number;
+  profundidadeCm: number;
+  escalaDor: number;
+  exsudato: NivelExsudato;
+  necrosePct: number;
+  esfaceloPct: number;
+  granulacaoPct: number;
+  epitelizacaoPct: number;
+  maiorRisco: NivelRisco;
+  titulosRecomendacoes: string[];
+}
+
+export interface TimelineFerida {
+  pontos: PontoTimelineFerida[];
+  tendencia: { status: 'melhorando' | 'piorando' | 'estavel' };
 }
 
 // ---------- Financeiro ----------

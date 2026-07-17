@@ -33,21 +33,30 @@ export function NovoDocumentoDialog({
   pacienteNome,
   open,
   onOpenChange,
+  feridaId,
+  avaliacaoFeridaId,
+  tipoInicial,
+  aceitarSomenteImagem,
 }: {
   pacienteId: string;
   pacienteNome?: string;
   open: boolean;
   onOpenChange: (o: boolean) => void;
+  /** Anexa a foto a uma ferida/avaliação específica (galeria de FeridaDetailPage). */
+  feridaId?: string;
+  avaliacaoFeridaId?: string;
+  tipoInicial?: TipoDocumento;
+  aceitarSomenteImagem?: boolean;
 }) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [nome, setNome] = useState('');
-  const [tipo, setTipo] = useState<TipoDocumento>(TipoDocumento.OUTRO);
+  const [tipo, setTipo] = useState<TipoDocumento>(tipoInicial ?? TipoDocumento.OUTRO);
   const [file, setFile] = useState<File | null>(null);
   const [etapa, setEtapa] = useState<'idle' | 'hash' | 'upload' | 'confirmando'>('idle');
 
   function reset() {
-    setNome(''); setTipo(TipoDocumento.OUTRO); setFile(null); setEtapa('idle');
+    setNome(''); setTipo(tipoInicial ?? TipoDocumento.OUTRO); setFile(null); setEtapa('idle');
   }
 
   function selecionarSugestao(valor: string) {
@@ -70,6 +79,8 @@ export function NovoDocumentoDialog({
       const presign = await documentosApi.presignUpload({
         clinicaId: user.clinicaId,
         pacienteId,
+        feridaId,
+        avaliacaoFeridaId,
         nome: nome.trim(),
         nomePaciente: pacienteNome,
         tipo,
@@ -97,6 +108,7 @@ export function NovoDocumentoDialog({
       onOpenChange(false);
       reset();
       void qc.invalidateQueries({ queryKey: ['documentos'] });
+      if (feridaId) void qc.invalidateQueries({ queryKey: ['documentos', 'ferida', feridaId] });
     },
     onError: (e) => { toast.error('Erro', apiErrorMessage(e)); setEtapa('idle'); },
   });
@@ -134,10 +146,12 @@ export function NovoDocumentoDialog({
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Arquivo (PDF, JPEG, PNG ou DICOM — máx. {MAX_TAMANHO_MB}MB)</Label>
+            <Label>
+              Arquivo ({aceitarSomenteImagem ? 'JPEG, PNG, WEBP ou HEIC' : 'PDF, JPEG, PNG ou DICOM'} — máx. {MAX_TAMANHO_MB}MB)
+            </Label>
             <Input
               type="file"
-              accept="application/pdf,image/jpeg,image/png,application/dicom"
+              accept={aceitarSomenteImagem ? 'image/jpeg,image/png,image/webp,image/heic' : 'application/pdf,image/jpeg,image/png,application/dicom'}
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
             />
           </div>

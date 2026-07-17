@@ -1,20 +1,27 @@
 import { api } from './client';
 import type {
+  AchadoPerilesional,
   Agendamento,
+  AvaliacaoFerida,
   ChecklistDocumentoItem,
   DashboardFinanceiro,
   Documento,
+  Etiologia,
+  Ferida,
   Lancamento,
   ListUsuariosResult,
   LoginResponse,
+  Medicao,
   ModalidadeAtendimento,
   Modulo,
+  NivelExsudato,
   ObservacaoPaciente,
   Paciente,
   PainelPsicologia,
   ProjetoPaciente,
   PageResult,
   Papel,
+  PerfilTecidual,
   PresignUploadResponse,
   Produto,
   Prontuario,
@@ -22,7 +29,9 @@ import type {
   SalaEvento,
   SalaTelemedicina,
   SinalSala,
+  StatusFerida,
   StatusSala,
+  TimelineFerida,
   TipoEventoSala,
   TipoSinal,
   StatusAgendamento,
@@ -150,12 +159,12 @@ export type { TipoAtendimento };
 
 // ---------- Documentos ----------
 export const documentosApi = {
-  list: (params: { pacienteId?: string; prontuarioId?: string } = {}) =>
+  list: (params: { pacienteId?: string; prontuarioId?: string; feridaId?: string; avaliacaoFeridaId?: string } = {}) =>
     api
       .get<PageResult<Documento> | Documento[]>('/documentos', { params })
       .then((r) => r.data),
   presignUpload: (payload: {
-    clinicaId: string; pacienteId: string; prontuarioId?: string;
+    clinicaId: string; pacienteId: string; prontuarioId?: string; feridaId?: string; avaliacaoFeridaId?: string;
     nome: string; nomePaciente?: string; tipo: TipoDocumento; mimeType: string; tamanho: number; hash: string;
   }) =>
     api.post<PresignUploadResponse>('/documentos/presign-upload', payload).then((r) => r.data),
@@ -305,6 +314,47 @@ export const observacoesPacienteApi = {
     api.post<ObservacaoPaciente>('/observacoes-paciente', payload).then((r) => r.data),
   listByPaciente: (pacienteId: string) =>
     api.get<ObservacaoPaciente[]>('/observacoes-paciente', { params: { pacienteId } }).then((r) => r.data),
+};
+
+// ---------- Feridas ----------
+export const feridasApi = {
+  create: (payload: {
+    clinicaId?: string; pacienteId: string; rotulo: string; etiologia: Etiologia; localizacao: string;
+    status?: StatusFerida; dataInicio?: string; observacoes?: string;
+  }) => api.post<Ferida>('/feridas', payload).then((r) => r.data),
+  update: (id: string, payload: { rotulo?: string; status?: StatusFerida; observacoes?: string }) =>
+    api.patch<Ferida>(`/feridas/${id}`, payload).then((r) => r.data),
+  listByPaciente: (pacienteId: string) =>
+    api.get<Ferida[]>('/feridas', { params: { pacienteId } }).then((r) => r.data),
+  get: (id: string) =>
+    api.get<Ferida>(`/feridas/${id}`).then((r) => r.data),
+  excluir: (id: string) =>
+    api.patch(`/feridas/${id}/excluir`).then((r) => r.data),
+  timeline: (id: string) =>
+    api.get<TimelineFerida>(`/feridas/${id}/timeline`).then((r) => r.data),
+};
+
+export const avaliacaoFeridaApi = {
+  create: (
+    feridaId: string,
+    payload: {
+      medicao: Medicao;
+      tecido: PerfilTecidual;
+      exsudato: NivelExsudato;
+      escalaDor?: number;
+      odor?: boolean;
+      achadosPerilesionais?: AchadoPerilesional[];
+      sinaisSistemicos?: boolean;
+      perfusaoRuim?: boolean;
+      ossoOuTendaoExposto?: boolean;
+      pioraAreaPct30Dias?: number;
+      diasCicatrizacaoEstagnada?: number;
+    },
+  ) => api.post<AvaliacaoFerida>(`/feridas/${feridaId}/avaliacoes`, payload).then((r) => r.data),
+  listByFerida: (feridaId: string) =>
+    api.get<AvaliacaoFerida[]>(`/feridas/${feridaId}/avaliacoes`).then((r) => r.data),
+  get: (feridaId: string, avaliacaoId: string) =>
+    api.get<AvaliacaoFerida>(`/feridas/${feridaId}/avaliacoes/${avaliacaoId}`).then((r) => r.data),
 };
 
 // ---------- Checklist de Documentos ----------
