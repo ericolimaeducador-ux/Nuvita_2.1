@@ -32,7 +32,7 @@ permissions:
   id-token: write
 
 env:
-  SERVICE: nuvita-api
+  SERVICE: nuvita2-api
   REGION: southamerica-east1
 
 jobs:

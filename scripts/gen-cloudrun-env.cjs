@@ -14,11 +14,10 @@
 const fs = require('fs');
 const path = require('path');
 
-// Origens permitidas no CORS em produção (frontend + apex). localhost p/ dev local.
+// Origens permitidas no CORS em produção (frontend do Nuvita 2.1). localhost p/ dev local.
 const PROD_ORIGINS = [
-  'https://www.nuvita.app.br',
-  'https://nuvita.app.br',
-  'http://localhost:5173',
+  'https://estomoterapia.nuvita.app.br',
+  'http://localhost:5174',
 ];
 const PROD_ROOT_DOMAIN = 'nuvita.app.br';
 const envFile = path.join(__dirname, '..', 'apps', 'api', '.env');

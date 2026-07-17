@@ -6,7 +6,7 @@
       {
         "source": "**",
         "run": {
-          "serviceId": "nuvita-api",
+          "serviceId": "nuvita2-api",
           "region": "southamerica-east1"
         }
       }
