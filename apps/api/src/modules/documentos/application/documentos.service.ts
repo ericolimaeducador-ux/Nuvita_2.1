@@ -1,5 +1,5 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { randomUUID } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
 import { AuthTokenPayload } from '../../../../../../packages/shared/src/auth';
 import { resolveTenantClinicaId } from '../../../common/tenancy/resolve-clinica-id';
 import { AUDIT_LOG_REPOSITORY } from '../../auth/auth.constants';
@@ -11,7 +11,8 @@ import {
   MAX_DOCUMENT_SIZE_BYTES,
   MAX_PATIENT_STORAGE_BYTES,
 } from '../documentos.constants';
-import { ALLOWED_DOCUMENT_MIME_TYPES } from '../domain/documento.entity';
+import { ALLOWED_DOCUMENT_MIME_TYPES, Documento } from '../domain/documento.entity';
+import { magicBytesMatch } from '../domain/magic-bytes';
 
 // Extensão de arquivo por MIME type permitido — usada para nomear o objeto no
 // storage de forma legível ao baixar.
@@ -99,7 +100,30 @@ export class DocumentosService {
   async confirmUpload(documentoId: string, clinicaId: string | undefined, context: DocumentoRequestContext) {
     const resolvedClinicaId = this.resolveClinicaId(context.user, clinicaId);
     const documento = await this.getDocumentoOrThrow(resolvedClinicaId, documentoId);
-    const thumbnailUrl = await this.storage.createThumbnailIfSupported(documento);
+
+    // O PUT presignado é feito direto pelo cliente no storage — nada garante
+    // que aconteceu, nem que o corpo bate com o que foi declarado no presign.
+    // Verificação server-side: existência, tamanho, sha256 e magic bytes.
+    const body = await this.storage.fetchObject(documento.url);
+    if (!body) {
+      await this.rejectUpload(documento, resolvedClinicaId, context, 'objeto ausente no storage');
+      throw new BadRequestException('Arquivo nao encontrado no storage. Envie o arquivo antes de confirmar.');
+    }
+    if (body.length !== documento.tamanho) {
+      await this.rejectUpload(documento, resolvedClinicaId, context, 'tamanho divergente');
+      throw new BadRequestException('Tamanho do arquivo nao corresponde ao declarado.');
+    }
+    const actualHash = createHash('sha256').update(body).digest('hex');
+    if (actualHash !== documento.hash) {
+      await this.rejectUpload(documento, resolvedClinicaId, context, 'sha256 divergente');
+      throw new BadRequestException('Conteudo do arquivo nao corresponde ao hash declarado.');
+    }
+    if (!magicBytesMatch(body, documento.mimeType)) {
+      await this.rejectUpload(documento, resolvedClinicaId, context, 'magic bytes incompativeis com o MIME declarado');
+      throw new BadRequestException('Conteudo do arquivo nao corresponde ao tipo declarado.');
+    }
+
+    const thumbnailUrl = await this.storage.createThumbnailIfSupported(documento, body);
     if (thumbnailUrl) {
       await this.documentos.setThumbnail(resolvedClinicaId, documentoId, thumbnailUrl);
     }
@@ -181,6 +205,27 @@ export class DocumentosService {
     });
 
     return documento;
+  }
+
+  /** Upload reprovado na verificação: audita, soft-deleta o registro fantasma e limpa o objeto do storage. */
+  private async rejectUpload(
+    documento: Documento,
+    clinicaId: string,
+    context: DocumentoRequestContext,
+    motivo: string,
+  ): Promise<void> {
+    await this.audit(AuditEvent.DOCUMENT_UPLOAD_REJECTED, context, {
+      clinicaId,
+      pacienteId: documento.pacienteId,
+      documentoId: documento.id,
+      motivo,
+    });
+    await this.documentos.softDelete(clinicaId, documento.id, context.user.sub);
+    try {
+      await this.storage.deleteObject(documento.url);
+    } catch {
+      // best-effort: objeto pode nem existir (caso "ausente no storage")
+    }
   }
 
   private async getDocumentoOrThrow(clinicaId: string, documentoId: string) {

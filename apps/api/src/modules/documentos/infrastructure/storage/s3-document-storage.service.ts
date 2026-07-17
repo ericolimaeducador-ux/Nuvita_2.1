@@ -69,15 +69,26 @@ export class S3DocumentStorageService implements DocumentStorage {
     return getSignedUrl(this.client, command, { expiresIn: expiresInSeconds });
   }
 
-  async createThumbnailIfSupported(documento: Documento): Promise<string | undefined> {
+  async fetchObject(privateUrl: string): Promise<Buffer | null> {
+    const key = this.keyFromPrivateUrl(privateUrl);
+    try {
+      const object = await this.client.send(new GetObjectCommand({ Bucket: this.bucket, Key: key }));
+      return await this.streamToBuffer(object.Body as Readable);
+    } catch (error) {
+      if ((error as { name?: string }).name === 'NoSuchKey') {
+        return null;
+      }
+      throw error;
+    }
+  }
+
+  async createThumbnailIfSupported(documento: Documento, body: Buffer): Promise<string | undefined> {
     if (!['image/jpeg', 'image/png'].includes(documento.mimeType)) {
       return undefined;
     }
 
     const key = this.keyFromPrivateUrl(documento.url);
     const thumbnailKey = `${key}.thumb.jpg`;
-    const object = await this.client.send(new GetObjectCommand({ Bucket: this.bucket, Key: key }));
-    const body = await this.streamToBuffer(object.Body as Readable);
     const thumbnail = await sharp(body).resize({ width: 320, withoutEnlargement: true }).jpeg({ quality: 82 }).toBuffer();
 
     await this.client.send(
