@@ -1,13 +1,12 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { AuthTokenPayload, Papel } from '../../../../../../packages/shared/src/auth';
-import { EtapaFluxoClinico } from '../../../../../../packages/shared/src/fluxo-clinico';
 import { resolveTenantClinicaId } from '../../../common/tenancy/resolve-clinica-id';
 import { AUDIT_LOG_REPOSITORY } from '../../auth/auth.constants';
 import { AuditLogRepository } from '../../auth/application/ports/audit-log.repository';
 import { AuditEvent } from '../../auth/domain/audit-event.enum';
 import { PacientesService } from '../../pacientes/application/pacientes.service';
 import { AGENDAMENTO_REPOSITORY } from '../agendamentos.constants';
-import { ModalidadeAtendimento, StatusAgendamento, TipoAgendamento } from '../domain/agendamento.entity';
+import { ModalidadeAtendimento, StatusAgendamento } from '../domain/agendamento.entity';
 import { CancelAgendamentoDto } from './dto/cancel-agendamento.dto';
 import { CreateAgendamentoDto } from './dto/create-agendamento.dto';
 import { CreateBloqueioDto } from './dto/create-bloqueio.dto';
@@ -46,12 +45,6 @@ export class AgendamentosService {
     });
 
     await this.audit(AuditEvent.APPOINTMENT_CREATED, context, { clinicaId, agendamentoId: agendamento.id });
-
-    if (agendamento.tipo === TipoAgendamento.ENTREVISTA) {
-      await this.pacientesService.avancarEtapaFluxo(
-        clinicaId, agendamento.pacienteId, EtapaFluxoClinico.ENTREVISTA_AGENDADA, context,
-      );
-    }
 
     return agendamento;
   }
@@ -135,16 +128,6 @@ export class AgendamentosService {
     if (!agendamento) throw new NotFoundException('Agendamento nao encontrado.');
 
     await this.audit(AuditEvent.APPOINTMENT_CONCLUDED, context, { clinicaId: resolvedClinicaId, agendamentoId: id });
-
-    if (agendamento.tipo === TipoAgendamento.ENTREVISTA) {
-      await this.pacientesService.avancarEtapaFluxo(
-        resolvedClinicaId, agendamento.pacienteId, EtapaFluxoClinico.AGUARDANDO_DOCUMENTOS, context,
-      );
-    } else if (agendamento.tipo === TipoAgendamento.ATENDIMENTO_ENFERMAGEM) {
-      await this.pacientesService.avancarEtapaFluxo(
-        resolvedClinicaId, agendamento.pacienteId, EtapaFluxoClinico.AVALIACAO_IU, context,
-      );
-    }
 
     return agendamento;
   }

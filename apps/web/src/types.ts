@@ -199,12 +199,8 @@ export enum Modulo {
   FINANCEIRO = 'FINANCEIRO',
   NOTIFICACOES = 'NOTIFICACOES',
   TELEMEDICINA = 'TELEMEDICINA',
-  LAUDOS = 'LAUDOS',
-  PROCESSOS = 'PROCESSOS',
-  ENTREGAS = 'ENTREGAS',
-  AVALIACOES = 'AVALIACOES',
+  FERIDAS = 'FERIDAS',
   ANALYTICS = 'ANALYTICS',
-  FLUXO_CLINICO = 'FLUXO_CLINICO',
   ATENDIMENTO_PSICOLOGICO = 'ATENDIMENTO_PSICOLOGICO',
   FINANCEIRO_PSICOLOGIA = 'FINANCEIRO_PSICOLOGIA',
   CLINICA = 'CLINICA',
@@ -222,12 +218,8 @@ export const MODULO_LABEL: Record<Modulo, string> = {
   [Modulo.FINANCEIRO]: 'Financeiro',
   [Modulo.NOTIFICACOES]: 'Notificações',
   [Modulo.TELEMEDICINA]: 'Telemedicina',
-  [Modulo.LAUDOS]: 'Laudos e relatórios',
-  [Modulo.PROCESSOS]: 'Processos jurídicos',
-  [Modulo.ENTREGAS]: 'Insumos / entregas',
-  [Modulo.AVALIACOES]: 'Avaliações de IU',
+  [Modulo.FERIDAS]: 'Feridas',
   [Modulo.ANALYTICS]: 'Relatórios / analytics',
-  [Modulo.FLUXO_CLINICO]: 'Fluxo clínico',
   [Modulo.ATENDIMENTO_PSICOLOGICO]: 'Atendimento psicológico',
   [Modulo.FINANCEIRO_PSICOLOGIA]: 'Financeiro da psicologia',
   [Modulo.CLINICA]: 'Configuração da clínica',
@@ -241,20 +233,19 @@ export const PERMISSOES_PADRAO_POR_PAPEL: Record<Papel, Modulo[]> = {
   [Papel.SUPER_ADMIN]: TODOS_MODULOS,
   [Papel.ADMIN]: [
     M.DASHBOARD, M.PACIENTES, M.AGENDA, M.PRONTUARIOS, M.DOCUMENTOS, M.FINANCEIRO,
-    M.NOTIFICACOES, M.TELEMEDICINA, M.LAUDOS, M.PROCESSOS, M.ENTREGAS, M.AVALIACOES,
-    M.ANALYTICS, M.FLUXO_CLINICO, M.CLINICA,
+    M.NOTIFICACOES, M.TELEMEDICINA, M.FERIDAS,
+    M.ANALYTICS, M.CLINICA,
   ],
   [Papel.MEDICO]: [
     M.DASHBOARD, M.PACIENTES, M.AGENDA, M.PRONTUARIOS, M.DOCUMENTOS, M.TELEMEDICINA,
-    M.LAUDOS, M.AVALIACOES, M.ENTREGAS, M.FLUXO_CLINICO,
+    M.FERIDAS,
   ],
   [Papel.ENFERMEIRO]: [
-    M.DASHBOARD, M.PACIENTES, M.AGENDA, M.PRONTUARIOS, M.DOCUMENTOS, M.AVALIACOES,
-    M.LAUDOS, M.ENTREGAS, M.FLUXO_CLINICO,
+    M.DASHBOARD, M.PACIENTES, M.AGENDA, M.PRONTUARIOS, M.DOCUMENTOS,
+    M.FERIDAS,
   ],
   [Papel.ADVOGADO]: [
-    M.DASHBOARD, M.PACIENTES, M.PRONTUARIOS, M.PROCESSOS, M.ENTREGAS, M.DOCUMENTOS,
-    M.FLUXO_CLINICO,
+    M.DASHBOARD, M.PACIENTES, M.PRONTUARIOS, M.DOCUMENTOS,
   ],
   // Atendimento psicológico é um extra: só o psicólogo enxerga por padrão;
   // outros usuários ganham por concessão individual no painel super-admin.
@@ -265,7 +256,7 @@ export const PERMISSOES_PADRAO_POR_PAPEL: Record<Papel, Modulo[]> = {
     M.ATENDIMENTO_PSICOLOGICO, M.FINANCEIRO_PSICOLOGIA,
   ],
   [Papel.SECRETARIA]: [
-    M.DASHBOARD, M.PACIENTES, M.AGENDA, M.DOCUMENTOS, M.FINANCEIRO, M.NOTIFICACOES, M.FLUXO_CLINICO,
+    M.DASHBOARD, M.PACIENTES, M.AGENDA, M.DOCUMENTOS, M.FINANCEIRO, M.NOTIFICACOES,
   ],
   [Papel.PACIENTE]: [M.DASHBOARD],
 };
@@ -352,8 +343,6 @@ export interface Paciente {
   programaIU?: boolean;
   projeto?: ProjetoPaciente;
   observacoes?: string;
-  etapaFluxo?: EtapaFluxoClinico;
-  etapaFluxoDesde?: string;
   ativo?: boolean;
   criadoEm?: string;
 }
@@ -439,98 +428,10 @@ export interface ProntuarioPlano {
   retorno?: string;
 }
 
-export type NaturezaAtendimento = 'sus' | 'suplementar' | 'particular';
-export type TipoSolicitacaoJudicial = 'medicamento' | 'produto' | 'procedimento';
-
-export interface PrescritorJudicial {
-  nome?: string;
-  registro?: string;
-  especialidade?: string;
-}
-
-export interface ProdutoJudicial {
-  descricao?: string;
-  calibreFrench?: number;
-  comprimentoCm?: number;
-  quantidadePorDia?: number;
-  quantidadePorMes?: number;
-  usoContinuo?: boolean;
-}
-
-export interface MedicamentoJudicial {
-  principioAtivo?: string;
-  formaFarmaceuticaApresentacao?: string;
-  dose?: string;
-  posologia?: string;
-  viaAdministracao?: string;
-  duracaoTratamento?: string;
-}
-
-export interface RelatorioJudicial {
-  municipioEstado?: string;
-  naturezaAtendimento?: NaturezaAtendimento;
-  enfermidadeCid?: string;
-  historicoDoenca?: string;
-  tratamentosRealizados?: string;
-  tipoSolicitacao?: TipoSolicitacaoJudicial;
-  produto?: ProdutoJudicial;
-  medicamento?: MedicamentoJudicial;
-  procedimentoDescricao?: string;
-  urgente?: boolean;
-  justificativaUrgencia?: string;
-  imprescindivel?: boolean;
-  justificativaImprescindivel?: string;
-  beneficiosEsperados?: string;
-  consequenciasNaoUso?: string;
-  prescritor?: PrescritorJudicial;
-  dataEmissao?: string;
-}
-
 export interface AssinaturaProntuario {
   medicoId: string;
   dataAssinatura: string;
   hash?: string;
-}
-
-export interface CateterIndicado {
-  sexo?: string;
-  french?: number;
-  codigo?: number;
-}
-
-/** Questionário de Avaliação de Incontinência Urinária embutido no prontuário. */
-export interface FichaAvaliacaoIU {
-  local?: string;
-  estadoCivil?: string;
-  prescritor?: string;
-  planoSaude?: string;
-  hospitalReferencia?: string;
-  motivoIU?: string;
-  inicioSintomas?: string;
-  perfilCliente?: string;
-  destreza?: string;
-  dntui?: boolean;
-  tiposIU?: string[];
-  miccaoEspontanea?: boolean;
-  volumeAproximadoMl?: number;
-  realizaCateterismo?: boolean;
-  cateterismosDia?: number;
-  cateterUtilizado?: string;
-  ultimaInfeccaoUrinaria?: string;
-  emTratamento?: boolean;
-  tratamento?: string;
-  volumeDrenado?: string;
-  outrasIntercorrencias?: string;
-  cateterIndicado?: CateterIndicado;
-  encaminhamento?: string;
-  localEncaminhamento?: string;
-  responsavelCateterismo?: string;
-  autorizaPesquisa?: boolean;
-  aceitaInformacoes?: boolean;
-  emailContato?: string;
-  whatsappContato?: string;
-  coren?: string;
-  respCuidador?: string;
 }
 
 export interface RegistroEnfermagem {
@@ -599,10 +500,8 @@ export interface Prontuario {
   objetivo?: ProntuarioObjetivo;
   avaliacao?: ProntuarioAvaliacao;
   plano?: ProntuarioPlano;
-  fichaAvaliacaoIU?: FichaAvaliacaoIU;
   registroEnfermagem?: RegistroEnfermagem;
   registroPsicologico?: RegistroPsicologico;
-  relatorioJudicial?: RelatorioJudicial;
 }
 
 export enum TipoDocumento {
@@ -894,279 +793,6 @@ export interface SinalSala {
   criadoEm: string;
 }
 
-// ---------- Fluxo Clínico — Avaliação de Incontinência Urinária ----------
-
-export enum LocalAtendimento {
-  RESIDENCIA = 'residencia',
-  HOSPITAL = 'hospital',
-  INST_LONGA_PERMANENCIA = 'inst_longa_permanencia',
-}
-export const LOCAL_LABEL: Record<LocalAtendimento, string> = {
-  [LocalAtendimento.RESIDENCIA]: 'Residência',
-  [LocalAtendimento.HOSPITAL]: 'Hospital',
-  [LocalAtendimento.INST_LONGA_PERMANENCIA]: 'Inst. Longa Permanência',
-};
-
-export enum PerfilCliente {
-  ATIVO = 'ativo',
-  MODERADO = 'moderado',
-  ACAMADO = 'acamado',
-  CADEIRANTE = 'cadeirante',
-}
-export const PERFIL_LABEL: Record<PerfilCliente, string> = {
-  [PerfilCliente.ATIVO]: 'Ativo',
-  [PerfilCliente.MODERADO]: 'Moderado',
-  [PerfilCliente.ACAMADO]: 'Acamado',
-  [PerfilCliente.CADEIRANTE]: 'Cadeirante',
-};
-
-export enum Destreza {
-  PRESERVADA = 'preservada',
-  REDUZIDA = 'reduzida',
-  MUITO_REDUZIDA = 'muito_reduzida',
-}
-export const DESTREZA_LABEL: Record<Destreza, string> = {
-  [Destreza.PRESERVADA]: 'Preservada',
-  [Destreza.REDUZIDA]: 'Reduzida',
-  [Destreza.MUITO_REDUZIDA]: 'Muito reduzida',
-};
-
-export enum TipoIU {
-  ESFORCO = 'esforco',
-  URGENCIA = 'urgencia',
-  MISTA = 'mista',
-  RETENCAO_TRANSBORDAMENTO = 'retencao_transbordamento',
-  CONTINUA = 'continua',
-  INSENSIVEL = 'insensivel',
-  ENURESE_NOTURNA = 'enurese_noturna',
-  COITO = 'coito',
-}
-export const TIPO_IU_LABEL: Record<TipoIU, string> = {
-  [TipoIU.ESFORCO]: 'Esforço',
-  [TipoIU.URGENCIA]: 'Urgência',
-  [TipoIU.MISTA]: 'Mista',
-  [TipoIU.RETENCAO_TRANSBORDAMENTO]: 'Retenção/Transbordamento',
-  [TipoIU.CONTINUA]: 'Contínua',
-  [TipoIU.INSENSIVEL]: 'Insensível',
-  [TipoIU.ENURESE_NOTURNA]: 'Enurese Noturna',
-  [TipoIU.COITO]: 'Coito',
-};
-
-export enum EncaminhamentoIU {
-  POLO_SUS = 'polo_sus',
-  PLANO_SAUDE = 'plano_saude',
-  VAREJO = 'varejo',
-}
-export const ENCAMINHAMENTO_LABEL: Record<EncaminhamentoIU, string> = {
-  [EncaminhamentoIU.POLO_SUS]: 'Pólo SUS',
-  [EncaminhamentoIU.PLANO_SAUDE]: 'Plano de Saúde',
-  [EncaminhamentoIU.VAREJO]: 'Varejo',
-};
-
-export interface AvaliacaoIU {
-  id: string;
-  clinicaId: string;
-  pacienteId: string;
-  enfermeiroId: string;
-  enfermeiroNome?: string;
-  agendamentoId?: string;
-  dataAtendimento: string;
-  local: LocalAtendimento;
-  prescritor?: string;
-  planoSaude?: string;
-  hospitalReferencia?: string;
-  motivoIU: string;
-  inicioSintomas?: string;
-  perfilCliente: PerfilCliente;
-  destreza: Destreza;
-  dntui: boolean;
-  tiposIU: TipoIU[];
-  miccaoEspontanea: boolean;
-  volumeAproximadoMl?: number;
-  realizaCateterismo: boolean;
-  cateterismosDia?: number;
-  cateterUtilizado?: string;
-  ultimaInfeccaoUrinaria?: string;
-  emTratamento: boolean;
-  tratamento?: string;
-  volumeDrenadoMl?: string;
-  outrasIntercorrencias?: string;
-  produtoIndicado?: { codigo: number; sexo: 'feminino' | 'masculino'; french: number };
-  responsavelCateterismo?: string;
-  autorizaPesquisa: boolean;
-  aceitaInformacoes: boolean;
-  emailContato?: string;
-  whatsappContato?: string;
-  coren?: string;
-  encaminhamento?: EncaminhamentoIU;
-  localEncaminhamento?: string;
-  respCuidador?: string;
-  criadoEm: string;
-}
-
-export enum StatusElegibilidade {
-  EM_AVALIACAO = 'em_avaliacao',
-  ELEGIVEL = 'elegivel',
-  NAO_ELEGIVEL = 'nao_elegivel',
-}
-export const STATUS_ELEGIBILIDADE_LABEL: Record<StatusElegibilidade, string> = {
-  [StatusElegibilidade.EM_AVALIACAO]: 'Em avaliação',
-  [StatusElegibilidade.ELEGIVEL]: 'Elegível',
-  [StatusElegibilidade.NAO_ELEGIVEL]: 'Não elegível',
-};
-
-export interface FollowUp {
-  id: string;
-  clinicaId: string;
-  pacienteId: string;
-  avaliacaoIuId: string;
-  enfermeiroId: string;
-  dataFollowup: string;
-  statusElegibilidade: StatusElegibilidade;
-  observacoes: string;
-  proximoFollowup?: string;
-  criadoEm: string;
-}
-
-export enum StatusLaudoMedico {
-  RASCUNHO = 'RASCUNHO',
-  AGUARDANDO_REVISAO = 'AGUARDANDO_REVISAO',
-  ASSINADO = 'ASSINADO',
-}
-
-export const STATUS_LAUDO_MEDICO_LABEL: Record<StatusLaudoMedico, string> = {
-  [StatusLaudoMedico.RASCUNHO]: 'Rascunho',
-  [StatusLaudoMedico.AGUARDANDO_REVISAO]: 'Aguardando revisão',
-  [StatusLaudoMedico.ASSINADO]: 'Assinado',
-};
-
-/** Só relevante quando `prescricaoCateterExterno=true`; tamanho/faixa/código do
- * cateter externo vêm do catálogo via `produtosSolicitados`, não duplicados aqui. */
-export interface CateterExternoConfig {
-  incluirDescricaoTecnica: boolean;
-  incluirCodigoSiafisico: boolean;
-}
-
-export type ComparativoAnvisa = 'speedicath' | 'gentlecath';
-
-export interface LaudoMedico {
-  id: string;
-  clinicaId: string;
-  pacienteId: string;
-  medicoId?: string;
-  criadoPorId: string;
-  criadoPorNome?: string;
-  criadoPorPapel: string;
-  status: StatusLaudoMedico;
-  avaliacaoIuId: string;
-  dataLaudo: string;
-  cid10: string[];
-
-  // ---- Texto narrativo (Relatório Médico Circunstanciado — CIL) ----
-  contextoSocial?: string;
-  etiologia: string;
-  nivelLesao?: string;
-  diagnosticoFuncional: string;
-  regimeCil: string;
-  insumoAtual: string;
-  fornecedorAtual?: string;
-
-  // ---- Quadro clínico e riscos (manuais, não-IA) ----
-  riscoEsvaziamento: boolean;
-  riscoItuAtual: boolean;
-  riscoAntibioticoterapia: boolean;
-  riscoTratoSuperior: boolean;
-  riscoInsuficienciaRenal: boolean;
-  riscoLesaoUretral: boolean;
-  riscoPerdasNoturnas: boolean;
-
-  // ---- Deficiências do insumo atual (manuais) ----
-  deficienciaLubrificacao: boolean;
-  deficienciaPontaProtetora: boolean;
-  deficienciaMangaProtetora: boolean;
-  deficienciaDor: boolean;
-  deficienciaAlergiaLidocaina: boolean;
-  deficienciaFrascoReutilizado: boolean;
-  deficienciaRiscoInternacao: boolean;
-
-  // ---- Prescrição indicada (toggles manuais) ----
-  prescricaoIncluirCodigoFabricante: boolean;
-  prescricaoEmbalagemPocket: boolean;
-  prescricaoClausulaMarca: boolean;
-  prescricaoCateterExterno: boolean;
-  prescricaoIncluirObjetivo: boolean;
-  prescricaoIncluirConclusao: boolean;
-  cateterExterno?: CateterExternoConfig;
-
-  produtosSolicitados: Array<{ codigo: number; descricao: string; quantidade: number; unidade: string; codigoSiafisico?: number }>;
-
-  // ---- Comparativo técnico ANVISA (seleção manual) ----
-  comparativoAnvisa?: ComparativoAnvisa;
-
-  // ---- Profissional e fecho — texto livre editável, independente da assinatura de auditoria ----
-  medicoNomeExibicao?: string;
-  medicoEspecialidade?: string;
-  crmExibicao?: string;
-  cidadeEmissao?: string;
-
-  assinado?: { medicoId: string; crmNumero?: string; dataAssinatura: string };
-  criadoEm: string;
-}
-
-export interface RascunhoLaudoIA {
-  cid10: string[];
-  contextoSocial: string;
-  etiologia: string;
-  nivelLesao: string;
-  diagnosticoFuncional: string;
-  regimeCil: string;
-  insumoAtual: string;
-  fornecedorAtual: string;
-}
-
-export enum StatusProcesso {
-  EM_PREPARACAO = 'em_preparacao',
-  PROTOCOLADO = 'protocolado',
-  EM_ANDAMENTO = 'em_andamento',
-  GANHO = 'ganho',
-  PERDIDO = 'perdido',
-  ARQUIVADO = 'arquivado',
-}
-export const STATUS_PROCESSO_LABEL: Record<StatusProcesso, string> = {
-  [StatusProcesso.EM_PREPARACAO]: 'Em preparação',
-  [StatusProcesso.PROTOCOLADO]: 'Protocolado',
-  [StatusProcesso.EM_ANDAMENTO]: 'Em andamento',
-  [StatusProcesso.GANHO]: 'Ganho',
-  [StatusProcesso.PERDIDO]: 'Perdido',
-  [StatusProcesso.ARQUIVADO]: 'Arquivado',
-};
-
-export interface ProcessoJuridico {
-  id: string;
-  clinicaId: string;
-  pacienteId: string;
-  avaliacaoIuId: string;
-  laudoMedicoId: string;
-  advogadoId: string;
-  status: StatusProcesso;
-  numeroProcesso?: string;
-  tribunal?: string;
-  dataProtocolo?: string;
-  dataDecisao?: string;
-  observacoes?: string;
-  documentos: Array<{ nome: string; url: string; tipo: string; adicionadoEm: string }>;
-  criadoEm: string;
-}
-
-export interface AnotacaoJuridica {
-  id: string;
-  clinicaId: string;
-  pacienteId: string;
-  autorId: string;
-  texto: string;
-  criadoEm: string;
-}
-
 export interface ObservacaoPaciente {
   id: string;
   clinicaId: string;
@@ -1197,133 +823,6 @@ export interface ChecklistDocumentoItem {
   criadoEm: string;
   atualizadoEm: string;
 }
-
-export enum OrigemEntrega {
-  SUS = 'sus',
-  PLANO_SAUDE = 'plano_saude',
-  VAREJO = 'varejo',
-  DOACAO = 'doacao',
-}
-export const ORIGEM_ENTREGA_LABEL: Record<OrigemEntrega, string> = {
-  [OrigemEntrega.SUS]: 'SUS',
-  [OrigemEntrega.PLANO_SAUDE]: 'Plano de Saúde',
-  [OrigemEntrega.VAREJO]: 'Varejo',
-  [OrigemEntrega.DOACAO]: 'Doação',
-};
-
-export enum StatusEntrega {
-  PENDENTE = 'pendente',
-  ENVIADA = 'enviada',
-  ENTREGUE = 'entregue',
-  DEVOLVIDA = 'devolvida',
-}
-export const STATUS_ENTREGA_LABEL: Record<StatusEntrega, string> = {
-  [StatusEntrega.PENDENTE]: 'Pendente',
-  [StatusEntrega.ENVIADA]: 'Enviada',
-  [StatusEntrega.ENTREGUE]: 'Entregue',
-  [StatusEntrega.DEVOLVIDA]: 'Devolvida',
-};
-
-export interface Entrega {
-  id: string;
-  clinicaId: string;
-  pacienteId: string;
-  processoJuridicoId?: string;
-  avaliacaoIuId?: string;
-  responsavelId: string;
-  dataEntrega: string;
-  origem: OrigemEntrega;
-  status: StatusEntrega;
-  itens: Array<{ codigo: number; descricao: string; quantidade: number; valorUnitarioCentavos: number; valorTotalCentavos: number }>;
-  valorTotalCentavos: number;
-  notaFiscal?: string;
-  observacoes?: string;
-  criadoEm: string;
-}
-
-// Espelho de packages/shared/src/fluxo-clinico/etapa.ts — etapa persistida do
-// pipeline clínico (fonte de verdade fica no backend).
-export enum EtapaFluxoClinico {
-  AGUARDANDO_ATENDIMENTO = 'aguardando_atendimento',
-  AVALIACAO_IU = 'avaliacao_iu',
-  APTO_AGUARDANDO_CONTATO = 'apto_aguardando_contato',
-  ENTREVISTA_AGENDADA = 'entrevista_agendada',
-  AGUARDANDO_DOCUMENTOS = 'aguardando_documentos',
-  AGUARDANDO_CONSULTA_MEDICA = 'aguardando_consulta_medica',
-  AGUARDANDO_ENVIO_JURIDICO = 'aguardando_envio_juridico',
-  PROCESSO_JURIDICO = 'processo_juridico',
-  NAO_ELEGIVEL = 'nao_elegivel',
-  CONCLUIDO = 'concluido',
-}
-
-export const ETAPA_FLUXO_LABEL: Record<EtapaFluxoClinico, string> = {
-  [EtapaFluxoClinico.AGUARDANDO_ATENDIMENTO]: 'Aguardando Atendimento',
-  [EtapaFluxoClinico.AVALIACAO_IU]: 'Avaliação IU / Teste do Produto',
-  [EtapaFluxoClinico.APTO_AGUARDANDO_CONTATO]: 'Apto — Aguardando Contato',
-  [EtapaFluxoClinico.ENTREVISTA_AGENDADA]: 'Entrevista Agendada',
-  [EtapaFluxoClinico.AGUARDANDO_DOCUMENTOS]: 'Aguardando Documentos',
-  [EtapaFluxoClinico.AGUARDANDO_CONSULTA_MEDICA]: 'Aguardando Consulta Médica',
-  [EtapaFluxoClinico.AGUARDANDO_ENVIO_JURIDICO]: 'Aguardando Envio ao Jurídico',
-  [EtapaFluxoClinico.PROCESSO_JURIDICO]: 'Processo Jurídico',
-  [EtapaFluxoClinico.NAO_ELEGIVEL]: 'Não Elegível',
-  [EtapaFluxoClinico.CONCLUIDO]: 'Concluído',
-};
-
-/** Prazos (em dias) só para as etapas com SLA definido pelo negócio. */
-export const PRAZO_DIAS_POR_ETAPA: Partial<Record<EtapaFluxoClinico, number>> = {
-  [EtapaFluxoClinico.AGUARDANDO_ATENDIMENTO]: 10,
-  [EtapaFluxoClinico.AVALIACAO_IU]: 20,
-  [EtapaFluxoClinico.APTO_AGUARDANDO_CONTATO]: 15,
-  [EtapaFluxoClinico.AGUARDANDO_DOCUMENTOS]: 10,
-  [EtapaFluxoClinico.AGUARDANDO_CONSULTA_MEDICA]: 15, // prazo médio, não SLA duro
-};
-
-export interface PrazoEtapaInfo {
-  diasLimite?: number;
-  diasDecorridos: number;
-  diasRestantes?: number;
-  atrasado: boolean;
-}
-
-/** Calcula a situação de prazo de uma etapa a partir de quando ela começou. */
-export function calcularPrazoEtapa(
-  etapa: EtapaFluxoClinico,
-  etapaDesde: string,
-  agora: Date = new Date(),
-): PrazoEtapaInfo {
-  const diasLimite = PRAZO_DIAS_POR_ETAPA[etapa];
-  const msPorDia = 24 * 60 * 60 * 1000;
-  const diasDecorridos = Math.floor((agora.getTime() - new Date(etapaDesde).getTime()) / msPorDia);
-
-  if (diasLimite === undefined) {
-    return { diasDecorridos, atrasado: false };
-  }
-
-  const diasRestantes = diasLimite - diasDecorridos;
-  return { diasLimite, diasDecorridos, diasRestantes, atrasado: diasRestantes < 0 };
-}
-
-/**
- * Avanço MANUAL do fluxo ("Avançar etapa" na tela do paciente) — espelho de
- * packages/shared/src/fluxo-clinico/etapa.ts. Usado só pra decidir se/como
- * mostrar o botão; a validação de verdade (papel x etapa) é feita no backend.
- * Ficam de fora as etapas cujo gatilho automático produz um documento
- * clínico/legal essencial (Avaliação IU, Laudo Médico) — pular via botão
- * perderia esse registro.
- */
-export const PROXIMA_ETAPA_MANUAL: Partial<Record<EtapaFluxoClinico, EtapaFluxoClinico>> = {
-  [EtapaFluxoClinico.APTO_AGUARDANDO_CONTATO]: EtapaFluxoClinico.ENTREVISTA_AGENDADA,
-  [EtapaFluxoClinico.ENTREVISTA_AGENDADA]: EtapaFluxoClinico.AGUARDANDO_DOCUMENTOS,
-  [EtapaFluxoClinico.AGUARDANDO_DOCUMENTOS]: EtapaFluxoClinico.AGUARDANDO_CONSULTA_MEDICA,
-  [EtapaFluxoClinico.AGUARDANDO_ENVIO_JURIDICO]: EtapaFluxoClinico.PROCESSO_JURIDICO,
-};
-
-export const PAPEIS_AVANCO_MANUAL: Partial<Record<EtapaFluxoClinico, Papel[]>> = {
-  [EtapaFluxoClinico.APTO_AGUARDANDO_CONTATO]: [Papel.SECRETARIA],
-  [EtapaFluxoClinico.ENTREVISTA_AGENDADA]: [Papel.SECRETARIA],
-  [EtapaFluxoClinico.AGUARDANDO_DOCUMENTOS]: [Papel.SECRETARIA],
-  [EtapaFluxoClinico.AGUARDANDO_ENVIO_JURIDICO]: [Papel.ADVOGADO],
-};
 
 export interface Produto {
   id: string;

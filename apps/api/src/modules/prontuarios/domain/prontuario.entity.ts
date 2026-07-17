@@ -81,117 +81,6 @@ export interface Plano {
   retorno?: string;
 }
 
-export enum NaturezaAtendimento {
-  SUS = 'sus',
-  SUPLEMENTAR = 'suplementar',
-  PARTICULAR = 'particular',
-}
-
-export enum TipoSolicitacaoJudicial {
-  MEDICAMENTO = 'medicamento',
-  PRODUTO = 'produto',
-  PROCEDIMENTO = 'procedimento',
-}
-
-export interface PrescritorJudicial {
-  nome?: string;
-  /** Conselho + número: ex. "CRM-SP 123456" ou "COREN-SP 123456". */
-  registro?: string;
-  especialidade?: string;
-}
-
-export interface ProdutoJudicial {
-  descricao?: string;
-  /** Calibre em French (Fr), quando cateter. */
-  calibreFrench?: number;
-  /** Comprimento em cm. */
-  comprimentoCm?: number;
-  quantidadePorDia?: number;
-  quantidadePorMes?: number;
-  usoContinuo?: boolean;
-}
-
-export interface MedicamentoJudicial {
-  /** Princípio ativo — DCB (ou DCI na ausência da DCB). */
-  principioAtivo?: string;
-  formaFarmaceuticaApresentacao?: string;
-  dose?: string;
-  posologia?: string;
-  viaAdministracao?: string;
-  duracaoTratamento?: string;
-}
-
-/**
- * Bloco de judicialização (NAT-JUS/SP). Preenchido quando o atendimento gera
- * uma demanda judicial de insumo/medicamento/procedimento. Espelha o Anexo IV
- * (Formulário de Solicitação de Informação Técnica ao NAT-JUS) e os requisitos
- * de relatório e receituário médico (validade de 90 dias).
- */
-export interface RelatorioJudicial {
-  municipioEstado?: string;
-  naturezaAtendimento?: NaturezaAtendimento;
-  /** Enfermidade + CID principal e causa de base. */
-  enfermidadeCid?: string;
-  /** História/evolução da doença. */
-  historicoDoenca?: string;
-  /** Tratamentos já realizados e respectivos resultados. */
-  tratamentosRealizados?: string;
-  tipoSolicitacao?: TipoSolicitacaoJudicial;
-  produto?: ProdutoJudicial;
-  medicamento?: MedicamentoJudicial;
-  procedimentoDescricao?: string;
-  urgente?: boolean;
-  justificativaUrgencia?: string;
-  imprescindivel?: boolean;
-  justificativaImprescindivel?: string;
-  beneficiosEsperados?: string;
-  consequenciasNaoUso?: string;
-  prescritor?: PrescritorJudicial;
-  /** Data de emissão do relatório (base para a validade de 90 dias). */
-  dataEmissao?: Date;
-}
-
-export interface CateterIndicado {
-  sexo?: string;
-  french?: number;
-  codigo?: number;
-}
-
-/** Questionário de Avaliação de Incontinência Urinária embutido no prontuário. */
-export interface FichaAvaliacaoIU {
-  local?: string;
-  estadoCivil?: string;
-  prescritor?: string;
-  planoSaude?: string;
-  hospitalReferencia?: string;
-  motivoIU?: string;
-  inicioSintomas?: string;
-  perfilCliente?: string;
-  destreza?: string;
-  dntui?: boolean;
-  tiposIU?: string[];
-  miccaoEspontanea?: boolean;
-  volumeAproximadoMl?: number;
-  realizaCateterismo?: boolean;
-  cateterismosDia?: number;
-  cateterUtilizado?: string;
-  ultimaInfeccaoUrinaria?: string;
-  emTratamento?: boolean;
-  tratamento?: string;
-  volumeDrenado?: string;
-  outrasIntercorrencias?: string;
-  cateterIndicado?: CateterIndicado;
-  encaminhamento?: string;
-  localEncaminhamento?: string;
-  responsavelCateterismo?: string;
-  autorizaPesquisa?: boolean;
-  aceitaInformacoes?: boolean;
-  emailContato?: string;
-  whatsappContato?: string;
-  coren?: string;
-  respCuidador?: string;
-}
-
 /** Registro da consulta de enfermagem (ligação de acompanhamento + chegada da sonda de teste). */
 export interface RegistroEnfermagem {
   dataLigacao?: Date;
@@ -272,10 +161,8 @@ export interface Prontuario {
   objetivo: Objetivo;
   avaliacao: Avaliacao;
   plano: Plano;
-  fichaAvaliacaoIU?: FichaAvaliacaoIU;
   registroEnfermagem?: RegistroEnfermagem;
   registroPsicologico?: RegistroPsicologico;
-  relatorioJudicial?: RelatorioJudicial;
   arquivos: ArquivoProntuario[];
   assinado?: AssinaturaProntuario;
   criadoEm: Date;

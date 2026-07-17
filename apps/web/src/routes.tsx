@@ -14,13 +14,7 @@ import { FinanceiroPsicologiaPage } from '@/pages/FinanceiroPsicologiaPage';
 import { TelemedicinaPage } from '@/pages/TelemedicinaPage';
 import { AtendimentoTelemedicinaPage } from '@/pages/AtendimentoTelemedicinaPage';
 import { ClinicaPage } from '@/pages/ClinicaPage';
-import { FluxoClinicoPage } from '@/pages/FluxoClinicoPage';
-import { FluxoPacientePage } from '@/pages/FluxoPacientePage';
-import { LaudoImpressaoPage } from '@/pages/LaudoImpressaoPage';
-import { AvaliacaoImpressaoPage } from '@/pages/AvaliacaoImpressaoPage';
-import { NatjusImpressaoPage } from '@/pages/NatjusImpressaoPage';
 import { ProntuarioImpressaoPage } from '@/pages/ProntuarioImpressaoPage';
-import { MeusProcessosPage } from '@/pages/MeusProcessosPage';
 import { AtendimentoPsicologicoPage } from '@/pages/AtendimentoPsicologicoPage';
 import { SuperAdminPage } from '@/pages/SuperAdminPage';
 import { Modulo, Papel } from '@/types';
@@ -39,12 +33,7 @@ export function AppRoutes() {
         {/* Páginas de impressão FORA do AppLayout: o documento sai limpo
             (sem sidebar/header do site) tanto na tela quanto no print/PDF. */}
         <Route element={<ProtectedRoute modulo={Modulo.PACIENTES} />}>
-          <Route path="/pacientes/:id/prontuario/:prontuarioId/natjus/imprimir" element={<NatjusImpressaoPage />} />
           <Route path="/pacientes/:id/prontuario/:prontuarioId/imprimir" element={<ProntuarioImpressaoPage />} />
-        </Route>
-        <Route element={<ProtectedRoute modulo={Modulo.FLUXO_CLINICO} />}>
-          <Route path="/fluxo-clinico/:id/laudo/:laudoId/imprimir" element={<LaudoImpressaoPage />} />
-          <Route path="/fluxo-clinico/:id/avaliacao/:avaliacaoId/imprimir" element={<AvaliacaoImpressaoPage />} />
         </Route>
         <Route element={<AppLayout />}>
           {/* /dashboard fica sem gate: é o destino dos redirects e todo papel o tem por padrão. */}
@@ -71,13 +60,6 @@ export function AppRoutes() {
           </Route>
           <Route element={<ProtectedRoute modulo={Modulo.TELEMEDICINA} />}>
             <Route path="/telemedicina" element={<TelemedicinaPage />} />
-          </Route>
-          <Route element={<ProtectedRoute modulo={Modulo.FLUXO_CLINICO} />}>
-            <Route path="/fluxo-clinico" element={<FluxoClinicoPage />} />
-            <Route path="/fluxo-clinico/:id" element={<FluxoPacientePage />} />
-          </Route>
-          <Route element={<ProtectedRoute modulo={Modulo.PROCESSOS} />}>
-            <Route path="/meus-processos" element={<MeusProcessosPage />} />
           </Route>
           <Route element={<ProtectedRoute modulo={Modulo.ATENDIMENTO_PSICOLOGICO} />}>
             <Route path="/atendimento-psicologico" element={<AtendimentoPsicologicoPage />} />

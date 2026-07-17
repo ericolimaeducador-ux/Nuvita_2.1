@@ -1,7 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
 import { ProjetoPaciente, Sexo } from '../../domain/paciente.entity';
-import { EtapaFluxoClinico } from '../../../../../../../packages/shared/src/fluxo-clinico';
 
 export type PacienteDocument = HydratedDocument<PacienteMongo>;
 
@@ -66,17 +65,6 @@ export class PacienteMongo {
   @Prop()
   observacoes?: string;
 
-  @Prop({
-    required: true,
-    enum: Object.values(EtapaFluxoClinico),
-    default: EtapaFluxoClinico.AGUARDANDO_ATENDIMENTO,
-    index: true,
-  })
-  etapaFluxo!: EtapaFluxoClinico;
-
-  @Prop({ required: true, default: Date.now })
-  etapaFluxoDesde!: Date;
-
   @Prop({ default: true, index: true })
   ativo!: boolean;
 
@@ -99,4 +87,3 @@ PacienteSchema.index(
   { unique: true, partialFilterExpression: { cpfHash: { $type: 'string' } } },
 );
 PacienteSchema.index({ clinicaId: 1, ativo: 1, criadoEm: -1, _id: -1 });
-PacienteSchema.index({ clinicaId: 1, etapaFluxo: 1, criadoEm: -1 });

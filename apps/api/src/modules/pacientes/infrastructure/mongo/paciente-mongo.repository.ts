@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, PipelineStage, Types } from 'mongoose';
-import { EtapaFluxoClinico } from '../../../../../../../packages/shared/src/fluxo-clinico';
 import {
   CreatePacienteInput,
   ListPacientesInput,
@@ -52,8 +51,6 @@ export class PacienteMongoRepository implements PacienteRepository {
       convenio: this.encryptJsonOptional(input.convenio),
       consentimentoLGPD: input.consentimentoLGPD,
       projeto: input.projeto,
-      etapaFluxo: EtapaFluxoClinico.AGUARDANDO_ATENDIMENTO,
-      etapaFluxoDesde: new Date(),
       ativo: true,
     };
     if (input.cpf) {
@@ -221,8 +218,6 @@ export class PacienteMongoRepository implements PacienteRepository {
     if (input.programaIU !== undefined) update.programaIU = input.programaIU;
     if (input.projeto !== undefined) update.projeto = input.projeto;
     if (input.observacoes !== undefined) update.observacoes = this.encryptOptional(input.observacoes);
-    if (input.etapaFluxo !== undefined) update.etapaFluxo = input.etapaFluxo;
-    if (input.etapaFluxoDesde !== undefined) update.etapaFluxoDesde = input.etapaFluxoDesde;
 
     return update;
   }
@@ -261,8 +256,6 @@ export class PacienteMongoRepository implements PacienteRepository {
       observacoes: this.decryptOptional(object.observacoes),
       programaIU: object.programaIU ?? false,
       projeto: object.projeto,
-      etapaFluxo: object.etapaFluxo,
-      etapaFluxoDesde: object.etapaFluxoDesde,
       ativo: object.ativo,
       criadoEm: object.criadoEm,
       atualizadoEm: object.atualizadoEm,
@@ -276,7 +269,7 @@ export class PacienteMongoRepository implements PacienteRepository {
     };
   }
 
-  /** Filtros comuns de list/searchByName (tenant, ativo, programaIU, etapa, dia de nascimento). */
+  /** Filtros comuns de list/searchByName (tenant, ativo, programaIU, dia de nascimento). */
   private listQuery(input: ListPacientesInput): Record<string, unknown> {
     const query = this.baseQuery(input.clinicaId, input.incluirInativos);
     if (input.programaIU !== undefined) query.programaIU = input.programaIU;
@@ -285,7 +278,6 @@ export class PacienteMongoRepository implements PacienteRepository {
     } else if (input.projetoExcluir !== undefined) {
       query.projeto = { $ne: input.projetoExcluir };
     }
-    if (input.etapaFluxo !== undefined) query.etapaFluxo = input.etapaFluxo;
     if (input.dataNascimento) {
       // Campo gravado como meia-noite UTC; intervalo de 24h cobre o dia inteiro.
       const inicio = new Date(`${input.dataNascimento}T00:00:00.000Z`);

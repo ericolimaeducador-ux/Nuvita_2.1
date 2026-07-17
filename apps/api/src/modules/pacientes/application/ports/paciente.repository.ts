@@ -1,11 +1,7 @@
-import { EtapaFluxoClinico } from '../../../../../../../packages/shared/src/fluxo-clinico';
 import { CursorPaginationInput, CursorPaginationResult } from '../../domain/pagination';
 import { Paciente, ProjetoPaciente } from '../../domain/paciente.entity';
 
-export type CreatePacienteInput = Omit<
-  Paciente,
-  'id' | 'ativo' | 'criadoEm' | 'atualizadoEm' | 'etapaFluxo' | 'etapaFluxoDesde'
->;
+export type CreatePacienteInput = Omit<Paciente, 'id' | 'ativo' | 'criadoEm' | 'atualizadoEm'>;
 
 export type UpdatePacienteInput = Partial<
   Omit<Paciente, 'id' | 'clinicaId' | 'ativo' | 'criadoEm' | 'atualizadoEm'>
@@ -28,7 +24,6 @@ export interface ListPacientesInput extends CursorPaginationInput {
   projeto?: ProjetoPaciente;
   /** Exclui um projeto do resultado (usado p/ esconder pacientes do Projeto PSI de quem não é psicólogo). Ignorado se `projeto` também for informado. */
   projetoExcluir?: ProjetoPaciente;
-  etapaFluxo?: EtapaFluxoClinico;
   /** Dia exato de nascimento no formato YYYY-MM-DD. */
   dataNascimento?: string;
   sort?: PacienteSort;

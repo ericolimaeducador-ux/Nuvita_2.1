@@ -4,12 +4,10 @@ import { TipoAtendimento } from '../../domain/prontuario.entity';
 import {
   ArquivoProntuarioDto,
   AvaliacaoDto,
-  FichaAvaliacaoIUDto,
   ObjetivoDto,
   PlanoDto,
   RegistroEnfermagemDto,
   RegistroPsicologicoDto,
-  RelatorioJudicialDto,
   SubjetivoDto,
 } from './soap.dto';
 
@@ -57,11 +55,6 @@ export class CreateProntuarioDto {
 
   @IsOptional()
   @ValidateNested()
-  @Type(() => FichaAvaliacaoIUDto)
-  fichaAvaliacaoIU?: FichaAvaliacaoIUDto;
-
-  @IsOptional()
-  @ValidateNested()
   @Type(() => RegistroEnfermagemDto)
   registroEnfermagem?: RegistroEnfermagemDto;
 
@@ -69,11 +62,6 @@ export class CreateProntuarioDto {
   @ValidateNested()
   @Type(() => RegistroPsicologicoDto)
   registroPsicologico?: RegistroPsicologicoDto;
-
-  @IsOptional()
-  @ValidateNested()
-  @Type(() => RelatorioJudicialDto)
-  relatorioJudicial?: RelatorioJudicialDto;
 
   @IsOptional()
   @ValidateNested({ each: true })

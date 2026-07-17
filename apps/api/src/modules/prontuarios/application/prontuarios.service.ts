@@ -51,7 +51,6 @@ export class ProntuariosService {
       objetivo: dto.objetivo ?? {},
       avaliacao: dto.avaliacao ?? {},
       plano: dto.plano ?? {},
-      fichaAvaliacaoIU: dto.fichaAvaliacaoIU,
       registroPsicologico: dto.registroPsicologico,
       registroEnfermagem: dto.registroEnfermagem
         ? {
@@ -59,14 +58,6 @@ export class ProntuariosService {
             dataLigacao: dto.registroEnfermagem.dataLigacao ? new Date(dto.registroEnfermagem.dataLigacao) : undefined,
             sondaChegouEm: dto.registroEnfermagem.sondaChegouEm
               ? new Date(dto.registroEnfermagem.sondaChegouEm)
-              : undefined,
-          }
-        : undefined,
-      relatorioJudicial: dto.relatorioJudicial
-        ? {
-            ...dto.relatorioJudicial,
-            dataEmissao: dto.relatorioJudicial.dataEmissao
-              ? new Date(dto.relatorioJudicial.dataEmissao)
               : undefined,
           }
         : undefined,
@@ -139,14 +130,6 @@ export class ProntuariosService {
     const updated = await this.prontuarios.updateDraft(current.clinicaId, prontuarioId, {
       ...dto,
       dataAtendimento: dto.dataAtendimento ? new Date(dto.dataAtendimento) : undefined,
-      relatorioJudicial: dto.relatorioJudicial
-        ? {
-            ...dto.relatorioJudicial,
-            dataEmissao: dto.relatorioJudicial.dataEmissao
-              ? new Date(dto.relatorioJudicial.dataEmissao)
-              : undefined,
-          }
-        : undefined,
       registroEnfermagem: dto.registroEnfermagem
         ? {
             ...dto.registroEnfermagem,
@@ -310,10 +293,8 @@ export class ProntuariosService {
         objetivo: prontuario.objetivo,
         avaliacao: prontuario.avaliacao,
         plano: prontuario.plano,
-        fichaAvaliacaoIU: prontuario.fichaAvaliacaoIU ?? null,
         registroEnfermagem: prontuario.registroEnfermagem ?? null,
         registroPsicologico: prontuario.registroPsicologico ?? null,
-        relatorioJudicial: this.normalizeJudicial(prontuario.relatorioJudicial),
         arquivos: prontuario.arquivos,
       },
       medicoId,
@@ -321,19 +302,6 @@ export class ProntuariosService {
     };
 
     return createHmac('sha256', secret).update(this.stableStringify(payload)).digest('hex');
-  }
-
-  /**
-   * Normaliza o bloco jurídico para o hash de assinatura: `dataEmissao` pode
-   * chegar como Date (create) ou string ISO (update de rascunho); convertê-la
-   * para ISO garante que o hash seja idêntico independente da origem.
-   */
-  private normalizeJudicial(judicial: Prontuario['relatorioJudicial']): unknown {
-    if (!judicial) return null;
-    const dataEmissao = judicial.dataEmissao
-      ? new Date(judicial.dataEmissao).toISOString()
-      : null;
-    return { ...judicial, dataEmissao };
   }
 
   private stableStringify(value: unknown): string {
