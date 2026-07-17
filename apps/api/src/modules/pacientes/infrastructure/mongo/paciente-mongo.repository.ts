@@ -262,6 +262,10 @@ export class PacienteMongoRepository implements PacienteRepository {
     };
   }
 
+  async count(clinicaId: string): Promise<number> {
+    return this.pacienteModel.countDocuments(this.baseQuery(clinicaId));
+  }
+
   private baseQuery(clinicaId: string, incluirInativos = false): Record<string, unknown> {
     return {
       clinicaId,

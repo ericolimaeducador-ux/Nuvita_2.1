@@ -115,6 +115,14 @@ export class ClinicasService {
       throw new NotFoundException('Clinica ativa nao encontrada.');
     }
 
+    const limiteUsuarios = LIMITES_POR_PLANO[clinica.plano].maxUsuarios;
+    const usuariosAtuais = await this.users.count({ clinicaId: adminClinicaId, ativo: true });
+    if (usuariosAtuais >= limiteUsuarios) {
+      throw new ForbiddenException(
+        `Limite de ${limiteUsuarios} usuarios do plano atingido. Faca upgrade do plano para adicionar mais usuarios.`,
+      );
+    }
+
     const email = dto.email.toLowerCase();
     const existingUser = await this.users.findByEmail(email);
     if (existingUser) {

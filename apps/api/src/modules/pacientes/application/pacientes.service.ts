@@ -1,9 +1,11 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { AuthTokenPayload, Papel } from '../../../../../../packages/shared/src/auth';
 import { resolveTenantClinicaId } from '../../../common/tenancy/resolve-clinica-id';
 import { AUDIT_LOG_REPOSITORY } from '../../auth/auth.constants';
 import { AuditLogRepository } from '../../auth/application/ports/audit-log.repository';
 import { AuditEvent } from '../../auth/domain/audit-event.enum';
+import { ClinicasService } from '../../clinicas/application/clinicas.service';
+import { LIMITES_POR_PLANO } from '../../clinicas/domain/clinica.entity';
 import { CreatePacienteDto } from './dto/create-paciente.dto';
 import { ListPacientesQueryDto } from './dto/list-pacientes-query.dto';
 import { UpdatePacienteDto } from './dto/update-paciente.dto';
@@ -26,10 +28,12 @@ export class PacientesService {
   constructor(
     @Inject(PACIENTE_REPOSITORY) private readonly pacientes: PacienteRepository,
     @Inject(AUDIT_LOG_REPOSITORY) private readonly auditLogs: AuditLogRepository,
+    private readonly clinicasService: ClinicasService,
   ) {}
 
   async create(dto: CreatePacienteDto, context: RequestAuditContext): Promise<Paciente> {
     const clinicaId = this.resolveClinicaId(context.user, dto.clinicaId);
+    await this.assertDentroDoLimiteDoPlano(clinicaId);
     const paciente = await this.pacientes.create({
       clinicaId,
       nome: dto.nome,
@@ -252,6 +256,19 @@ export class PacientesService {
 
   private resolveClinicaId(user: AuthTokenPayload, requestedClinicaId?: string): string {
     return resolveTenantClinicaId(user, requestedClinicaId);
+  }
+
+  /** Bloqueia o cadastro de novo paciente quando a clínica já atingiu o limite do próprio plano (LIMITES_POR_PLANO). */
+  private async assertDentroDoLimiteDoPlano(clinicaId: string): Promise<void> {
+    const clinica = await this.clinicasService.findById(clinicaId);
+    if (!clinica) return; // clínica não encontrada é tratado adiante pela criação em si
+    const limite = LIMITES_POR_PLANO[clinica.plano].maxPacientes;
+    const atual = await this.pacientes.count(clinicaId);
+    if (atual >= limite) {
+      throw new BadRequestException(
+        `Limite de ${limite} pacientes do plano atingido. Faça upgrade do plano para cadastrar mais pacientes.`,
+      );
+    }
   }
 
   /**

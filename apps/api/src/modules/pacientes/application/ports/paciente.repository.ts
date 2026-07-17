@@ -43,4 +43,6 @@ export interface PacienteRepository {
   findManyByIds(clinicaId: string, pacienteIds: string[]): Promise<Paciente[]>;
   update(clinicaId: string, pacienteId: string, input: UpdatePacienteInput): Promise<Paciente | null>;
   deactivate(clinicaId: string, pacienteId: string): Promise<Paciente | null>;
+  /** Total de pacientes ativos da clínica — usado para checar o limite do plano (LIMITES_POR_PLANO). */
+  count(clinicaId: string): Promise<number>;
 }

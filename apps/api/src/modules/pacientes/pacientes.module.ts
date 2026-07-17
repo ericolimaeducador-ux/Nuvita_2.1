@@ -6,6 +6,7 @@ import { AuditLogMongoRepository } from '../auth/infrastructure/mongo/audit-log-
 import { AuditLogMongo, AuditLogSchema } from '../auth/infrastructure/mongo/audit-log.schema';
 import { JwtAuthGuard } from '../auth/presentation/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/presentation/guards/roles.guard';
+import { ClinicasModule } from '../clinicas/clinicas.module';
 import { PacientesService } from './application/pacientes.service';
 import { PacienteCryptoService } from './infrastructure/crypto/paciente-crypto.service';
 import { PacienteMongoRepository } from './infrastructure/mongo/paciente-mongo.repository';
@@ -20,6 +21,7 @@ import { PacientesController } from './presentation/pacientes.controller';
       { name: PacienteMongo.name, schema: PacienteSchema },
       { name: AuditLogMongo.name, schema: AuditLogSchema },
     ]),
+    ClinicasModule,
   ],
   controllers: [PacientesController],
   providers: [
