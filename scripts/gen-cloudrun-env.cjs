@@ -49,6 +49,6 @@ const yaml = Object.entries(vars)
 fs.writeFileSync(outFile, yaml);
 console.log(`✓ Gerado ${outFile} com ${Object.keys(vars).length} variáveis.`);
 console.log('  (arquivo está no .gitignore — contém segredos, NÃO commitar)');
-console.log('\nPróximo passo: gcloud run deploy nuvita-api --source . \\');
-console.log('  --region southamerica-east1 --allow-unauthenticated \\');
-console.log('  --env-vars-file cloudrun.env.yaml');
+console.log('\nPróximo passo: aplicar como secret do GitHub e disparar o deploy —');
+console.log('  gh secret set CLOUDRUN_ENV_YAML < cloudrun.env.yaml');
+console.log('  gh workflow run deploy-api.yml');
