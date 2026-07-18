@@ -17,8 +17,12 @@ import { ConvenioDto } from './convenio.dto';
 import { EnderecoDto } from './endereco.dto';
 
 export class CreatePacienteDto {
+  // Opcional como em todos os outros DTOs tenantizados: para papéis de
+  // clínica o valor vem do token (resolveTenantClinicaId); só SUPER_ADMIN
+  // precisa indicar a clínica explicitamente.
+  @IsOptional()
   @IsMongoId()
-  clinicaId!: string;
+  clinicaId?: string;
 
   @IsString()
   @IsNotEmpty()
