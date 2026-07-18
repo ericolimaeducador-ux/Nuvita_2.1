@@ -14,11 +14,11 @@
 const fs = require('fs');
 const path = require('path');
 
-// Origens permitidas no CORS em produção (frontend do Nuvita 2.1). localhost p/ dev local.
-const PROD_ORIGINS = [
-  'https://estomoterapia.nuvita.app.br',
-  'http://localhost:5174',
-];
+// Origens permitidas no CORS em produção (frontend do Nuvita 2.1). Nunca
+// incluir localhost aqui: origem de dev na allowlist de produção deixa
+// qualquer página local conversar com a API de produção com credenciais.
+// Para testar contra produção, use um deploy de preview ou o próprio domínio.
+const PROD_ORIGINS = ['https://estomoterapia.nuvita.app.br'];
 const PROD_ROOT_DOMAIN = 'nuvita.app.br';
 const envFile = path.join(__dirname, '..', 'apps', 'api', '.env');
 const outFile = path.join(__dirname, '..', 'cloudrun.env.yaml');
