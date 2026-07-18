@@ -61,6 +61,10 @@ export class DocumentoMongoRepository implements DocumentoRepository {
     await this.model.updateOne({ _id: documentoId, clinicaId }, { $set: { thumbnailUrl } }).exec();
   }
 
+  async setConteudoSanitizado(clinicaId: string, documentoId: string, tamanho: number, hash: string): Promise<void> {
+    await this.model.updateOne({ _id: documentoId, clinicaId }, { $set: { tamanho, hash } }).exec();
+  }
+
   async softDelete(clinicaId: string, documentoId: string, excluidoPor: string): Promise<Documento | null> {
     const document = await this.model
       .findOneAndUpdate(

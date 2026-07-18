@@ -82,6 +82,17 @@ export class S3DocumentStorageService implements DocumentStorage {
     }
   }
 
+  async overwriteObject(privateUrl: string, body: Buffer, mimeType: string): Promise<void> {
+    await this.client.send(
+      new PutObjectCommand({
+        Bucket: this.bucket,
+        Key: this.keyFromPrivateUrl(privateUrl),
+        Body: body,
+        ContentType: mimeType,
+      }),
+    );
+  }
+
   async createThumbnailIfSupported(documento: Documento, body: Buffer): Promise<string | undefined> {
     if (!['image/jpeg', 'image/png'].includes(documento.mimeType)) {
       return undefined;

@@ -13,6 +13,7 @@ import {
 } from '../documentos.constants';
 import { ALLOWED_DOCUMENT_MIME_TYPES, Documento } from '../domain/documento.entity';
 import { magicBytesMatch } from '../domain/magic-bytes';
+import { stripImageMetadata } from '../domain/strip-metadata';
 
 // Extensão de arquivo por MIME type permitido — usada para nomear o objeto no
 // storage de forma legível ao baixar.
@@ -123,7 +124,21 @@ export class DocumentosService {
       throw new BadRequestException('Conteudo do arquivo nao corresponde ao tipo declarado.');
     }
 
-    const thumbnailUrl = await this.storage.createThumbnailIfSupported(documento, body);
+    // Fotos de celular carregam EXIF com GPS/data/serial — em foto de ferida,
+    // isso é o endereço do paciente embutido na imagem (LGPD). Remoção lossless
+    // server-side; tamanho/hash do registro passam a refletir o objeto sanitizado.
+    const sanitized = stripImageMetadata(body, documento.mimeType);
+    let corpoFinal = body;
+    let documentoFinal = documento;
+    if (sanitized) {
+      await this.storage.overwriteObject(documento.url, sanitized, documento.mimeType);
+      const sanitizedHash = createHash('sha256').update(sanitized).digest('hex');
+      await this.documentos.setConteudoSanitizado(resolvedClinicaId, documentoId, sanitized.length, sanitizedHash);
+      corpoFinal = sanitized;
+      documentoFinal = { ...documento, tamanho: sanitized.length, hash: sanitizedHash };
+    }
+
+    const thumbnailUrl = await this.storage.createThumbnailIfSupported(documentoFinal, corpoFinal);
     if (thumbnailUrl) {
       await this.documentos.setThumbnail(resolvedClinicaId, documentoId, thumbnailUrl);
     }
@@ -134,10 +149,11 @@ export class DocumentosService {
       prontuarioId: documento.prontuarioId,
       documentoId,
       thumbnail: Boolean(thumbnailUrl),
+      metadataRemovida: Boolean(sanitized),
     });
 
     return {
-      ...documento,
+      ...documentoFinal,
       thumbnailUrl: thumbnailUrl ?? documento.thumbnailUrl,
     };
   }

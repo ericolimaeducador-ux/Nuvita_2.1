@@ -29,5 +29,7 @@ export interface DocumentoRepository {
   list(input: ListDocumentoInput): Promise<Documento[]>;
   sumActivePatientBytes(clinicaId: string, pacienteId: string): Promise<number>;
   setThumbnail(clinicaId: string, documentoId: string, thumbnailUrl: string): Promise<void>;
+  /** Atualiza tamanho/hash após sanitização de metadata no confirm (o objeto no storage mudou). */
+  setConteudoSanitizado(clinicaId: string, documentoId: string, tamanho: number, hash: string): Promise<void>;
   softDelete(clinicaId: string, documentoId: string, excluidoPor: string): Promise<Documento | null>;
 }
