@@ -14,7 +14,20 @@ export class TokenRevocationService {
     return (await this.redis.exists(this.key(jti))) === 1;
   }
 
+  /** Revoga a família de sessão inteira (todos os tokens que carregam este fam). */
+  async revokeFamily(familyId: string, ttlSeconds: number): Promise<void> {
+    await this.redis.set(this.familyKey(familyId), '1', 'EX', ttlSeconds);
+  }
+
+  async isFamilyRevoked(familyId: string): Promise<boolean> {
+    return (await this.redis.exists(this.familyKey(familyId))) === 1;
+  }
+
   private key(jti: string): string {
     return `auth:revoked-token:${jti}`;
+  }
+
+  private familyKey(familyId: string): string {
+    return `auth:revoked-family:${familyId}`;
   }
 }

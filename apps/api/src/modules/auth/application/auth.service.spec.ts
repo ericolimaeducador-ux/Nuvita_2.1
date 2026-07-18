@@ -53,11 +53,20 @@ describe('AuthService — fluxo de autenticação', () => {
       assertAllowed: jest.fn(),
       clear: jest.fn(),
       recordFailure: jest.fn(),
+      assertAccountAllowed: jest.fn(),
+      recordAccountFailure: jest.fn().mockResolvedValue(null),
+      clearAccount: jest.fn(),
     } as unknown as jest.Mocked<LoginRateLimiterService>;
 
+    // Revogação stateful: comporta-se como o Redis real (revogar → isRevoked
+    // passa a responder true), essencial pros cenários de reuso de refresh.
+    const revokedJtis = new Set<string>();
+    const revokedFamilies = new Set<string>();
     tokenRevocation = {
-      revoke: jest.fn(),
-      isRevoked: jest.fn().mockResolvedValue(false),
+      revoke: jest.fn(async (jti: string) => void revokedJtis.add(jti)),
+      isRevoked: jest.fn(async (jti: string) => revokedJtis.has(jti)),
+      revokeFamily: jest.fn(async (fam: string) => void revokedFamilies.add(fam)),
+      isFamilyRevoked: jest.fn(async (fam: string) => revokedFamilies.has(fam)),
     } as unknown as jest.Mocked<TokenRevocationService>;
 
     const configService = {
@@ -122,5 +131,55 @@ describe('AuthService — fluxo de autenticação', () => {
     expect(accessPayload.permissoes).toEqual(expect.arrayContaining(['PACIENTES', 'PRONTUARIOS']));
     await service.logout(accessPayload, refreshResult.refreshToken, context);
     expect(auditLogs.create).toHaveBeenCalledWith(expect.objectContaining({ event: 'LOGOUT' }));
+
+    // 4) logout revogou a família — o access token da sessão morre junto
+    expect(accessPayload.fam).toEqual(expect.any(String));
+    await expect(service.validateAccessPayload(accessPayload)).rejects.toThrow(UnauthorizedException);
+  });
+
+  it('bloqueia login quando a conta está em lockout progressivo', async () => {
+    (loginRateLimiter.assertAccountAllowed as jest.Mock).mockRejectedValue(
+      new UnauthorizedException('Conta temporariamente bloqueada.'),
+    );
+    await expect(
+      service.login({ email: user.email, password: 'senhaForte123' }, context),
+    ).rejects.toThrow('Conta temporariamente bloqueada.');
+    // Nem chegou a consultar o usuário — o lockout corta antes do bcrypt
+    expect(users.findByEmailWithSecrets).not.toHaveBeenCalled();
+  });
+
+  it('audita ACCOUNT_LOCKED quando a falha dispara o lockout da conta', async () => {
+    (loginRateLimiter.recordAccountFailure as jest.Mock).mockResolvedValue(60);
+    await expect(
+      service.login({ email: user.email, password: 'senha-errada' }, context),
+    ).rejects.toThrow(UnauthorizedException);
+    expect(loginRateLimiter.recordAccountFailure).toHaveBeenCalledWith(user.email);
+    expect(auditLogs.create).toHaveBeenCalledWith(
+      expect.objectContaining({ event: 'ACCOUNT_LOCKED', metadata: { lockSeconds: 60 } }),
+    );
+  });
+
+  it('reuso de refresh token já rotacionado revoga a família inteira (access + refresh)', async () => {
+    const totpCode = speakeasy.totp({ secret: totpSecret, encoding: 'base32' });
+    const loginResult = await service.login({ email: user.email, password: 'senhaForte123', totpCode }, context);
+
+    // Rotação legítima: o refresh token do login é consumido e revogado
+    const refreshResult = await service.refresh(loginResult.refreshToken, context);
+
+    // Replay do token consumido (cenário de roubo) → família revogada + auditoria
+    await expect(service.refresh(loginResult.refreshToken, context)).rejects.toThrow(
+      'Sessao encerrada por seguranca. Faca login novamente.',
+    );
+    expect(tokenRevocation.revokeFamily).toHaveBeenCalled();
+    expect(auditLogs.create).toHaveBeenCalledWith(
+      expect.objectContaining({ event: 'REFRESH_TOKEN_REUSE_DETECTED', userId: user.id }),
+    );
+
+    // O par novo (da vítima ou do atacante) também morreu: refresh e access
+    await expect(service.refresh(refreshResult.refreshToken, context)).rejects.toThrow('Sessao encerrada.');
+    const accessPayload = await new JwtService().verifyAsync(refreshResult.accessToken, {
+      secret: JWT_ACCESS_SECRET,
+    });
+    await expect(service.validateAccessPayload(accessPayload)).rejects.toThrow('Sessao encerrada.');
   });
 });

@@ -8,3 +8,12 @@ export const REFRESH_TOKEN_TTL = '7d';
 export const REFRESH_TOKEN_TTL_SECONDS = 7 * 24 * 60 * 60;
 export const LOGIN_RATE_LIMIT_WINDOW_SECONDS = 15 * 60;
 export const LOGIN_RATE_LIMIT_MAX_ATTEMPTS = 5;
+
+// Lockout progressivo por CONTA (além do limite por IP): a partir da 5ª falha
+// a conta trava por 1 min, dobrando a cada falha seguinte até o teto de 1h.
+// Por conta, ataque distribuído (IPs variados) não contorna; o contador expira
+// sozinho depois de 1h sem falhas.
+export const ACCOUNT_LOCKOUT_THRESHOLD = 5;
+export const ACCOUNT_LOCKOUT_BASE_SECONDS = 60;
+export const ACCOUNT_LOCKOUT_MAX_SECONDS = 60 * 60;
+export const ACCOUNT_FAILURE_WINDOW_SECONDS = 60 * 60;

@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Param, Post, Query, Req } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { Request } from 'express';
 import { extractRequestMeta } from '../../../common/http/client-ip';
 import { TelemedicinaService } from '../application/telemedicina.service';
@@ -10,6 +11,11 @@ import { RegistrarEventoDto } from '../application/dto/registrar-evento.dto';
  * banda) é a credencial. Nada aqui expõe dados pessoais — só estado da sala,
  * sinalização WebRTC opaca e o registro de eventos do atendimento.
  */
+// Limite acima do padrão global: a sinalização WebRTC faz polling a cada
+// ~1,2s por participante (SalaVideo.tsx) e os dois lados da chamada podem
+// sair do mesmo IP (NAT da clínica) — 600/min comporta algumas salas
+// simultâneas por IP sem derrubar chamada em andamento.
+@Throttle({ default: { ttl: 60_000, limit: 600 } })
 @Controller('telemedicina/acesso')
 export class TelemedicinaAcessoController {
   constructor(private readonly telemedicinaService: TelemedicinaService) {}

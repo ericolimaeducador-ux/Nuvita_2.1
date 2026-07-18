@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { AuthThrottlerGuard } from './modules/auth/presentation/guards/auth-throttler.guard';
 import { SecurityModule } from './common/security/security.module';
 import { TenancyModule } from './common/tenancy/tenancy.module';
 import { AppConfigService } from './common/security/config.service';
@@ -30,9 +32,12 @@ import { FeridasModule } from './modules/feridas/feridas.module';
     }),
     SecurityModule,
     TenancyModule,
-    // Limite padrão para onde o AuthThrottlerGuard for aplicado (hoje, só as
-    // rotas de /auth). Rotas específicas apertam com @Throttle().
-    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 30 }]),
+    // Throttle global moderado por IP (guard registrado em providers abaixo):
+    // 300 req/min segura scraping/enumeração em endpoints caros (analytics,
+    // export, presign) sem atrapalhar uso normal atrás de NAT. Rotas com
+    // perfil próprio ajustam com @Throttle() (auth aperta, sinalização da
+    // telemedicina folga) ou @SkipThrottle() (health checks).
+    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 300 }]),
     MongooseModule.forRootAsync({
       imports: [SecurityModule],
       inject: [AppConfigService],
@@ -56,6 +61,11 @@ import { FeridasModule } from './modules/feridas/feridas.module';
     ChecklistDocumentosModule,
     ObservacoesPacienteModule,
     FeridasModule,
+  ],
+  providers: [
+    // AuthThrottlerGuard = ThrottlerGuard rastreando pelo X-Forwarded-For do
+    // proxy confiável (atrás do Cloud Run, req.ip seria igual pra todo mundo).
+    { provide: APP_GUARD, useClass: AuthThrottlerGuard },
   ],
 })
 export class AppModule {}

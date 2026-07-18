@@ -102,6 +102,7 @@ export class AuthService {
   async login(dto: LoginDto, context: RequestContext): Promise<AuthResponse> {
     const email = dto.email.toLowerCase();
     await this.loginRateLimiter.assertAllowed(context.ip);
+    await this.loginRateLimiter.assertAccountAllowed(email);
 
     const user = await this.users.findByEmailWithSecrets(email);
     if (!user || !user.ativo) {
@@ -123,7 +124,9 @@ export class AuthService {
     }
 
     await this.loginRateLimiter.clear(context.ip);
-    const tokens = await this.issueTokens(user);
+    await this.loginRateLimiter.clearAccount(email);
+    // Login abre uma família de sessão nova — refresh herda, reuso revoga tudo.
+    const tokens = await this.issueTokens(user, randomUUID());
 
     await this.auditLogs.create({
       event: AuditEvent.LOGIN_SUCCESS,
@@ -142,6 +145,29 @@ export class AuthService {
 
   async refresh(refreshToken: string, context: RequestContext): Promise<AuthResponse> {
     const payload = await this.verifyRefreshToken(refreshToken);
+
+    if (payload.fam && (await this.tokenRevocation.isFamilyRevoked(payload.fam))) {
+      throw new UnauthorizedException('Sessao encerrada.');
+    }
+
+    // Refresh token já rotacionado sendo apresentado de novo = cópia roubada
+    // (do atacante ou da vítima — impossível distinguir). Resposta padrão
+    // OWASP: revogar a família inteira e forçar novo login dos dois lados.
+    if (await this.tokenRevocation.isRevoked(payload.jti)) {
+      if (payload.fam) {
+        await this.tokenRevocation.revokeFamily(payload.fam, REFRESH_TOKEN_TTL_SECONDS);
+      }
+      await this.auditLogs.create({
+        event: AuditEvent.REFRESH_TOKEN_REUSE_DETECTED,
+        userId: payload.sub,
+        email: payload.email,
+        ip: context.ip,
+        userAgent: context.userAgent,
+        metadata: { familyId: payload.fam ?? null },
+      });
+      throw new UnauthorizedException('Sessao encerrada por seguranca. Faca login novamente.');
+    }
+
     const user = await this.users.findById(payload.sub);
 
     if (!user || !user.ativo) {
@@ -149,7 +175,8 @@ export class AuthService {
     }
 
     await this.tokenRevocation.revoke(payload.jti, REFRESH_TOKEN_TTL_SECONDS);
-    const tokens = await this.issueTokens(user);
+    // Tokens antigos (sem fam) ganham família aqui, no primeiro refresh.
+    const tokens = await this.issueTokens(user, payload.fam ?? randomUUID());
 
     await this.auditLogs.create({
       event: AuditEvent.TOKEN_REFRESH,
@@ -177,13 +204,20 @@ export class AuthService {
     let refreshPayload: AuthTokenPayload | undefined;
     if (refreshToken) {
       try {
-        refreshPayload = await this.verifyRefreshToken(refreshToken, false);
+        refreshPayload = await this.verifyRefreshToken(refreshToken);
         if (refreshPayload?.jti) {
           await this.tokenRevocation.revoke(refreshPayload.jti, REFRESH_TOKEN_TTL_SECONDS);
         }
       } catch {
         refreshPayload = undefined;
       }
+    }
+
+    // Logout encerra a família inteira: qualquer refresh token remanescente da
+    // sessão (ex.: roubado antes do logout) morre junto.
+    const familyId = accessPayload?.fam ?? refreshPayload?.fam;
+    if (familyId) {
+      await this.tokenRevocation.revokeFamily(familyId, REFRESH_TOKEN_TTL_SECONDS);
     }
 
     await this.auditLogs.create({
@@ -198,6 +232,12 @@ export class AuthService {
   async validateAccessPayload(payload: AuthTokenPayload): Promise<AuthTokenPayload> {
     if (payload.typ !== 'access' || (await this.tokenRevocation.isRevoked(payload.jti))) {
       throw new UnauthorizedException('Token invalido.');
+    }
+
+    // Família revogada (reuso detectado ou logout) derruba também os access
+    // tokens já emitidos — sem isso o atacante teria até 15min de janela.
+    if (payload.fam && (await this.tokenRevocation.isFamilyRevoked(payload.fam))) {
+      throw new UnauthorizedException('Sessao encerrada.');
     }
 
     const user = await this.users.findById(payload.sub);
@@ -236,6 +276,7 @@ export class AuthService {
     userId?: string,
   ): Promise<void> {
     await this.loginRateLimiter.recordFailure(context.ip);
+    const lockSeconds = await this.loginRateLimiter.recordAccountFailure(email);
     await this.auditLogs.create({
       event: AuditEvent.LOGIN_FAILURE,
       userId,
@@ -244,9 +285,19 @@ export class AuthService {
       userAgent: context.userAgent,
       metadata: { reason },
     });
+    if (lockSeconds !== null) {
+      await this.auditLogs.create({
+        event: AuditEvent.ACCOUNT_LOCKED,
+        userId,
+        email,
+        ip: context.ip,
+        userAgent: context.userAgent,
+        metadata: { lockSeconds },
+      });
+    }
   }
 
-  private async issueTokens(user: User): Promise<AuthTokens> {
+  private async issueTokens(user: User, familyId: string): Promise<AuthTokens> {
     const accessJti = randomUUID();
     const refreshJti = randomUUID();
 
@@ -258,6 +309,7 @@ export class AuthService {
       nome: user.nome,
       registroProfissional: user.registroProfissional,
       permissoes: resolvePermissoes(user.papel, user.modulosConcedidos, user.modulosRevogados),
+      fam: familyId,
     };
 
     const [accessToken, refreshToken] = await Promise.all([
@@ -280,20 +332,15 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  private async verifyRefreshToken(
-    refreshToken: string,
-    failIfRevoked = true,
-  ): Promise<AuthTokenPayload> {
+  // Só valida assinatura/tipo — quem decide o que fazer com jti/família
+  // revogados é o chamador (refresh distingue reuso de revogação comum).
+  private async verifyRefreshToken(refreshToken: string): Promise<AuthTokenPayload> {
     const payload = await this.jwtService.verifyAsync<AuthTokenPayload>(refreshToken, {
       secret: this.configService.getConfig().jwtRefreshSecret,
     });
 
     if (payload.typ !== 'refresh') {
       throw new UnauthorizedException('Refresh token invalido.');
-    }
-
-    if (failIfRevoked && (await this.tokenRevocation.isRevoked(payload.jti))) {
-      throw new UnauthorizedException('Refresh token revogado.');
     }
 
     return payload;

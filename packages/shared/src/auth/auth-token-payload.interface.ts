@@ -19,4 +19,12 @@ export interface AuthTokenPayload {
   permissoes?: Modulo[];
   jti: string;
   typ: 'access' | 'refresh';
+  /**
+   * Família de sessão (token family): criada no login e herdada a cada
+   * refresh. Reuso de um refresh token já rotacionado revoga a família
+   * inteira — access e refresh — encerrando a sessão do atacante e da
+   * vítima. Ausente em tokens emitidos antes deste campo; ganham família
+   * no próximo refresh.
+   */
+  fam?: string;
 }
