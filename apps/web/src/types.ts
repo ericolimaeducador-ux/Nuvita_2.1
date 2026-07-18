@@ -679,6 +679,80 @@ export interface RecomendacaoClinica {
   exigeRevisaoHumana: true;
 }
 
+// ---------- Escalas clínicas (PUSH 3.0 / RESVECH 2.0) ----------
+
+export enum BordasFerida {
+  NAO_DISTINGUIVEIS = 'nao_distinguiveis',
+  DIFUSAS = 'difusas',
+  DELIMITADAS = 'delimitadas',
+  DANIFICADAS = 'danificadas',
+  ENGROSSADAS = 'engrossadas',
+}
+export const BORDAS_FERIDA_LABEL: Record<BordasFerida, string> = {
+  [BordasFerida.NAO_DISTINGUIVEIS]: 'Não distinguíveis',
+  [BordasFerida.DIFUSAS]: 'Difusas',
+  [BordasFerida.DELIMITADAS]: 'Delimitadas',
+  [BordasFerida.DANIFICADAS]: 'Danificadas',
+  [BordasFerida.ENGROSSADAS]: 'Engrossadas ("envelhecidas")',
+};
+
+export enum TecidosAfetados {
+  PELE_INTACTA = 'pele_intacta',
+  EPIDERME_DERME = 'epiderme_derme',
+  SUBCUTANEO = 'subcutaneo',
+  MUSCULO = 'musculo',
+  OSSO_ANEXOS = 'osso_anexos',
+}
+export const TECIDOS_AFETADOS_LABEL: Record<TecidosAfetados, string> = {
+  [TecidosAfetados.PELE_INTACTA]: 'Pele intacta cicatrizada',
+  [TecidosAfetados.EPIDERME_DERME]: 'Epiderme e derme',
+  [TecidosAfetados.SUBCUTANEO]: 'Tecido subcutâneo',
+  [TecidosAfetados.MUSCULO]: 'Músculo',
+  [TecidosAfetados.OSSO_ANEXOS]: 'Osso e tecidos anexos',
+};
+
+export enum SinalInfeccaoResvech {
+  DOR_CRESCENTE = 'dor_crescente',
+  EXSUDATO_PURULENTO = 'exsudato_purulento',
+  TECIDO_FRIAVEL = 'tecido_friavel',
+  BIOFILME_COMPATIVEL = 'biofilme_compativel',
+  HIPERGRANULACAO = 'hipergranulacao',
+  LESOES_SATELITE = 'lesoes_satelite',
+  PALIDEZ_TECIDO = 'palidez_tecido',
+}
+export const SINAL_INFECCAO_RESVECH_LABEL: Record<SinalInfeccaoResvech, string> = {
+  [SinalInfeccaoResvech.DOR_CRESCENTE]: 'Dor crescente',
+  [SinalInfeccaoResvech.EXSUDATO_PURULENTO]: 'Exsudato purulento',
+  [SinalInfeccaoResvech.TECIDO_FRIAVEL]: 'Tecido friável / sangra fácil',
+  [SinalInfeccaoResvech.BIOFILME_COMPATIVEL]: 'Tecido compatível com biofilme',
+  [SinalInfeccaoResvech.HIPERGRANULACAO]: 'Hipergranulação',
+  [SinalInfeccaoResvech.LESOES_SATELITE]: 'Lesões satélite',
+  [SinalInfeccaoResvech.PALIDEZ_TECIDO]: 'Palidez do tecido',
+};
+
+export interface PushScore {
+  area: number;
+  exsudato: number;
+  tipoTecido: number;
+  total: number;
+}
+
+export interface ResvechScore {
+  dimensao: number;
+  profundidade: number;
+  bordas: number;
+  tecidoLeito: number;
+  exsudato: number;
+  infeccaoInflamacao: number;
+  total: number;
+}
+
+export interface EscalasClinicas {
+  push: PushScore;
+  resvech?: ResvechScore;
+  versao: string;
+}
+
 export interface AvaliacaoFerida {
   id: string;
   feridaId: string;
@@ -695,8 +769,12 @@ export interface AvaliacaoFerida {
   ossoOuTendaoExposto: boolean;
   pioraAreaPct30Dias?: number;
   diasCicatrizacaoEstagnada?: number;
+  bordas?: BordasFerida;
+  tecidosAfetados?: TecidosAfetados;
+  sinaisInfeccao?: SinalInfeccaoResvech[];
   recomendacoes: RecomendacaoClinica[];
   motorClinico: string;
+  escalas?: EscalasClinicas;
   criadoEm: string;
 }
 
@@ -713,6 +791,8 @@ export interface PontoTimelineFerida {
   epitelizacaoPct: number;
   maiorRisco: NivelRisco;
   titulosRecomendacoes: string[];
+  pushTotal?: number;
+  resvechTotal?: number;
 }
 
 export interface TimelineFerida {

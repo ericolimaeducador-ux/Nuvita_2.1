@@ -13,9 +13,16 @@ import { avaliacaoFeridaApi, feridasApi } from '@/api/resources';
 import { apiErrorMessage } from '@/api/client';
 import {
   AchadoPerilesional, ACHADO_PERILESIONAL_LABEL,
+  BordasFerida, BORDAS_FERIDA_LABEL,
   Etiologia, ETIOLOGIA_LABEL,
   NivelExsudato, NIVEL_EXSUDATO_LABEL,
+  SinalInfeccaoResvech, SINAL_INFECCAO_RESVECH_LABEL,
+  TecidosAfetados, TECIDOS_AFETADOS_LABEL,
 } from '@/types';
+
+// Valor sentinela dos selects do RESVECH — Radix Select não aceita item com
+// value vazio, e "não avaliar" precisa ser uma escolha explícita e reversível.
+const NAO_AVALIADO = 'nao_avaliado';
 
 export function NovaFeridaDialog({
   open, onOpenChange, pacienteId, clinicaId, onCreated,
@@ -106,6 +113,7 @@ export function NovaAvaliacaoFeridaDialog({
     defaultValues: { exsudato: NivelExsudato.NENHUM, escalaDor: 0 },
   });
   const [achados, setAchados] = useState<AchadoPerilesional[]>([]);
+  const [sinaisInfeccao, setSinaisInfeccao] = useState<SinalInfeccaoResvech[]>([]);
 
   const somaTecido = useMemo(() => {
     const n = (v: unknown) => Number(v) || 0;
@@ -115,6 +123,17 @@ export function NovaAvaliacaoFeridaDialog({
   function toggleAchado(a: AchadoPerilesional) {
     setAchados((prev) => (prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a]));
   }
+
+  function toggleSinalInfeccao(s: SinalInfeccaoResvech) {
+    setSinaisInfeccao((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
+  }
+
+  const bordas = watch('bordas') as string | undefined;
+  const tecidosAfetados = watch('tecidosAfetados') as string | undefined;
+  const resvechPreenchido = !!bordas && bordas !== NAO_AVALIADO && !!tecidosAfetados && tecidosAfetados !== NAO_AVALIADO;
+  const resvechParcial =
+    !resvechPreenchido &&
+    ((!!bordas && bordas !== NAO_AVALIADO) || (!!tecidosAfetados && tecidosAfetados !== NAO_AVALIADO));
 
   const mut = useMutation({
     mutationFn: (v: Record<string, unknown>) => {
@@ -140,14 +159,23 @@ export function NovaAvaliacaoFeridaDialog({
         ossoOuTendaoExposto: !!v.ossoOuTendaoExposto,
         pioraAreaPct30Dias: v.pioraAreaPct30Dias ? Number(v.pioraAreaPct30Dias) : undefined,
         diasCicatrizacaoEstagnada: v.diasCicatrizacaoEstagnada ? Number(v.diasCicatrizacaoEstagnada) : undefined,
+        bordas: resvechPreenchido ? (v.bordas as BordasFerida) : undefined,
+        tecidosAfetados: resvechPreenchido ? (v.tecidosAfetados as TecidosAfetados) : undefined,
+        sinaisInfeccao: resvechPreenchido && sinaisInfeccao.length > 0 ? sinaisInfeccao : undefined,
       });
     },
     onSuccess: (avaliacao) => {
       const risco = avaliacao.recomendacoes[0]?.risco;
-      toast.success('Avaliação registrada.', risco ? `Maior risco identificado: ${risco}.` : undefined);
+      const partes = [risco ? `Maior risco identificado: ${risco}.` : undefined];
+      if (avaliacao.escalas) {
+        partes.push(`PUSH ${avaliacao.escalas.push.total}/17`);
+        if (avaliacao.escalas.resvech) partes.push(`RESVECH ${avaliacao.escalas.resvech.total}/35`);
+      }
+      toast.success('Avaliação registrada.', partes.filter(Boolean).join(' · ') || undefined);
       onOpenChange(false);
       reset();
       setAchados([]);
+      setSinaisInfeccao([]);
       onCreated();
     },
     onError: (e) => toast.error('Erro', apiErrorMessage(e)),
@@ -257,9 +285,58 @@ export function NovaAvaliacaoFeridaDialog({
             </div>
           </div>
 
+          <div className="space-y-2 rounded-md border p-3">
+            <Label className="font-medium">RESVECH 2.0 (opcional)</Label>
+            <p className="text-xs text-muted-foreground">
+              Preencha bordas e tecidos afetados para pontuar a escala. O PUSH 3.0 é calculado automaticamente em toda avaliação.
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Bordas da lesão</Label>
+                <Select value={bordas ?? NAO_AVALIADO} onValueChange={(v) => setValue('bordas', v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NAO_AVALIADO}>Não avaliar</SelectItem>
+                    {Object.values(BordasFerida).map((b) => (
+                      <SelectItem key={b} value={b}>{BORDAS_FERIDA_LABEL[b]}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Tecido mais profundo afetado</Label>
+                <Select value={tecidosAfetados ?? NAO_AVALIADO} onValueChange={(v) => setValue('tecidosAfetados', v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NAO_AVALIADO}>Não avaliar</SelectItem>
+                    {Object.values(TecidosAfetados).map((t) => (
+                      <SelectItem key={t} value={t}>{TECIDOS_AFETADOS_LABEL[t]}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            {resvechParcial && (
+              <p className="text-xs text-destructive">Preencha os dois campos (ou deixe ambos em "Não avaliar").</p>
+            )}
+            {resvechPreenchido && (
+              <div className="space-y-2">
+                <Label className="text-xs">Sinais de infecção/inflamação (os demais são derivados dos campos acima)</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {Object.values(SinalInfeccaoResvech).map((s) => (
+                    <div key={s} className="flex items-center gap-2">
+                      <Checkbox id={`sinf_${s}`} checked={sinaisInfeccao.includes(s)} onCheckedChange={() => toggleSinalInfeccao(s)} />
+                      <Label htmlFor={`sinf_${s}`} className="text-sm cursor-pointer">{SINAL_INFECCAO_RESVECH_LABEL[s]}</Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button type="submit" disabled={mut.isPending || somaTecido > 100}>
+            <Button type="submit" disabled={mut.isPending || somaTecido > 100 || resvechParcial}>
               {mut.isPending ? 'Salvando...' : 'Registrar avaliação'}
             </Button>
           </DialogFooter>

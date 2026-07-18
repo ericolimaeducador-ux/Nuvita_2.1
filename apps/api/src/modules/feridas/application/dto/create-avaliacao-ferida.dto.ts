@@ -11,6 +11,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { AchadoPerilesional, NivelExsudato } from '../../domain/avaliacao-ferida.entity';
+import { BordasFerida, SinalInfeccaoResvech, TecidosAfetados } from '../../domain/escalas';
 import { MedicaoDto } from './medicao.dto';
 import { PerfilTecidualDto } from './perfil-tecidual.dto';
 
@@ -45,4 +46,14 @@ export class CreateAvaliacaoFeridaDto {
 
   @IsOptional() @IsNumber() @Min(0) pioraAreaPct30Dias?: number;
   @IsOptional() @IsInt() @Min(0) diasCicatrizacaoEstagnada?: number;
+
+  // Itens 2/3/6 do RESVECH 2.0 — o score só é calculado quando bordas e
+  // tecidosAfetados vierem juntos (validado na service).
+  @IsOptional() @IsEnum(BordasFerida) bordas?: BordasFerida;
+  @IsOptional() @IsEnum(TecidosAfetados) tecidosAfetados?: TecidosAfetados;
+
+  @IsOptional()
+  @IsArray()
+  @IsEnum(SinalInfeccaoResvech, { each: true })
+  sinaisInfeccao?: SinalInfeccaoResvech[];
 }

@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
 import { AchadoPerilesional, NivelExsudato, NivelRisco } from '../../domain/avaliacao-ferida.entity';
+import { BordasFerida, SinalInfeccaoResvech, TecidosAfetados } from '../../domain/escalas';
 
 export type AvaliacaoFeridaDocument = HydratedDocument<AvaliacaoFeridaMongo>;
 
@@ -18,6 +19,32 @@ class PerfilTecidualSchema {
   @Prop({ required: true }) epitelizacaoPct!: number;
   @Prop({ required: true }) esfaceloPct!: number;
   @Prop({ required: true }) necrosePct!: number;
+}
+
+@Schema({ _id: false })
+class PushScoreSchema {
+  @Prop({ required: true }) area!: number;
+  @Prop({ required: true }) exsudato!: number;
+  @Prop({ required: true }) tipoTecido!: number;
+  @Prop({ required: true }) total!: number;
+}
+
+@Schema({ _id: false })
+class ResvechScoreSchema {
+  @Prop({ required: true }) dimensao!: number;
+  @Prop({ required: true }) profundidade!: number;
+  @Prop({ required: true }) bordas!: number;
+  @Prop({ required: true }) tecidoLeito!: number;
+  @Prop({ required: true }) exsudato!: number;
+  @Prop({ required: true }) infeccaoInflamacao!: number;
+  @Prop({ required: true }) total!: number;
+}
+
+@Schema({ _id: false })
+class EscalasClinicasSchema {
+  @Prop({ type: PushScoreSchema, required: true }) push!: PushScoreSchema;
+  @Prop({ type: ResvechScoreSchema }) resvech?: ResvechScoreSchema;
+  @Prop({ required: true }) versao!: string;
 }
 
 @Schema({ _id: false })
@@ -74,11 +101,23 @@ export class AvaliacaoFeridaMongo {
   @Prop()
   diasCicatrizacaoEstagnada?: number;
 
+  @Prop({ enum: Object.values(BordasFerida) })
+  bordas?: BordasFerida;
+
+  @Prop({ enum: Object.values(TecidosAfetados) })
+  tecidosAfetados?: TecidosAfetados;
+
+  @Prop({ type: [String], enum: Object.values(SinalInfeccaoResvech) })
+  sinaisInfeccao?: SinalInfeccaoResvech[];
+
   @Prop({ type: [RecomendacaoClinicaSchema], required: true })
   recomendacoes!: RecomendacaoClinicaSchema[];
 
   @Prop({ required: true })
   motorClinico!: string;
+
+  @Prop({ type: EscalasClinicasSchema })
+  escalas?: EscalasClinicasSchema;
 
   @Prop({ default: Date.now, immutable: true })
   criadoEm!: Date;

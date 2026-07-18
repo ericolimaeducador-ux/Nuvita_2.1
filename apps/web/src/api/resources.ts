@@ -3,6 +3,7 @@ import type {
   AchadoPerilesional,
   Agendamento,
   AvaliacaoFerida,
+  BordasFerida,
   ChecklistDocumentoItem,
   DashboardFinanceiro,
   Documento,
@@ -28,9 +29,11 @@ import type {
   SalaAcessoInfo,
   SalaEvento,
   SalaTelemedicina,
+  SinalInfeccaoResvech,
   SinalSala,
   StatusFerida,
   StatusSala,
+  TecidosAfetados,
   TimelineFerida,
   TipoEventoSala,
   TipoSinal,
@@ -349,6 +352,9 @@ export const avaliacaoFeridaApi = {
       ossoOuTendaoExposto?: boolean;
       pioraAreaPct30Dias?: number;
       diasCicatrizacaoEstagnada?: number;
+      bordas?: BordasFerida;
+      tecidosAfetados?: TecidosAfetados;
+      sinaisInfeccao?: SinalInfeccaoResvech[];
     },
   ) => api.post<AvaliacaoFerida>(`/feridas/${feridaId}/avaliacoes`, payload).then((r) => r.data),
   listByFerida: (feridaId: string) =>

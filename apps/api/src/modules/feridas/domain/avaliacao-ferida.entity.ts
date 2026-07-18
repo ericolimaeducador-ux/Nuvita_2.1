@@ -1,3 +1,7 @@
+// Só tipos: o import é apagado na compilação, então o ciclo entity ⇄ escalas
+// não existe em runtime (escalas.ts importa os enums de valor daqui).
+import type { BordasFerida, EscalasClinicas, SinalInfeccaoResvech, TecidosAfetados } from './escalas';
+
 export enum NivelExsudato {
   NENHUM = 'nenhum',
   BAIXO = 'baixo',
@@ -68,9 +72,17 @@ export interface AvaliacaoFerida {
   ossoOuTendaoExposto: boolean;
   pioraAreaPct30Dias?: number;
   diasCicatrizacaoEstagnada?: number;
+  /** Item 3 do RESVECH 2.0 — opcional; sem ele o score RESVECH não é calculado. */
+  bordas?: BordasFerida;
+  /** Item 2 do RESVECH 2.0 — opcional; sem ele o score RESVECH não é calculado. */
+  tecidosAfetados?: TecidosAfetados;
+  /** Checklist do item 6 do RESVECH 2.0 (sinais não deriváveis dos demais campos). */
+  sinaisInfeccao?: SinalInfeccaoResvech[];
   recomendacoes: RecomendacaoClinica[];
   /** Versão do motor de risco que gerou as recomendações (= ENGINE_VERSION), permite auditar regras passadas mesmo após a lógica evoluir. */
   motorClinico: string;
+  /** PUSH 3.0 (sempre) + RESVECH 2.0 (quando bordas/tecidosAfetados informados), calculados na criação. */
+  escalas?: EscalasClinicas;
   criadoEm: Date;
 }
 
@@ -87,6 +99,9 @@ export interface PontoTimelineFerida {
   epitelizacaoPct: number;
   maiorRisco: NivelRisco;
   titulosRecomendacoes: string[];
+  /** Totais das escalas — ausentes em avaliações anteriores à introdução delas. */
+  pushTotal?: number;
+  resvechTotal?: number;
 }
 
 export type TendenciaFerida = 'melhorando' | 'piorando' | 'estavel';

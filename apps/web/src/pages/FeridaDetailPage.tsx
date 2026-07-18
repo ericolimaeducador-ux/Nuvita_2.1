@@ -89,7 +89,7 @@ export function FeridaDetailPage() {
         }
       />
 
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-4 gap-4 mb-6">
         <Card><CardContent className="pt-6">
           <p className="text-xs text-muted-foreground">Status</p>
           <p className="text-lg font-semibold">{STATUS_FERIDA_LABEL[ferida.status]}</p>
@@ -106,6 +106,21 @@ export function FeridaDetailPage() {
           <p className="text-xs text-muted-foreground">Tendência (área)</p>
           <p className="text-lg font-semibold">
             {timelineQ.data ? TENDENCIA_LABEL[timelineQ.data.tendencia.status] : '—'}
+          </p>
+        </CardContent></Card>
+        <Card><CardContent className="pt-6">
+          <p className="text-xs text-muted-foreground">Escalas (última avaliação)</p>
+          <p className="text-lg font-semibold">
+            {avaliacoes[0]?.escalas ? (
+              <>
+                PUSH {avaliacoes[0].escalas.push.total}/17
+                {avaliacoes[0].escalas.resvech && (
+                  <span className="block text-sm font-medium text-muted-foreground">
+                    RESVECH {avaliacoes[0].escalas.resvech.total}/35
+                  </span>
+                )}
+              </>
+            ) : '—'}
           </p>
         </CardContent></Card>
       </div>
@@ -155,6 +170,12 @@ export function FeridaDetailPage() {
                     {a.medicao.comprimentoCm}×{a.medicao.larguraCm}×{a.medicao.profundidadeCm}cm
                     {a.medicao.areaCm2 !== undefined && ` (área: ${a.medicao.areaCm2}cm²)`}
                   </p>
+                  {a.escalas && (
+                    <div className="mt-1 flex gap-2">
+                      <Badge variant="outline">PUSH {a.escalas.push.total}/17</Badge>
+                      {a.escalas.resvech && <Badge variant="outline">RESVECH {a.escalas.resvech.total}/35</Badge>}
+                    </div>
+                  )}
                   <ul className="mt-2 space-y-1">
                     {a.recomendacoes.map((r) => (
                       <li key={r.regraId} className="text-sm">

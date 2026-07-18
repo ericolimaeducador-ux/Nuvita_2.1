@@ -9,6 +9,7 @@ import { CreateAvaliacaoFeridaDto } from './dto/create-avaliacao-ferida.dto';
 import { AVALIACAO_FERIDA_REPOSITORY } from '../feridas.constants';
 import { AvaliacaoFerida, NivelRisco, PontoTimelineFerida, TimelineFerida } from '../domain/avaliacao-ferida.entity';
 import { avaliarRiscoFerida, ENGINE_VERSION } from '../domain/risk-engine';
+import { calcularPush, calcularResvech, ESCALAS_VERSION, EscalasClinicas } from '../domain/escalas';
 import { AvaliacaoFeridaRepository } from './ports/avaliacao-ferida.repository';
 import { FeridasService } from './feridas.service';
 
@@ -69,6 +70,32 @@ export class AvaliacaoFeridaService {
       diasCicatrizacaoEstagnada: dto.diasCicatrizacaoEstagnada,
     });
 
+    // RESVECH exige os dois campos próprios juntos — um sem o outro é quase
+    // sempre esquecimento no preenchimento, melhor avisar do que pontuar errado.
+    if ((dto.bordas === undefined) !== (dto.tecidosAfetados === undefined)) {
+      throw new BadRequestException('Para pontuar RESVECH 2.0, informe bordas e tecidosAfetados juntos.');
+    }
+
+    const escalas: EscalasClinicas = {
+      push: calcularPush({ ...dto.medicao, areaCm2 }, dto.tecido, dto.exsudato),
+      resvech:
+        dto.bordas !== undefined && dto.tecidosAfetados !== undefined
+          ? calcularResvech({
+              medicao: { ...dto.medicao, areaCm2 },
+              tecido: dto.tecido,
+              exsudato: dto.exsudato,
+              odor,
+              achadosPerilesionais,
+              pioraAreaPct30Dias: dto.pioraAreaPct30Dias,
+              diasCicatrizacaoEstagnada: dto.diasCicatrizacaoEstagnada,
+              bordas: dto.bordas,
+              tecidosAfetados: dto.tecidosAfetados,
+              sinaisInfeccao: dto.sinaisInfeccao,
+            })
+          : undefined,
+      versao: ESCALAS_VERSION,
+    };
+
     const avaliacao = await this.avaliacoes.create({
       feridaId,
       clinicaId: resolved,
@@ -84,8 +111,12 @@ export class AvaliacaoFeridaService {
       ossoOuTendaoExposto,
       pioraAreaPct30Dias: dto.pioraAreaPct30Dias,
       diasCicatrizacaoEstagnada: dto.diasCicatrizacaoEstagnada,
+      bordas: dto.bordas,
+      tecidosAfetados: dto.tecidosAfetados,
+      sinaisInfeccao: dto.sinaisInfeccao,
       recomendacoes,
       motorClinico: ENGINE_VERSION,
+      escalas,
     });
 
     if (this.notificacoes && RISCOS_QUE_NOTIFICAM.has(recomendacoes[0].risco)) {
@@ -146,6 +177,8 @@ export class AvaliacaoFeridaService {
       epitelizacaoPct: a.tecido.epitelizacaoPct,
       maiorRisco: a.recomendacoes[0].risco,
       titulosRecomendacoes: a.recomendacoes.map((r) => r.titulo),
+      pushTotal: a.escalas?.push.total,
+      resvechTotal: a.escalas?.resvech?.total,
     }));
 
     const primeira = pontos[0]?.areaCm2;
