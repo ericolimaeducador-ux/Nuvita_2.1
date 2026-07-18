@@ -50,7 +50,7 @@ o `<ProtectedRoute modulo=...>` do front.
 
 ### MÉDIO
 
-**M1 — EXIF/GPS em fotos de ferida (privacidade LGPD)**
+**M1 — EXIF/GPS em fotos de ferida (privacidade LGPD)** · ✅ **CORRIGIDO em `5f0ecb9` (2026-07-18):** strip lossless server-side no confirm (JPEG APP1/APP13/COM, PNG tEXt/zTXt/iTXt/eXIf/tIME, WebP EXIF/XMP); objeto regravado sanitizado, tamanho/hash atualizados, auditoria com `metadataRemovida`. Lacuna restante: HEIC (ISO-BMFF) não é sanitizado — mitigar no cliente junto com o guia de foto (A3).
 Fotos de celular carregam EXIF com GPS, data e serial do aparelho — na
 prática, o endereço do paciente embutido na imagem de uma lesão. Nenhum
 strip de metadata hoje. *Correção:* remover EXIF no cliente antes do upload
@@ -74,7 +74,7 @@ cadeia e força novo login.
 controle administrativo do Atlas. *Correção:* criar usuário com
 `readWrite@nuvita2`, trocar a URI, remover o antigo.
 
-**M5 — CORS de produção inclui `http://localhost:5174`**
+**M5 — CORS de produção inclui `http://localhost:5174`** · ✅ **CORRIGIDO em `d76fbc1` (2026-07-18):** `PROD_ORIGINS` só com o domínio real; aplicado em produção via regeneração do `CLOUDRUN_ENV_YAML` + redeploy.
 `gen-cloudrun-env.cjs:18` — origem de dev na allowlist de produção permite
 que qualquer página local converse com a API de produção com credenciais.
 *Correção:* remover do array `PROD_ORIGINS`.
@@ -97,7 +97,7 @@ que qualquer página local converse com a API de produção com credenciais.
 |---|---|---|
 | **Assinatura do prontuário** | HMAC de servidor — íntegro tecnicamente, mas **não é assinatura digital qualificada**. Pela CFM 1.821/2007 + SBIS NGS2, só assinatura ICP-Brasil elimina o papel com validade plena | Integrar assinatura ICP-Brasil (certificado A1/A3 do profissional) ou assinatura qualificada gov.br; manter o HMAC como camada interna |
 | **Guarda de 20 anos** | Soft-delete correto (nada é apagado fisicamente) | Formalizar política de retenção/arquivamento por escrito (exigência de auditoria) |
-| **LGPD — direitos do titular** | Export de paciente existe (portabilidade ✅); consentimento modelado ✅ | Faltam: registro de operações (ROPA), designação de DPO/encarregado, política de retenção publicada, strip de EXIF (M1) |
+| **LGPD — direitos do titular** | Export de paciente existe (portabilidade ✅); consentimento modelado ✅ | Faltam: registro de operações (ROPA), designação de DPO/encarregado, política de retenção publicada (strip de EXIF ✅ corrigido — M1) |
 | **Telemedicina (CFM 2.314/2022)** | Sala tokenizada + eventos auditados ✅ | Adicionar consentimento específico de teleatendimento registrado por sessão |
 | **Motor de risco como SaMD (ANVISA RDC 657/2022)** | `exigeRevisaoHumana: true` em toda recomendação + versão do motor persistida (`motorClinico`) — postura correta de *apoio à decisão* | Manter disclaimers visíveis na UI; se evoluir para diagnóstico automatizado (IA de segmentação), reavaliar enquadramento como dispositivo médico classe II |
 
