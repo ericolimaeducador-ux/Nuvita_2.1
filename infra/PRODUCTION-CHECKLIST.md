@@ -53,12 +53,17 @@ Cloud Run usa IPs dinâmicos. Em Atlas → Network Access, liberar `0.0.0.0/0`
 (protegido por usuário/senha forte) **ou** configurar VPC peering / Private Endpoint.
 Não verificável por CLI local (sem `atlas` CLI instalado) — checar direto no console Atlas.
 
-### 3. Domínio próprio `estomoterapia.nuvita.app.br` — DNS pendente (registro.br)
-- Frontend (GitHub Pages): CNAME apontando pro Pages, `Enforce HTTPS` habilitado.
-- API: `gcloud run domain-mappings create --service nuvita2-api --domain api.estomoterapia.nuvita.app.br --region southamerica-east1`
-  (verificar antes o domínio no Google Search Console), depois criar o registro que o
-  comando indicar no registro.br.
-- Confirmar que `CORS_ORIGIN` cobre o domínio final assim que o DNS resolver.
+### 3. Domínio próprio `estomoterapia.nuvita.app.br` (registro.br) — em andamento 2026-07-18
+- Frontend (GitHub Pages): CNAME `estomoterapia` → `ericolimaeducador-ux.github.io.`
+  ✅ criado e propagado; falta o cert HTTPS do Pages emitir → habilitar `Enforce HTTPS`.
+- API: **domain mapping nativo do Cloud Run NÃO existe em `southamerica-east1`**
+  (erro 501 — não usar `gcloud run domain-mappings` nesta região). O caminho é o
+  mesmo do Nuvita original: **Firebase Hosting como proxy** (`firebase.json` na raiz
+  já tem o rewrite `**` → serviço `nuvita2-api`): `firebase deploy --only hosting`
+  ✅ feito (proxy validado em `https://nuvita2-estomoterapia.web.app/health`), DNS A
+  `api.estomoterapia` → `199.36.158.100` ✅ criado; falta adicionar o domínio
+  customizado no console Firebase (Hosting → Add custom domain) e aguardar o cert.
+- `CORS_ORIGIN` já cobre `https://estomoterapia.nuvita.app.br` ✅.
 
 ### 4. Primeiro bootstrap de admin em produção
 - Rodar o bootstrap do admin no banco de produção (ver `scripts/`), usando o
