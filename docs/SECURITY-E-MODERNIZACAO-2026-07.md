@@ -56,13 +56,13 @@ prática, o endereço do paciente embutido na imagem de uma lesão. Nenhum
 strip de metadata hoje. *Correção:* remover EXIF no cliente antes do upload
 (canvas re-encode resolve de graça) ou no backend na geração do thumbnail.
 
-**M2 — Rate limiting restrito a `/auth`, por IP**
+**M2 — Rate limiting restrito a `/auth`, por IP** · ✅ **CORRIGIDO em `17781cb` (2026-07-18):** ThrottlerGuard global por IP (300/min; auth 30, login 10, register 5; sinalização da telemedicina 600; health isento) + lockout progressivo por conta (5ª falha trava 1min, dobra até 1h, audita `ACCOUNT_LOCKED`, fail-open sem Redis).
 Endpoints caros (analytics, export de paciente, presign) sem limite; o
 limite de login é por IP (ataque distribuído contorna; NAT corporativo pune
 inocentes). *Correção:* throttle global moderado + contador de falhas por
 conta (lockout progressivo) além do IP.
 
-**M3 — Refresh token sem detecção de reuso**
+**M3 — Refresh token sem detecção de reuso** · ✅ **CORRIGIDO em `17781cb` (2026-07-18):** token family (`fam` no payload) criada no login; reuso de refresh rotacionado revoga a família inteira (refresh + access dos dois lados), audita `REFRESH_TOKEN_REUSE_DETECTED` e força novo login; logout também encerra a família.
 Revogação individual existe, mas se um refresh token vazar e for usado pelo
 atacante *antes* do usuário, a família não é invalidada. *Correção:* token
 family/rotation detection — reuso de um jti já rotacionado revoga toda a
