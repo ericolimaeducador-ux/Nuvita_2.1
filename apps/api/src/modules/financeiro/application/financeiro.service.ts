@@ -38,6 +38,9 @@ export class FinanceiroService {
       formaPagamento: dto.formaPagamento,
       vencimento: dto.vencimento ? new Date(dto.vencimento) : undefined,
       observacoes: dto.observacoes,
+      categoria: dto.categoria,
+      produtoId: dto.produtoId,
+      quantidade: dto.quantidade,
       criadoPor: context.user.sub,
     });
 

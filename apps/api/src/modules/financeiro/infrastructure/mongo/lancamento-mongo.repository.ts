@@ -35,6 +35,9 @@ export class LancamentoMongoRepository implements LancamentoRepository {
       vencimento: input.vencimento,
       observacoes: input.observacoes,
       origem: input.origem ?? OrigemLancamento.GERAL,
+      categoria: input.categoria,
+      produtoId: input.produtoId,
+      quantidade: input.quantidade,
       profissionalId: input.profissionalId,
       ciclo: input.ciclo,
       criadoPor: input.criadoPor,
@@ -104,7 +107,7 @@ export class LancamentoMongoRepository implements LancamentoRepository {
       { $match: match },
       {
         $group: {
-          _id: { tipo: '$tipo', formaPagamento: '$formaPagamento', status: '$status' },
+          _id: { tipo: '$tipo', formaPagamento: '$formaPagamento', status: '$status', categoria: '$categoria' },
           total: { $sum: '$valor' },
           quantidade: { $sum: 1 },
         },
@@ -112,7 +115,7 @@ export class LancamentoMongoRepository implements LancamentoRepository {
     ];
 
     const results = await this.model.aggregate(pipeline).exec() as Array<{
-      _id: { tipo: TipoLancamento; formaPagamento?: string; status: StatusLancamento };
+      _id: { tipo: TipoLancamento; formaPagamento?: string; status: StatusLancamento; categoria?: string };
       total: number;
       quantidade: number;
     }>;
@@ -121,6 +124,7 @@ export class LancamentoMongoRepository implements LancamentoRepository {
     let totalDespesas = 0;
     let totalPendente = 0;
     const formaMap = new Map<string, { total: number; quantidade: number }>();
+    const categoriaMap = new Map<string, { categoria: string; tipo: TipoLancamento; total: number; quantidade: number }>();
 
     for (const r of results) {
       if (r._id.tipo === TipoLancamento.RECEITA && r._id.status === StatusLancamento.RECEBIDO) {
@@ -136,6 +140,15 @@ export class LancamentoMongoRepository implements LancamentoRepository {
       const forma = r._id.formaPagamento ?? 'nao_informado';
       const current = formaMap.get(forma) ?? { total: 0, quantidade: 0 };
       formaMap.set(forma, { total: current.total + r.total, quantidade: current.quantidade + r.quantidade });
+
+      // Composição por categoria só com o que foi efetivado (recebido/pago) —
+      // pendências ficam no card próprio, não distorcem os gráficos.
+      if (r._id.status === StatusLancamento.RECEBIDO) {
+        const categoria = r._id.categoria ?? 'outro';
+        const key = `${categoria}:${r._id.tipo}`;
+        const atual = categoriaMap.get(key) ?? { categoria, tipo: r._id.tipo, total: 0, quantidade: 0 };
+        categoriaMap.set(key, { ...atual, total: atual.total + r.total, quantidade: atual.quantidade + r.quantidade });
+      }
     }
 
     return {
@@ -144,7 +157,48 @@ export class LancamentoMongoRepository implements LancamentoRepository {
       totalPendente,
       saldo: totalReceitas - totalDespesas,
       porFormaPagamento: Array.from(formaMap.entries()).map(([forma, data]) => ({ forma, ...data })),
+      porCategoria: Array.from(categoriaMap.values()).sort((a, b) => b.total - a.total),
+      serieMensal: await this.serieMensal(match),
     };
+  }
+
+  /**
+   * Entrada×saída efetivada por mês nos últimos 12 meses (independe do filtro
+   * de período do dashboard — o gráfico de evolução precisa da janela cheia).
+   */
+  private async serieMensal(matchBase: Record<string, unknown>): Promise<DashboardFinanceiro['serieMensal']> {
+    const inicio = new Date();
+    inicio.setDate(1);
+    inicio.setHours(0, 0, 0, 0);
+    inicio.setMonth(inicio.getMonth() - 11);
+
+    const match = { ...matchBase, status: StatusLancamento.RECEBIDO, criadoEm: { $gte: inicio } };
+    const results = await this.model
+      .aggregate([
+        { $match: match },
+        {
+          $group: {
+            _id: { mes: { $dateToString: { format: '%Y-%m', date: '$criadoEm' } }, tipo: '$tipo' },
+            total: { $sum: '$valor' },
+          },
+        },
+      ])
+      .exec() as Array<{ _id: { mes: string; tipo: TipoLancamento }; total: number }>;
+
+    const porMes = new Map<string, { receitas: number; despesas: number }>();
+    // Todos os 12 meses aparecem, mesmo zerados — eixo do gráfico contínuo.
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(inicio.getFullYear(), inicio.getMonth() + i, 1);
+      porMes.set(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`, { receitas: 0, despesas: 0 });
+    }
+    for (const r of results) {
+      const mes = porMes.get(r._id.mes) ?? { receitas: 0, despesas: 0 };
+      if (r._id.tipo === TipoLancamento.RECEITA) mes.receitas += r.total;
+      else mes.despesas += r.total;
+      porMes.set(r._id.mes, mes);
+    }
+
+    return Array.from(porMes.entries()).map(([mes, valores]) => ({ mes, ...valores }));
   }
 
   private toEntity(doc: LancamentoDocument): Lancamento {
@@ -163,6 +217,9 @@ export class LancamentoMongoRepository implements LancamentoRepository {
       recebidoEm: obj.recebidoEm,
       observacoes: obj.observacoes,
       origem: obj.origem ?? OrigemLancamento.GERAL,
+      categoria: obj.categoria,
+      produtoId: obj.produtoId,
+      quantidade: obj.quantidade,
       profissionalId: obj.profissionalId,
       ciclo: obj.ciclo,
       criadoPor: obj.criadoPor,

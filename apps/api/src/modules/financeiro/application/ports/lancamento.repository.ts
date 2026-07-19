@@ -1,4 +1,5 @@
 import {
+  CategoriaLancamento,
   DashboardFinanceiro,
   FormaPagamento,
   Lancamento,
@@ -18,6 +19,9 @@ export interface CreateLancamentoInput {
   vencimento?: Date;
   observacoes?: string;
   origem?: OrigemLancamento;
+  categoria?: CategoriaLancamento;
+  produtoId?: string;
+  quantidade?: number;
   profissionalId?: string;
   ciclo?: number;
   criadoPor: string;

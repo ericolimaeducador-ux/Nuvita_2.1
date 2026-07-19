@@ -846,6 +846,20 @@ export const FORMA_PAGAMENTO_LABEL: Record<FormaPagamento, string> = {
   [FormaPagamento.BOLETO]: 'Boleto',
 };
 
+export enum CategoriaLancamento {
+  CONSULTA = 'consulta',
+  VENDA_PRODUTO = 'venda_produto',
+  COMPRA_PRODUTO = 'compra_produto',
+  OUTRO = 'outro',
+}
+
+export const CATEGORIA_LANCAMENTO_LABEL: Record<CategoriaLancamento, string> = {
+  [CategoriaLancamento.CONSULTA]: 'Consulta',
+  [CategoriaLancamento.VENDA_PRODUTO]: 'Venda de produto',
+  [CategoriaLancamento.COMPRA_PRODUTO]: 'Compra de produto',
+  [CategoriaLancamento.OUTRO]: 'Outro',
+};
+
 export interface Lancamento {
   id: string;
   clinicaId: string;
@@ -859,6 +873,9 @@ export interface Lancamento {
   vencimento?: string;
   recebidoEm?: string;
   observacoes?: string;
+  categoria?: CategoriaLancamento;
+  produtoId?: string;
+  quantidade?: number;
   criadoPor: string;
   criadoEm: string;
 }
@@ -869,6 +886,8 @@ export interface DashboardFinanceiro {
   totalPendente: number;
   saldo: number;
   porFormaPagamento: Array<{ forma: string; total: number; quantidade: number }>;
+  porCategoria: Array<{ categoria: string; tipo: TipoLancamento; total: number; quantidade: number }>;
+  serieMensal: Array<{ mes: string; receitas: number; despesas: number }>;
 }
 
 // ---------- Financeiro da psicologia (psicólogo autônomo) ----------

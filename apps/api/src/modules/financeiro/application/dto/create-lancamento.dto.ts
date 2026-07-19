@@ -1,5 +1,5 @@
-import { IsDateString, IsEnum, IsNumber, IsOptional, IsPositive, IsString, MinLength } from 'class-validator';
-import { FormaPagamento, TipoLancamento } from '../../domain/lancamento.entity';
+import { IsDateString, IsEnum, IsInt, IsNumber, IsOptional, IsPositive, IsString, MinLength } from 'class-validator';
+import { CategoriaLancamento, FormaPagamento, TipoLancamento } from '../../domain/lancamento.entity';
 
 export class CreateLancamentoDto {
   @IsOptional()
@@ -36,4 +36,17 @@ export class CreateLancamentoDto {
   @IsOptional()
   @IsString()
   observacoes?: string;
+
+  @IsOptional()
+  @IsEnum(CategoriaLancamento)
+  categoria?: CategoriaLancamento;
+
+  @IsOptional()
+  @IsString()
+  produtoId?: string;
+
+  @IsOptional()
+  @IsInt()
+  @IsPositive()
+  quantidade?: number;
 }

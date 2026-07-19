@@ -1,6 +1,12 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
-import { FormaPagamento, OrigemLancamento, StatusLancamento, TipoLancamento } from '../../domain/lancamento.entity';
+import {
+  CategoriaLancamento,
+  FormaPagamento,
+  OrigemLancamento,
+  StatusLancamento,
+  TipoLancamento,
+} from '../../domain/lancamento.entity';
 
 export type LancamentoDocument = HydratedDocument<LancamentoMongo>;
 
@@ -21,6 +27,9 @@ export class LancamentoMongo {
   // o default cobre a leitura deles sem migração.
   @Prop({ required: true, enum: OrigemLancamento, default: OrigemLancamento.GERAL, index: true })
   origem!: OrigemLancamento;
+  @Prop({ enum: CategoriaLancamento, index: true }) categoria?: CategoriaLancamento;
+  @Prop({ index: true }) produtoId?: string;
+  @Prop() quantidade?: number;
   @Prop({ index: true }) profissionalId?: string;
   @Prop() ciclo?: number;
   @Prop({ required: true }) criadoPor!: string;

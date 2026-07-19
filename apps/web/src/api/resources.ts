@@ -206,6 +206,9 @@ export interface CreateLancamentoPayload {
   pacienteId?: string;
   agendamentoId?: string;
   observacoes?: string;
+  categoria?: string;
+  produtoId?: string;
+  quantidade?: number;
 }
 
 export const financeiroApi = {
