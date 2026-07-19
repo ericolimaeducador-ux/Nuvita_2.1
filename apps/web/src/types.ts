@@ -201,7 +201,6 @@ export enum Modulo {
   TELEMEDICINA = 'TELEMEDICINA',
   FERIDAS = 'FERIDAS',
   ANALYTICS = 'ANALYTICS',
-  FINANCEIRO_PSICOLOGIA = 'FINANCEIRO_PSICOLOGIA',
   CLINICA = 'CLINICA',
   SUPER_ADMIN = 'SUPER_ADMIN',
 }
@@ -219,7 +218,6 @@ export const MODULO_LABEL: Record<Modulo, string> = {
   [Modulo.TELEMEDICINA]: 'Telemedicina',
   [Modulo.FERIDAS]: 'Feridas',
   [Modulo.ANALYTICS]: 'Relatórios / analytics',
-  [Modulo.FINANCEIRO_PSICOLOGIA]: 'Financeiro da psicologia',
   [Modulo.CLINICA]: 'Configuração da clínica',
   [Modulo.SUPER_ADMIN]: 'Super Admin',
 };
@@ -245,12 +243,11 @@ export const PERMISSOES_PADRAO_POR_PAPEL: Record<Papel, Modulo[]> = {
   [Papel.ADVOGADO]: [
     M.DASHBOARD, M.PACIENTES, M.PRONTUARIOS, M.DOCUMENTOS,
   ],
-  // O financeiro da psicologia é o caixa do próprio psicólogo (autônomo) — não
-  // se confunde com o M.FINANCEIRO da clínica, que ele não enxerga. As sessões
-  // são registradas pelo prontuário comum (tipo psicoterapia).
+  // As sessões de psicoterapia são registradas pelo prontuário comum (tipo
+  // psicoterapia); o financeiro é o único livro-caixa da clínica (M.FINANCEIRO),
+  // visível só a quem recebe pagamento (admin/secretaria).
   [Papel.PSICOLOGO]: [
     M.DASHBOARD, M.PACIENTES, M.AGENDA, M.PRONTUARIOS, M.DOCUMENTOS, M.TELEMEDICINA,
-    M.FINANCEIRO_PSICOLOGIA,
   ],
   [Papel.SECRETARIA]: [
     M.DASHBOARD, M.PACIENTES, M.AGENDA, M.DOCUMENTOS, M.FINANCEIRO, M.NOTIFICACOES,
@@ -846,17 +843,27 @@ export const FORMA_PAGAMENTO_LABEL: Record<FormaPagamento, string> = {
   [FormaPagamento.BOLETO]: 'Boleto',
 };
 
+/**
+ * Categoria do lançamento na realidade de uma clínica de estomaterapia:
+ * consulta presencial, atendimento avulso por telemedicina, venda/compra de
+ * produto (curativos, coberturas, bolsas) e consultoria prestada a hospitais
+ * e clínicas de idosos.
+ */
 export enum CategoriaLancamento {
   CONSULTA = 'consulta',
+  TELEMEDICINA_AVULSA = 'telemedicina_avulsa',
   VENDA_PRODUTO = 'venda_produto',
   COMPRA_PRODUTO = 'compra_produto',
+  CONSULTORIA = 'consultoria',
   OUTRO = 'outro',
 }
 
 export const CATEGORIA_LANCAMENTO_LABEL: Record<CategoriaLancamento, string> = {
   [CategoriaLancamento.CONSULTA]: 'Consulta',
+  [CategoriaLancamento.TELEMEDICINA_AVULSA]: 'Telemedicina avulsa',
   [CategoriaLancamento.VENDA_PRODUTO]: 'Venda de produto',
   [CategoriaLancamento.COMPRA_PRODUTO]: 'Compra de produto',
+  [CategoriaLancamento.CONSULTORIA]: 'Consultoria (hospital/clínica)',
   [CategoriaLancamento.OUTRO]: 'Outro',
 };
 
@@ -888,63 +895,6 @@ export interface DashboardFinanceiro {
   porFormaPagamento: Array<{ forma: string; total: number; quantidade: number }>;
   porCategoria: Array<{ categoria: string; tipo: TipoLancamento; total: number; quantidade: number }>;
   serieMensal: Array<{ mes: string; receitas: number; despesas: number }>;
-}
-
-// ---------- Financeiro da psicologia (psicólogo autônomo) ----------
-
-/** O acompanhamento é vendido em pacotes fechados de sessões, pagos adiantado. */
-export const SESSOES_POR_CICLO = 4;
-
-export enum StatusCiclo {
-  A_COBRAR = 'a_cobrar',
-  AGUARDANDO_PAGAMENTO = 'aguardando_pagamento',
-  EM_DIA = 'em_dia',
-}
-
-export const STATUS_CICLO_LABEL: Record<StatusCiclo, string> = {
-  [StatusCiclo.A_COBRAR]: 'Cobrar ciclo',
-  [StatusCiclo.AGUARDANDO_PAGAMENTO]: 'Aguardando pagamento',
-  [StatusCiclo.EM_DIA]: 'Em dia',
-};
-
-export interface CobrancaCiclo {
-  id: string;
-  ciclo: number;
-  valor: number;
-  status: StatusLancamento;
-  formaPagamento?: FormaPagamento;
-  vencimento?: string;
-  recebidoEm?: string;
-  criadoEm: string;
-}
-
-export interface PacientePsicologia {
-  pacienteId: string;
-  pacienteNome?: string;
-  sessoesRealizadas: number;
-  proximaSessao: number;
-  cicloAtual: number;
-  sessoesNoCiclo: number;
-  sessoesAteFecharCiclo: number;
-  statusCiclo: StatusCiclo;
-  valorEmAberto: number;
-  primeiraSessaoEm?: string;
-  ultimaSessaoEm?: string;
-  cobrancas: CobrancaCiclo[];
-}
-
-export interface PainelPsicologia {
-  valorSessao?: number;
-  sessoesPorCiclo: number;
-  recebidoNoMes: number;
-  aReceber: number;
-  ciclosACobrar: number;
-  pacientes: PacientePsicologia[];
-}
-
-/** "1ª consulta" na estreia; depois, o número da sessão que vem. */
-export function rotuloProximaSessao(p: { sessoesRealizadas: number; proximaSessao: number }): string {
-  return p.sessoesRealizadas === 0 ? '1ª consulta' : `${p.proximaSessao}ª sessão`;
 }
 
 // ---------- Telemedicina ----------

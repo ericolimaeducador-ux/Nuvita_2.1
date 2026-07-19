@@ -17,7 +17,6 @@ export enum Modulo {
   TELEMEDICINA = 'TELEMEDICINA',
   FERIDAS = 'FERIDAS',
   ANALYTICS = 'ANALYTICS',
-  FINANCEIRO_PSICOLOGIA = 'FINANCEIRO_PSICOLOGIA',
   CLINICA = 'CLINICA',
   SUPER_ADMIN = 'SUPER_ADMIN',
 }
@@ -35,7 +34,6 @@ export const MODULO_LABEL: Record<Modulo, string> = {
   [Modulo.TELEMEDICINA]: 'Telemedicina',
   [Modulo.FERIDAS]: 'Feridas',
   [Modulo.ANALYTICS]: 'Relatórios / analytics',
-  [Modulo.FINANCEIRO_PSICOLOGIA]: 'Financeiro da psicologia',
   [Modulo.CLINICA]: 'Configuração da clínica',
   [Modulo.SUPER_ADMIN]: 'Super Admin',
 };
@@ -61,12 +59,11 @@ export const PERMISSOES_PADRAO_POR_PAPEL: Record<Papel, Modulo[]> = {
   [Papel.ADVOGADO]: [
     M.DASHBOARD, M.PACIENTES, M.PRONTUARIOS, M.DOCUMENTOS,
   ],
-  // O financeiro da psicologia é o caixa do próprio psicólogo (autônomo) — não
-  // se confunde com o M.FINANCEIRO da clínica, que ele não enxerga. As sessões
-  // são registradas pelo prontuário comum (tipo psicoterapia).
+  // As sessões de psicoterapia são registradas pelo prontuário comum (tipo
+  // psicoterapia); o financeiro é o único livro-caixa da clínica (M.FINANCEIRO),
+  // visível só a quem recebe pagamento (admin/secretaria).
   [Papel.PSICOLOGO]: [
     M.DASHBOARD, M.PACIENTES, M.AGENDA, M.PRONTUARIOS, M.DOCUMENTOS, M.TELEMEDICINA,
-    M.FINANCEIRO_PSICOLOGIA,
   ],
   [Papel.SECRETARIA]: [
     M.DASHBOARD, M.PACIENTES, M.AGENDA, M.DOCUMENTOS, M.FINANCEIRO, M.NOTIFICACOES,

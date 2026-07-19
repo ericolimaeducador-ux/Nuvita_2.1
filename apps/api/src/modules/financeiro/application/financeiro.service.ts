@@ -5,7 +5,7 @@ import { AUDIT_LOG_REPOSITORY } from '../../auth/auth.constants';
 import { AuditLogRepository } from '../../auth/application/ports/audit-log.repository';
 import { AuditEvent } from '../../auth/domain/audit-event.enum';
 import { LANCAMENTO_REPOSITORY } from '../financeiro.constants';
-import { OrigemLancamento, StatusLancamento } from '../domain/lancamento.entity';
+import { StatusLancamento } from '../domain/lancamento.entity';
 import { CreateLancamentoDto } from './dto/create-lancamento.dto';
 import { FinancialDashboardQueryDto } from './dto/financial-dashboard-query.dto';
 import { ListLancamentosQueryDto } from './dto/list-lancamentos-query.dto';
@@ -57,8 +57,6 @@ export class FinanceiroService {
       agendamentoId: query.agendamentoId,
       tipo: query.tipo,
       status: query.status,
-      // O caixa do psicólogo autônomo é dele: não entra no financeiro da clínica.
-      origem: OrigemLancamento.GERAL,
       dataInicio: query.dataInicio ? new Date(query.dataInicio) : undefined,
       dataFim: query.dataFim ? new Date(query.dataFim) : undefined,
     });
@@ -110,7 +108,6 @@ export class FinanceiroService {
 
     const result = await this.lancamentos.dashboard({
       clinicaId,
-      origem: OrigemLancamento.GERAL,
       dataInicio,
       dataFim,
     });

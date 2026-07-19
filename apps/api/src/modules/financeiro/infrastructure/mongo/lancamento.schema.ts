@@ -3,7 +3,6 @@ import { HydratedDocument } from 'mongoose';
 import {
   CategoriaLancamento,
   FormaPagamento,
-  OrigemLancamento,
   StatusLancamento,
   TipoLancamento,
 } from '../../domain/lancamento.entity';
@@ -23,15 +22,9 @@ export class LancamentoMongo {
   @Prop({ index: true }) vencimento?: Date;
   @Prop() recebidoEm?: Date;
   @Prop() observacoes?: string;
-  // Lançamentos criados antes do módulo de psicologia não têm origem gravada —
-  // o default cobre a leitura deles sem migração.
-  @Prop({ required: true, enum: OrigemLancamento, default: OrigemLancamento.GERAL, index: true })
-  origem!: OrigemLancamento;
   @Prop({ enum: CategoriaLancamento, index: true }) categoria?: CategoriaLancamento;
   @Prop({ index: true }) produtoId?: string;
   @Prop() quantidade?: number;
-  @Prop({ index: true }) profissionalId?: string;
-  @Prop() ciclo?: number;
   @Prop({ required: true }) criadoPor!: string;
   criadoEm!: Date;
   atualizadoEm?: Date;
@@ -42,4 +35,4 @@ export const LancamentoSchema = SchemaFactory.createForClass(LancamentoMongo);
 LancamentoSchema.index({ clinicaId: 1, status: 1, criadoEm: -1 });
 LancamentoSchema.index({ clinicaId: 1, tipo: 1, criadoEm: -1 });
 LancamentoSchema.index({ clinicaId: 1, vencimento: 1, status: 1 });
-LancamentoSchema.index({ clinicaId: 1, origem: 1, profissionalId: 1, pacienteId: 1 });
+LancamentoSchema.index({ clinicaId: 1, categoria: 1, criadoEm: -1 });

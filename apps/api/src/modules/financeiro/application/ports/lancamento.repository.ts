@@ -3,7 +3,6 @@ import {
   DashboardFinanceiro,
   FormaPagamento,
   Lancamento,
-  OrigemLancamento,
   StatusLancamento,
   TipoLancamento,
 } from '../../domain/lancamento.entity';
@@ -18,12 +17,9 @@ export interface CreateLancamentoInput {
   formaPagamento?: FormaPagamento;
   vencimento?: Date;
   observacoes?: string;
-  origem?: OrigemLancamento;
   categoria?: CategoriaLancamento;
   produtoId?: string;
   quantidade?: number;
-  profissionalId?: string;
-  ciclo?: number;
   criadoPor: string;
 }
 
@@ -33,15 +29,12 @@ export interface ListLancamentosInput {
   agendamentoId?: string;
   tipo?: TipoLancamento;
   status?: StatusLancamento;
-  origem?: OrigemLancamento;
-  profissionalId?: string;
   dataInicio?: Date;
   dataFim?: Date;
 }
 
 export interface DashboardInput {
   clinicaId: string;
-  origem?: OrigemLancamento;
   dataInicio: Date;
   dataFim: Date;
 }
