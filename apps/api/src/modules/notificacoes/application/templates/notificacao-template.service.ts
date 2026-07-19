@@ -22,10 +22,6 @@ const TEMPLATES: Record<TipoNotificacao, { assunto: string; mensagem: string }> 
     assunto: 'Resultado disponivel',
     mensagem: 'Ola {nome}, o documento {documento} ja esta disponivel no seu prontuario.',
   },
-  [TipoNotificacao.ELEGIBILIDADE_CONFIRMADA]: {
-    assunto: 'Paciente elegivel para produto gratuito',
-    mensagem: 'O paciente {nome} foi confirmado como elegivel para receber o insumo indicado gratuitamente via SUS. Agende o laudo medico.',
-  },
   [TipoNotificacao.RISCO_FERIDA_ALTO]: {
     assunto: 'Ferida com risco alto/urgente',
     mensagem: 'Uma avaliacao do paciente {nome} gerou recomendacao de risco alto ou urgente. Revise o caso o quanto antes.',
