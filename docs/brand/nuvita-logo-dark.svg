@@ -1,0 +1,7 @@
+<svg viewBox="0 0 250 80" width="420" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Nuvita">
+  <g stroke="#FFB800" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 45 55 L 20 55 C 11.716 55 5 48.284 5 40 C 5 31.716 11.716 25 20 25 C 22.046 25 23.996 25.41 25.756 26.143 C 28.595 16.518 37.604 9.5 48.5 9.5 C 57.697 9.5 65.655 14.805 69.458 22.585 C 70.92 22.197 72.481 21.986 74.095 21.986 C 82.38 21.986 89.095 28.702 89.095 36.986 C 89.095 45.27 82.38 51.986 74.095 51.986 L 68 51.986" />
+    <path d="M 25 42 L 40 42 L 46 28 L 56 60 L 62 42 L 78 42" />
+  </g>
+  <text x="105" y="55" font-family="'Plus Jakarta Sans','Inter','Montserrat',sans-serif" font-weight="bold" font-size="44" fill="#FFFFFF">Nuvita</text>
+</svg>
