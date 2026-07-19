@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   LayoutDashboard, Users, Calendar, Bell, DollarSign,
-  Video, Building2, LogOut, ChevronLeft, ChevronRight, Shield, Bandage,
+  Video, Building2, LogOut, ChevronLeft, ChevronRight, Shield, Bandage, Menu, X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -31,10 +31,18 @@ const navItems: { to: string; icon: React.ElementType; label: string; modulo: Mo
 
 export function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
+  // Em telas pequenas a sidebar vira um menu off-canvas (fixed + overlay) em
+  // vez de disputar espaço com o conteúdo — fechado por padrão, some ao
+  // trocar de rota.
+  const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { user, permissoes, clinicaAtiva, trocarClinica, logout } = useAuth();
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
 
   // SUPER_ADMIN é papel de plataforma (sem clínica no token): opera os dados
   // clínicos "assumindo" uma clínica, enviada em toda chamada via x-clinica-id.
@@ -67,19 +75,41 @@ export function AppLayout() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      {/* Sidebar — cobalto sólido, item ativo em pílula dourada */}
+      {/* Backdrop do menu mobile — clique fora fecha */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
+          onClick={() => setMobileOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Sidebar — cobalto sólido, item ativo em pílula dourada.
+          Mobile (<lg): off-canvas fixo, entra/sai por translate-x.
+          Desktop (lg+): sempre em fluxo, recolhe por width (collapsed). */}
       <motion.aside
         animate={{ width: collapsed ? 64 : 240 }}
         transition={{ duration: 0.2, ease: 'easeInOut' }}
-        className="relative flex flex-col bg-brand-cobalt overflow-hidden shrink-0"
+        className={cn(
+          'fixed inset-y-0 left-0 z-40 flex flex-col bg-brand-cobalt overflow-hidden shrink-0',
+          'transition-transform duration-200 lg:relative lg:z-auto lg:translate-x-0',
+          mobileOpen ? 'translate-x-0' : '-translate-x-full',
+        )}
       >
         {/* Logo (sem slogan) — ícone recolhido quando a sidebar está colapsada */}
-        <div className="flex items-center h-[68px] px-4 border-b border-white/10">
+        <div className="flex items-center justify-between h-[68px] px-4 border-b border-white/10">
           {collapsed ? (
             <LogoIcon size={32} iconColor="#FFB800" className="mx-auto" />
           ) : (
             <Logo width={150} iconColor="#FFB800" textColor="#FFFFFF" />
           )}
+          <button
+            onClick={() => setMobileOpen(false)}
+            className="lg:hidden p-1 text-blue-100/85 hover:text-white"
+            aria-label="Fechar menu"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
 
         {/* Nav */}
@@ -157,10 +187,10 @@ export function AppLayout() {
           </Button>
         </div>
 
-        {/* Collapse toggle */}
+        {/* Collapse toggle — só desktop; no mobile a sidebar é off-canvas (abre/fecha, não recolhe) */}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="absolute -right-3 top-8 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-card border border-border text-muted-foreground hover:text-foreground transition-colors shadow-sm"
+          className="hidden lg:flex absolute -right-3 top-8 z-10 h-6 w-6 items-center justify-center rounded-full bg-card border border-border text-muted-foreground hover:text-foreground transition-colors shadow-sm"
         >
           {collapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
         </button>
@@ -169,7 +199,14 @@ export function AppLayout() {
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header superior — sino + perfil do usuário logado */}
-        <header className="flex items-center justify-end gap-4 px-6 py-3 bg-card border-b border-border shrink-0">
+        <header className="flex items-center justify-end gap-4 px-4 sm:px-6 py-3 bg-card border-b border-border shrink-0">
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="lg:hidden mr-auto p-2 -ml-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            aria-label="Abrir menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
           {ehSuperAdmin && (
             <div className="flex items-center gap-2 mr-auto">
               <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
