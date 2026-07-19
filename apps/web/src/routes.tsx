@@ -15,7 +15,6 @@ import { TelemedicinaPage } from '@/pages/TelemedicinaPage';
 import { AtendimentoTelemedicinaPage } from '@/pages/AtendimentoTelemedicinaPage';
 import { ClinicaPage } from '@/pages/ClinicaPage';
 import { ProntuarioImpressaoPage } from '@/pages/ProntuarioImpressaoPage';
-import { AtendimentoPsicologicoPage } from '@/pages/AtendimentoPsicologicoPage';
 import { FeridasPage } from '@/pages/FeridasPage';
 import { FeridaDetailPage } from '@/pages/FeridaDetailPage';
 import { SuperAdminPage } from '@/pages/SuperAdminPage';
@@ -66,9 +65,6 @@ export function AppRoutes() {
           </Route>
           <Route element={<ProtectedRoute modulo={Modulo.TELEMEDICINA} />}>
             <Route path="/telemedicina" element={<TelemedicinaPage />} />
-          </Route>
-          <Route element={<ProtectedRoute modulo={Modulo.ATENDIMENTO_PSICOLOGICO} />}>
-            <Route path="/atendimento-psicologico" element={<AtendimentoPsicologicoPage />} />
           </Route>
           <Route element={<ProtectedRoute modulo={Modulo.FINANCEIRO_PSICOLOGIA} />}>
             <Route path="/financeiro-psicologia" element={<FinanceiroPsicologiaPage />} />

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   LayoutDashboard, Users, Calendar, Bell, DollarSign,
-  Video, Building2, LogOut, ChevronLeft, ChevronRight, Shield, Brain, Wallet, Bandage,
+  Video, Building2, LogOut, ChevronLeft, ChevronRight, Shield, Wallet, Bandage,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -20,7 +20,6 @@ import { Logo, LogoIcon } from '@/components/Logo';
 const navItems: { to: string; icon: React.ElementType; label: string; modulo: Modulo; roles?: Papel[] }[] = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', modulo: Modulo.DASHBOARD },
   { to: '/pacientes', icon: Users, label: 'Pacientes', modulo: Modulo.PACIENTES },
-  { to: '/atendimento-psicologico', icon: Brain, label: 'Atend. Psicológico', modulo: Modulo.ATENDIMENTO_PSICOLOGICO },
   { to: '/financeiro-psicologia', icon: Wallet, label: 'Financeiro (Psi)', modulo: Modulo.FINANCEIRO_PSICOLOGIA },
   { to: '/agenda', icon: Calendar, label: 'Agenda', modulo: Modulo.AGENDA },
   { to: '/feridas', icon: Bandage, label: 'Feridas', modulo: Modulo.FERIDAS },
