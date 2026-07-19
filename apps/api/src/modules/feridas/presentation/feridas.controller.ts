@@ -19,8 +19,8 @@ import { FeridasRequestContext, FeridasService } from '../application/feridas.se
 // paciente); mutação restrita aos profissionais clinicamente responsáveis —
 // não reusa PAPEIS_PROFISSIONAIS inteiro (que inclui ADVOGADO/PSICOLOGO, sem
 // sentido clínico aqui).
-const LEITURA_FERIDAS = [Papel.MEDICO, Papel.ENFERMEIRO, Papel.ADMIN, Papel.SECRETARIA];
-const MUTACAO_FERIDAS = [Papel.MEDICO, Papel.ENFERMEIRO, Papel.ADMIN];
+const LEITURA_FERIDAS = [Papel.ENFERMEIRO, Papel.ADMIN, Papel.SECRETARIA];
+const MUTACAO_FERIDAS = [Papel.ENFERMEIRO, Papel.ADMIN];
 
 @Controller('feridas')
 @UseGuards(JwtAuthGuard, TenantRequiredGuard, RolesGuard, PermissoesGuard)

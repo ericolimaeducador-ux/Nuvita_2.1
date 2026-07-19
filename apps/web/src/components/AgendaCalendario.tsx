@@ -22,10 +22,7 @@ const localizer = dayjsLocalizer(dayjs);
 const DnDCalendar = withDragAndDrop<RBCEvent>(Calendar<RBCEvent>);
 
 const CORES_MODALIDADE: Record<ModalidadeAtendimento, string> = {
-  [ModalidadeAtendimento.MEDICO]: '#2563eb',
   [ModalidadeAtendimento.ENFERMAGEM]: '#059669',
-  [ModalidadeAtendimento.JURIDICO]: '#7c3aed',
-  [ModalidadeAtendimento.PSICOLOGIA]: '#e11d48',
 };
 
 function podeMover(a: Agendamento): boolean {

@@ -1,5 +1,5 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { AuthTokenPayload, Papel } from '../../../../../../packages/shared/src/auth';
+import { AuthTokenPayload } from '../../../../../../packages/shared/src/auth';
 import { resolveTenantClinicaId } from '../../../common/tenancy/resolve-clinica-id';
 import { AUDIT_LOG_REPOSITORY } from '../../auth/auth.constants';
 import { AuditLogRepository } from '../../auth/application/ports/audit-log.repository';
@@ -36,7 +36,7 @@ export class AgendamentosService {
       clinicaId,
       pacienteId: dto.pacienteId,
       medicoId: dto.medicoId,
-      modalidade: dto.modalidade ?? ModalidadeAtendimento.MEDICO,
+      modalidade: dto.modalidade ?? ModalidadeAtendimento.ENFERMAGEM,
       dataHoraInicio: new Date(dto.dataHoraInicio),
       dataHoraFim: new Date(dto.dataHoraFim),
       tipo: dto.tipo,
@@ -54,7 +54,7 @@ export class AgendamentosService {
 
     const agendamentos = await this.agendamentos.list({
       clinicaId,
-      medicoId: this.resolveMedicoIdFiltro(context.user, query.medicoId),
+      medicoId: query.medicoId,
       pacienteId: query.pacienteId,
       modalidade: query.modalidade,
       dataInicio: query.dataInicio ? new Date(query.dataInicio) : undefined,
@@ -153,7 +153,7 @@ export class AgendamentosService {
 
     return this.agendamentos.listBloqueios(
       clinicaId,
-      this.resolveMedicoIdFiltro(context.user, query.medicoId),
+      query.medicoId,
       query.dataInicio ? new Date(query.dataInicio) : undefined,
       query.dataFim ? new Date(query.dataFim) : undefined,
     );
@@ -171,17 +171,6 @@ export class AgendamentosService {
 
   private resolveClinicaId(user: AuthTokenPayload, requestedClinicaId?: string): string {
     return resolveTenantClinicaId(user, requestedClinicaId);
-  }
-
-  /**
-   * O psicólogo enxerga só a própria agenda (pacientes do Projeto PSI já são
-   * isolados por profissional individualmente) — ignora qualquer `medicoId`
-   * pedido na query e força o próprio id. Demais papéis mantêm a agenda
-   * compartilhada da clínica (fluxo clínico passa por vários profissionais).
-   */
-  private resolveMedicoIdFiltro(user: AuthTokenPayload, medicoIdSolicitado?: string): string | undefined {
-    if (user.papel === Papel.PSICOLOGO) return user.sub;
-    return medicoIdSolicitado;
   }
 
   /** Anexa nome e CPF do paciente a cada agendamento p/ identificação segura na

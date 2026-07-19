@@ -11,7 +11,7 @@ import { LoginRateLimiterService } from '../infrastructure/redis/login-rate-limi
 import { TokenRevocationService } from '../infrastructure/redis/token-revocation.service';
 import { AuthService } from './auth.service';
 
-/** Fluxo completo de sessão: login (com 2FA obrigatório para MEDICO) → refresh → logout. */
+/** Fluxo completo de sessão: login (com 2FA obrigatório para ENFERMEIRO) → refresh → logout. */
 describe('AuthService — fluxo de autenticação', () => {
   const JWT_ACCESS_SECRET = 'access-secret-de-teste';
   const JWT_REFRESH_SECRET = 'refresh-secret-de-teste';
@@ -30,7 +30,7 @@ describe('AuthService — fluxo de autenticação', () => {
       nome: 'Dra. Ana',
       email: 'ana@clinica.com',
       passwordHash: await bcrypt.hash('senhaForte123', 4),
-      papel: Papel.MEDICO,
+      papel: Papel.ENFERMEIRO,
       clinicaId: 'clinica-1',
       twoFactorSecret: totpSecret,
       ativo: true,

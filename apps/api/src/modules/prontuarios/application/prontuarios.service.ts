@@ -51,7 +51,6 @@ export class ProntuariosService {
       objetivo: dto.objetivo ?? {},
       avaliacao: dto.avaliacao ?? {},
       plano: dto.plano ?? {},
-      registroPsicologico: dto.registroPsicologico,
       registroEnfermagem: dto.registroEnfermagem,
       arquivos: dto.arquivos ?? [],
     });
@@ -277,7 +276,6 @@ export class ProntuariosService {
         avaliacao: prontuario.avaliacao,
         plano: prontuario.plano,
         registroEnfermagem: prontuario.registroEnfermagem ?? null,
-        registroPsicologico: prontuario.registroPsicologico ?? null,
         arquivos: prontuario.arquivos,
       },
       medicoId,

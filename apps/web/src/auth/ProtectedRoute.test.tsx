@@ -34,7 +34,7 @@ describe('ProtectedRoute', () => {
 
   it('redireciona para / quando o papel do usuário não está na lista permitida', () => {
     mockUseAuth.mockReturnValue({ user: usuarioBase, token: 'tok', permissoes: [] });
-    renderWithRoute({ roles: [Papel.MEDICO] });
+    renderWithRoute({ roles: [Papel.SECRETARIA] });
     expect(screen.getByText('Home')).toBeInTheDocument();
   });
 

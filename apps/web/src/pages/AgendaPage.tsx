@@ -56,7 +56,7 @@ export function AgendaPage() {
   const [visao, setVisao] = useState<'calendario' | 'lista'>('calendario');
 
   // Form state
-  const [fModalidade, setFModalidade] = useState<ModalidadeAtendimento>(ModalidadeAtendimento.MEDICO);
+  const [fModalidade, setFModalidade] = useState<ModalidadeAtendimento>(ModalidadeAtendimento.ENFERMAGEM);
   const [fPacienteId, setFPacienteId] = useState('');
   const [fMedicoId, setFMedicoId] = useState(
     user && PAPEIS_PROFISSIONAIS.includes(user.papel) ? user.id : ''
@@ -119,7 +119,7 @@ export function AgendaPage() {
   }
 
   function resetForm() {
-    setFModalidade(ModalidadeAtendimento.MEDICO);
+    setFModalidade(ModalidadeAtendimento.ENFERMAGEM);
     setFPacienteId('');
     setFMedicoId(user && PAPEIS_PROFISSIONAIS.includes(user.papel) ? user.id : '');
     setFTipo('');

@@ -53,9 +53,6 @@ export class ProntuarioMongo {
   @Prop({ type: MongooseSchema.Types.Mixed })
   registroEnfermagem?: Record<string, unknown>;
 
-  @Prop({ type: MongooseSchema.Types.Mixed })
-  registroPsicologico?: Record<string, unknown>;
-
   @Prop({ type: [MongooseSchema.Types.Mixed], default: [] })
   arquivos!: Record<string, unknown>[];
 

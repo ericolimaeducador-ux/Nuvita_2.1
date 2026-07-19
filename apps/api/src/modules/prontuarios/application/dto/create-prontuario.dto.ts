@@ -7,14 +7,13 @@ import {
   ObjetivoDto,
   PlanoDto,
   RegistroEnfermagemDto,
-  RegistroPsicologicoDto,
   SubjetivoDto,
 } from './soap.dto';
 
-// Consulta de enfermagem e psicoterapia não são SOAPs tradicionais — os 4
-// blocos SOAP ficam dispensados de validação/obrigatoriedade nesses tipos.
+// Consulta de enfermagem não é um SOAP tradicional — os 4 blocos SOAP ficam
+// dispensados de validação/obrigatoriedade nesse tipo.
 const ehAtendimentoSoap = (o: CreateProntuarioDto) =>
-  o.tipo !== TipoAtendimento.CONSULTA_ENFERMAGEM && o.tipo !== TipoAtendimento.PSICOTERAPIA;
+  o.tipo !== TipoAtendimento.CONSULTA_ENFERMAGEM;
 
 export class CreateProntuarioDto {
   @IsMongoId()
@@ -57,11 +56,6 @@ export class CreateProntuarioDto {
   @ValidateNested()
   @Type(() => RegistroEnfermagemDto)
   registroEnfermagem?: RegistroEnfermagemDto;
-
-  @IsOptional()
-  @ValidateNested()
-  @Type(() => RegistroPsicologicoDto)
-  registroPsicologico?: RegistroPsicologicoDto;
 
   @IsOptional()
   @ValidateNested({ each: true })

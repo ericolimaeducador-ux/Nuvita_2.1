@@ -86,9 +86,6 @@ export function PacienteDetailPage() {
   const location = useLocation();
   const qc = useQueryClient();
   const { permissoes, user } = useAuth();
-  // Psicólogo atende fora do fluxo clínico da Mais Quali Vida: só enxerga
-  // dados cadastrais, os próprios atendimentos (psicoterapia) e documentos.
-  const ehPsicologo = user?.papel === Papel.PSICOLOGO;
   const [viewProntuarioId, setViewProntuarioId] = useState<string | null>(null);
   const [novoOpen, setNovoOpen] = useState(false);
   const [atendimentoPrefill, setAtendimentoPrefill] = useState<{
@@ -140,7 +137,7 @@ export function PacienteDetailPage() {
 
   // Export LGPD: mesmos papéis autorizados no backend (GET /pacientes/:id/export).
   const podeExportar =
-    user?.papel === Papel.SECRETARIA || user?.papel === Papel.MEDICO || user?.papel === Papel.ADMIN;
+    user?.papel === Papel.SECRETARIA || user?.papel === Papel.ENFERMEIRO || user?.papel === Papel.ADMIN;
 
   // Direito de acesso/portabilidade (LGPD): baixa um JSON com todos os dados do
   // paciente. Antes o botão só disparava o GET e descartava a resposta (nada
@@ -205,11 +202,9 @@ export function PacienteDetailPage() {
                 </Badge>
               </div>
             </div>
-            {!ehPsicologo && (
-              <Button size="sm" onClick={() => setNovoOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" /> Novo atendimento
-              </Button>
-            )}
+            <Button size="sm" onClick={() => setNovoOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" /> Novo atendimento
+            </Button>
             {podeExportar && (
               <Button
                 variant="outline"
@@ -283,13 +278,13 @@ export function PacienteDetailPage() {
       </Secao>
 
       {/* Feridas */}
-      {!ehPsicologo && permissoes.includes(Modulo.FERIDAS) && <FeridasSecao pacienteId={id} />}
+      {permissoes.includes(Modulo.FERIDAS) && <FeridasSecao pacienteId={id} />}
 
-      {/* Observações gerais — campo livre p/ qualquer profissional de atendimento (fora do escopo do psicólogo) */}
-      {!ehPsicologo && <ObservacoesSecao pacienteId={id} observacoesAtuais={p.observacoes} />}
+      {/* Observações gerais — campo livre p/ qualquer profissional de atendimento */}
+      <ObservacoesSecao pacienteId={id} observacoesAtuais={p.observacoes} />
 
       {/* Checklist de documentos (secretaria/admin) */}
-      {!ehPsicologo && permissoes.includes(Modulo.DOCUMENTOS) && <ChecklistDocumentosSecao pacienteId={id} />}
+      {permissoes.includes(Modulo.DOCUMENTOS) && <ChecklistDocumentosSecao pacienteId={id} />}
 
       {/* Documentos */}
       <Secao
@@ -340,9 +335,8 @@ export function PacienteDetailPage() {
         )}
       </Secao>
 
-      {/* Histórico de agenda — fora do escopo do psicólogo (agenda dele fica em Atendimento Psicológico) */}
-      {!ehPsicologo && (
-        <Secao icon={<CalendarClock className="h-4 w-4" />} titulo="Histórico de agenda" contagem={toItems<Agendamento>(agendaQ.data as never).length} defaultOpen={false}>
+      {/* Histórico de agenda */}
+      <Secao icon={<CalendarClock className="h-4 w-4" />} titulo="Histórico de agenda" contagem={toItems<Agendamento>(agendaQ.data as never).length} defaultOpen={false}>
           {agendaQ.isLoading ? (
             <Skeleton className="h-20 w-full" />
           ) : toItems<Agendamento>(agendaQ.data as never).length === 0 ? (
@@ -372,8 +366,7 @@ export function PacienteDetailPage() {
               </TableBody>
             </Table>
           )}
-        </Secao>
-      )}
+      </Secao>
 
       <ProntuarioDetailDialog
         prontuarioId={viewProntuarioId}
@@ -621,10 +614,6 @@ type EditPacienteForm = z.infer<typeof editPacienteSchema>;
  * nesses campos e esta seção permite completá-los/corrigi-los a qualquer momento. */
 function DadosCadastraisSecao({ paciente: p, pacienteId }: { paciente: Paciente; pacienteId: string }) {
   const qc = useQueryClient();
-  const { user } = useAuth();
-  // Psicólogo só cuida de pacientes do Projeto PSI — trava o campo em vez de
-  // expor o seletor (evita que o paciente suma da lista dele por engano).
-  const ehPsicologo = user?.papel === Papel.PSICOLOGO;
   const [open, setOpen] = useState(false);
 
   const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm<EditPacienteForm>({
@@ -636,7 +625,7 @@ function DadosCadastraisSecao({ paciente: p, pacienteId }: { paciente: Paciente;
       cpf: p.cpf ?? '',
       dataNascimento: p.dataNascimento ? p.dataNascimento.slice(0, 10) : '',
       sexo: p.sexo ?? '',
-      projeto: ehPsicologo ? ProjetoPaciente.PSI : (p.projeto ?? ''),
+      projeto: p.projeto ?? '',
       telefone: p.telefone ?? '',
       email: p.email ?? '',
       consentimento: !!p.consentimentoLGPD?.aceito,
@@ -742,17 +731,15 @@ function DadosCadastraisSecao({ paciente: p, pacienteId }: { paciente: Paciente;
               </div>
             </div>
 
-            {!ehPsicologo && (
-              <div className="space-y-2">
-                <Label>Projeto</Label>
-                <Select value={watch('projeto') || undefined} onValueChange={(v) => setValue('projeto', v as ProjetoPaciente)}>
-                  <SelectTrigger><SelectValue placeholder="Sem projeto" /></SelectTrigger>
-                  <SelectContent>
-                    {Object.values(ProjetoPaciente).map((pj) => <SelectItem key={pj} value={pj}>{PROJETO_LABEL[pj]}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label>Projeto</Label>
+              <Select value={watch('projeto') || undefined} onValueChange={(v) => setValue('projeto', v as ProjetoPaciente)}>
+                <SelectTrigger><SelectValue placeholder="Sem projeto" /></SelectTrigger>
+                <SelectContent>
+                  {Object.values(ProjetoPaciente).map((pj) => <SelectItem key={pj} value={pj}>{PROJETO_LABEL[pj]}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">

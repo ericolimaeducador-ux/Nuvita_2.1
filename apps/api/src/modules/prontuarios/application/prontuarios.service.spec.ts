@@ -33,7 +33,7 @@ describe('ProntuariosService', () => {
     user: {
       sub: 'medico-1',
       email: 'medico@nuvita.test',
-      papel: Papel.MEDICO,
+      papel: Papel.ENFERMEIRO,
       clinicaId: 'clinica-1',
       jti: 'jti',
       typ: 'access' as const,

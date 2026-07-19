@@ -63,7 +63,7 @@ export class TelemedicinaService {
       clinicaId,
       agendamentoId: dto.agendamentoId,
       medicoId: context.user.sub,
-      modalidade: dto.modalidade ?? ModalidadeAtendimento.MEDICO,
+      modalidade: dto.modalidade ?? ModalidadeAtendimento.ENFERMAGEM,
       pacienteId: dto.pacienteId,
       tokenMedico: randomUUID(),
       tokenPaciente: randomUUID(),

@@ -48,22 +48,9 @@ export const PERMISSOES_PADRAO_POR_PAPEL: Record<Papel, Modulo[]> = {
     M.NOTIFICACOES, M.TELEMEDICINA, M.FERIDAS,
     M.ANALYTICS, M.CLINICA,
   ],
-  [Papel.MEDICO]: [
-    M.DASHBOARD, M.PACIENTES, M.AGENDA, M.PRONTUARIOS, M.DOCUMENTOS, M.TELEMEDICINA,
-    M.FERIDAS,
-  ],
   [Papel.ENFERMEIRO]: [
     M.DASHBOARD, M.PACIENTES, M.AGENDA, M.PRONTUARIOS, M.DOCUMENTOS,
     M.FERIDAS, M.TELEMEDICINA,
-  ],
-  [Papel.ADVOGADO]: [
-    M.DASHBOARD, M.PACIENTES, M.PRONTUARIOS, M.DOCUMENTOS,
-  ],
-  // As sessões de psicoterapia são registradas pelo prontuário comum (tipo
-  // psicoterapia); o financeiro é o único livro-caixa da clínica (M.FINANCEIRO),
-  // visível só a quem recebe pagamento (admin/secretaria).
-  [Papel.PSICOLOGO]: [
-    M.DASHBOARD, M.PACIENTES, M.AGENDA, M.PRONTUARIOS, M.DOCUMENTOS, M.TELEMEDICINA,
   ],
   [Papel.SECRETARIA]: [
     M.DASHBOARD, M.PACIENTES, M.AGENDA, M.DOCUMENTOS, M.FINANCEIRO, M.NOTIFICACOES,

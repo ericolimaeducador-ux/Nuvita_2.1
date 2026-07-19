@@ -9,7 +9,7 @@ export class AgendamentoMongo {
   @Prop({ required: true, index: true }) clinicaId!: string;
   @Prop({ required: true, index: true }) pacienteId!: string;
   @Prop({ required: true, index: true }) medicoId!: string;
-  @Prop({ required: true, enum: ModalidadeAtendimento, default: ModalidadeAtendimento.MEDICO, index: true }) modalidade!: ModalidadeAtendimento;
+  @Prop({ required: true, enum: ModalidadeAtendimento, default: ModalidadeAtendimento.ENFERMAGEM, index: true }) modalidade!: ModalidadeAtendimento;
   @Prop({ required: true, index: true }) dataHoraInicio!: Date;
   @Prop({ required: true }) dataHoraFim!: Date;
   @Prop({ required: true, enum: TipoAgendamento }) tipo!: TipoAgendamento;

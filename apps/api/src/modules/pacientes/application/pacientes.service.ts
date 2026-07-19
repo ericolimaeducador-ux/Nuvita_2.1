@@ -14,9 +14,6 @@ import { PACIENTE_REPOSITORY } from '../pacientes.constants';
 import { Paciente, ProjetoPaciente } from '../domain/paciente.entity';
 import { PacienteRepository } from './ports/paciente.repository';
 
-/** Papéis profissionais que NUNCA veem pacientes do Projeto PSI (exclusivo do psicólogo). */
-const PAPEIS_SEM_ACESSO_PSI: Papel[] = [Papel.MEDICO, Papel.ENFERMEIRO, Papel.ADVOGADO];
-
 export interface RequestAuditContext {
   ip: string;
   userAgent: string;
@@ -272,35 +269,19 @@ export class PacientesService {
   }
 
   /**
-   * Pacientes do Projeto PSI (atendimento psicológico) ficam isolados dos
-   * demais: só o PSICOLOGO os enxerga, e os outros profissionais de
-   * atendimento (médico/enfermeiro/advogado) nunca os veem — mesmo pedindo
-   * `projeto` explicitamente na query. ADMIN/SECRETARIA continuam sem
-   * restrição (visão administrativa da clínica inteira).
+   * Existia pra isolar pacientes do Projeto PSI (atendimento psicológico) —
+   * só o papel PSICOLOGO os enxergava. Removido o papel, a visibilidade por
+   * projeto (Alpha/Beta) passa a ser sempre um filtro livre, igual já era
+   * pra admin/secretaria.
    */
   private resolveVisibilidadeProjeto(
-    papel: Papel,
+    _papel: Papel,
     projetoSolicitado?: ProjetoPaciente,
   ): { projeto?: ProjetoPaciente; projetoExcluir?: ProjetoPaciente; semResultados?: boolean } {
-    // Psicólogo: enxerga somente PSI (o filtro de projeto solicitado é irrelevante).
-    if (papel === Papel.PSICOLOGO) return { projeto: ProjetoPaciente.PSI };
-
-    // Médico/enfermeiro/advogado nunca veem PSI, mas AINDA devem respeitar um
-    // filtro explícito por Alpha/Beta — antes o projetoSolicitado era descartado
-    // e a lista voltava com todos os projetos não-PSI (Alpha + Beta juntos).
-    if (PAPEIS_SEM_ACESSO_PSI.includes(papel)) {
-      if (projetoSolicitado === ProjetoPaciente.PSI) return { semResultados: true };
-      if (projetoSolicitado) return { projeto: projetoSolicitado };
-      return { projetoExcluir: ProjetoPaciente.PSI };
-    }
-
-    // Admin/secretaria: filtro livre por qualquer projeto.
     return { projeto: projetoSolicitado };
   }
 
-  private podeVerPaciente(papel: Papel, projetoPaciente?: ProjetoPaciente): boolean {
-    if (papel === Papel.PSICOLOGO) return projetoPaciente === ProjetoPaciente.PSI;
-    if (PAPEIS_SEM_ACESSO_PSI.includes(papel)) return projetoPaciente !== ProjetoPaciente.PSI;
+  private podeVerPaciente(_papel: Papel, _projetoPaciente?: ProjetoPaciente): boolean {
     return true;
   }
 

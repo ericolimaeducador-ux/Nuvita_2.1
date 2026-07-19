@@ -3,10 +3,7 @@
 export enum Papel {
   SUPER_ADMIN = 'SUPER_ADMIN',
   ADMIN = 'ADMIN',
-  MEDICO = 'MEDICO',
   ENFERMEIRO = 'ENFERMEIRO',
-  ADVOGADO = 'ADVOGADO',
-  PSICOLOGO = 'PSICOLOGO',
   SECRETARIA = 'SECRETARIA',
   PACIENTE = 'PACIENTE',
 }
@@ -14,34 +11,22 @@ export enum Papel {
 export const PAPEL_LABEL: Record<Papel, string> = {
   [Papel.SUPER_ADMIN]: 'Super Admin',
   [Papel.ADMIN]: 'Administrador',
-  [Papel.MEDICO]: 'Médico(a)',
   [Papel.ENFERMEIRO]: 'Enfermeiro(a)',
-  [Papel.ADVOGADO]: 'Advogado(a)',
-  [Papel.PSICOLOGO]: 'Psicólogo(a)',
   [Papel.SECRETARIA]: 'Secretaria',
   [Papel.PACIENTE]: 'Paciente',
 };
 
 // Papéis profissionais que prestam atendimento (paridade de permissões clínicas).
 export const PAPEIS_PROFISSIONAIS: Papel[] = [
-  Papel.MEDICO,
   Papel.ENFERMEIRO,
-  Papel.ADVOGADO,
-  Papel.PSICOLOGO,
 ];
 
 export enum ModalidadeAtendimento {
-  MEDICO = 'medico',
   ENFERMAGEM = 'enfermagem',
-  JURIDICO = 'juridico',
-  PSICOLOGIA = 'psicologia',
 }
 
 export const MODALIDADE_LABEL: Record<ModalidadeAtendimento, string> = {
-  [ModalidadeAtendimento.MEDICO]: 'Médico',
   [ModalidadeAtendimento.ENFERMAGEM]: 'Enfermagem',
-  [ModalidadeAtendimento.JURIDICO]: 'Jurídico',
-  [ModalidadeAtendimento.PSICOLOGIA]: 'Psicologia',
 };
 
 export enum Sexo {
@@ -64,15 +49,11 @@ export const SEXO_LABEL: Record<Sexo, string> = {
 export enum ProjetoPaciente {
   ALPHA = 'ALPHA',
   BETA = 'BETA',
-  // Pacientes de atendimento psicológico — só aparecem para o papel PSICOLOGO
-  // (o backend filtra); nunca aparecem para os demais profissionais.
-  PSI = 'PSI',
 }
 
 export const PROJETO_LABEL: Record<ProjetoPaciente, string> = {
   [ProjetoPaciente.ALPHA]: 'Projeto Alpha',
   [ProjetoPaciente.BETA]: 'Projeto Beta',
-  [ProjetoPaciente.PSI]: 'Projeto PSI (Psicologia)',
 };
 
 export enum StatusAgendamento {
@@ -100,56 +81,23 @@ export const STATUS_AGENDAMENTO_COLOR: Record<StatusAgendamento, string> = {
 };
 
 export enum TipoAgendamento {
-  CONSULTA = 'consulta',
-  RETORNO = 'retorno',
-  EXAME = 'exame',
-  PROCEDIMENTO = 'procedimento',
-  TELECONSULTA = 'teleconsulta',
   ATENDIMENTO_ENFERMAGEM = 'atendimento_enfermagem',
   PROCEDIMENTO_ENFERMAGEM = 'procedimento_enfermagem',
-  ATENDIMENTO_JURIDICO = 'atendimento_juridico',
-  AUDIENCIA = 'audiencia',
   ENTREVISTA = 'entrevista',
-  AVALIACAO_PSICOLOGICA = 'avaliacao_psicologica',
-  SESSAO_PSICOTERAPIA = 'sessao_psicoterapia',
 }
 
 export const TIPO_AGENDAMENTO_LABEL: Record<TipoAgendamento, string> = {
-  [TipoAgendamento.CONSULTA]: 'Consulta',
-  [TipoAgendamento.RETORNO]: 'Retorno',
-  [TipoAgendamento.EXAME]: 'Exame',
-  [TipoAgendamento.PROCEDIMENTO]: 'Procedimento',
-  [TipoAgendamento.TELECONSULTA]: 'Teleconsulta',
   [TipoAgendamento.ATENDIMENTO_ENFERMAGEM]: 'Atend. Enfermagem',
   [TipoAgendamento.PROCEDIMENTO_ENFERMAGEM]: 'Proc. Enfermagem',
-  [TipoAgendamento.ATENDIMENTO_JURIDICO]: 'Atend. Jurídico',
-  [TipoAgendamento.AUDIENCIA]: 'Audiência',
   [TipoAgendamento.ENTREVISTA]: 'Entrevista (Fluxo Clínico)',
-  [TipoAgendamento.AVALIACAO_PSICOLOGICA]: 'Avaliação Psicológica',
-  [TipoAgendamento.SESSAO_PSICOTERAPIA]: 'Sessão de Psicoterapia',
 };
 
 // Tipos de agendamento sugeridos por modalidade (para filtrar o formulário).
 export const TIPOS_POR_MODALIDADE: Record<ModalidadeAtendimento, TipoAgendamento[]> = {
-  [ModalidadeAtendimento.MEDICO]: [
-    TipoAgendamento.CONSULTA,
-    TipoAgendamento.RETORNO,
-    TipoAgendamento.EXAME,
-    TipoAgendamento.PROCEDIMENTO,
-    TipoAgendamento.TELECONSULTA,
-  ],
   [ModalidadeAtendimento.ENFERMAGEM]: [
     TipoAgendamento.ATENDIMENTO_ENFERMAGEM,
     TipoAgendamento.PROCEDIMENTO_ENFERMAGEM,
     TipoAgendamento.ENTREVISTA,
-  ],
-  [ModalidadeAtendimento.JURIDICO]: [
-    TipoAgendamento.ATENDIMENTO_JURIDICO,
-    TipoAgendamento.AUDIENCIA,
-  ],
-  [ModalidadeAtendimento.PSICOLOGIA]: [
-    TipoAgendamento.AVALIACAO_PSICOLOGICA,
-    TipoAgendamento.SESSAO_PSICOTERAPIA,
   ],
 };
 
@@ -159,7 +107,6 @@ export enum TipoAtendimento {
   URGENCIA = 'urgencia',
   TELECONSULTA = 'teleconsulta',
   CONSULTA_ENFERMAGEM = 'consulta_enfermagem',
-  PSICOTERAPIA = 'psicoterapia',
 }
 
 export const TIPO_ATENDIMENTO_LABEL: Record<TipoAtendimento, string> = {
@@ -168,24 +115,14 @@ export const TIPO_ATENDIMENTO_LABEL: Record<TipoAtendimento, string> = {
   [TipoAtendimento.URGENCIA]: 'Urgência',
   [TipoAtendimento.TELECONSULTA]: 'Teleconsulta',
   [TipoAtendimento.CONSULTA_ENFERMAGEM]: 'Consulta de Enfermagem',
-  [TipoAtendimento.PSICOTERAPIA]: 'Atendimento Psicológico',
 };
 
 /** Mapeia o tipo de agendamento para o tipo de atendimento (prontuário) mais
- * próximo, usado para pré-preencher "Iniciar atendimento" a partir da agenda.
- * Tipos jurídicos (atendimento_juridico, audiencia) não têm prontuário clínico
- * equivalente — ficam de fora do mapa. */
+ * próximo, usado para pré-preencher "Iniciar atendimento" a partir da agenda. */
 export const TIPO_ATENDIMENTO_POR_AGENDAMENTO: Partial<Record<TipoAgendamento, TipoAtendimento>> = {
-  [TipoAgendamento.CONSULTA]: TipoAtendimento.CONSULTA,
-  [TipoAgendamento.RETORNO]: TipoAtendimento.RETORNO,
-  [TipoAgendamento.EXAME]: TipoAtendimento.CONSULTA,
-  [TipoAgendamento.PROCEDIMENTO]: TipoAtendimento.CONSULTA,
-  [TipoAgendamento.TELECONSULTA]: TipoAtendimento.TELECONSULTA,
   [TipoAgendamento.ATENDIMENTO_ENFERMAGEM]: TipoAtendimento.CONSULTA_ENFERMAGEM,
   [TipoAgendamento.PROCEDIMENTO_ENFERMAGEM]: TipoAtendimento.CONSULTA_ENFERMAGEM,
   [TipoAgendamento.ENTREVISTA]: TipoAtendimento.CONSULTA_ENFERMAGEM,
-  [TipoAgendamento.AVALIACAO_PSICOLOGICA]: TipoAtendimento.PSICOTERAPIA,
-  [TipoAgendamento.SESSAO_PSICOTERAPIA]: TipoAtendimento.PSICOTERAPIA,
 };
 
 // ---- Permissões por módulo (espelho de packages/shared/src/auth/permissao.ts) ----
@@ -232,22 +169,9 @@ export const PERMISSOES_PADRAO_POR_PAPEL: Record<Papel, Modulo[]> = {
     M.NOTIFICACOES, M.TELEMEDICINA, M.FERIDAS,
     M.ANALYTICS, M.CLINICA,
   ],
-  [Papel.MEDICO]: [
-    M.DASHBOARD, M.PACIENTES, M.AGENDA, M.PRONTUARIOS, M.DOCUMENTOS, M.TELEMEDICINA,
-    M.FERIDAS,
-  ],
   [Papel.ENFERMEIRO]: [
     M.DASHBOARD, M.PACIENTES, M.AGENDA, M.PRONTUARIOS, M.DOCUMENTOS,
     M.FERIDAS, M.TELEMEDICINA,
-  ],
-  [Papel.ADVOGADO]: [
-    M.DASHBOARD, M.PACIENTES, M.PRONTUARIOS, M.DOCUMENTOS,
-  ],
-  // As sessões de psicoterapia são registradas pelo prontuário comum (tipo
-  // psicoterapia); o financeiro é o único livro-caixa da clínica (M.FINANCEIRO),
-  // visível só a quem recebe pagamento (admin/secretaria).
-  [Papel.PSICOLOGO]: [
-    M.DASHBOARD, M.PACIENTES, M.AGENDA, M.PRONTUARIOS, M.DOCUMENTOS, M.TELEMEDICINA,
   ],
   [Papel.SECRETARIA]: [
     M.DASHBOARD, M.PACIENTES, M.AGENDA, M.DOCUMENTOS, M.FINANCEIRO, M.NOTIFICACOES,
@@ -289,10 +213,7 @@ export interface AuthUser {
 
 /** Rótulo do registro profissional conforme o papel (CRM/COREN/OAB). */
 export const REGISTRO_LABEL: Partial<Record<Papel, string>> = {
-  [Papel.MEDICO]: 'CRM',
   [Papel.ENFERMEIRO]: 'COREN',
-  [Papel.ADVOGADO]: 'OAB',
-  [Papel.PSICOLOGO]: 'CRP',
 };
 export function registroLabel(papel?: Papel): string {
   return (papel && REGISTRO_LABEL[papel]) || 'Registro profissional';
@@ -465,55 +386,6 @@ export const REGISTRO_ENFERMAGEM_CAMPOS: Array<[keyof RegistroEnfermagem, string
   ['coren', 'COREN'],
 ];
 
-/** Registro de atendimento psicológico / psicoterapia (Res. CFP 006/2019). */
-export interface RegistroPsicologico {
-  motivoAtendimento?: string;
-  avaliacaoDemanda?: string;
-  doencasPrevias?: string;
-  diagnosticosSaudeMental?: string;
-  medicamentosEmUso?: string;
-  historicoFamiliarSaudeMental?: string;
-  qualidadeSono?: string;
-  apetiteAlimentacao?: string;
-  atividadeFisica?: string;
-  usoSubstancias?: string;
-  estadoEmocional?: string;
-  escalaDor?: number;
-  avaliacaoRisco?: string;
-  redeApoio?: string;
-  objetivosTrabalho?: string;
-  procedimentoTecnica?: string;
-  evolucao?: string;
-  encaminhamentos?: string;
-  anotacoesLivres?: string;
-  crp?: string;
-}
-
-/** Ordem/rótulos de exibição do registro psicológico — usado no histórico de
- * sessões, no relatório e na impressão do prontuário de psicoterapia. */
-export const REGISTRO_PSICOLOGICO_CAMPOS: Array<[keyof RegistroPsicologico, string]> = [
-  ['motivoAtendimento', 'Motivo do atendimento'],
-  ['avaliacaoDemanda', 'Avaliação de demanda'],
-  ['doencasPrevias', 'Doenças prévias'],
-  ['diagnosticosSaudeMental', 'Diagnósticos de saúde mental'],
-  ['medicamentosEmUso', 'Medicamentos em uso'],
-  ['historicoFamiliarSaudeMental', 'Histórico familiar de saúde mental'],
-  ['qualidadeSono', 'Qualidade do sono'],
-  ['apetiteAlimentacao', 'Apetite / alimentação'],
-  ['atividadeFisica', 'Atividade física'],
-  ['usoSubstancias', 'Uso de substâncias'],
-  ['estadoEmocional', 'Estado emocional'],
-  ['escalaDor', 'Dor (0-10)'],
-  ['avaliacaoRisco', 'Avaliação de risco'],
-  ['redeApoio', 'Rede de apoio'],
-  ['objetivosTrabalho', 'Objetivos do acompanhamento'],
-  ['procedimentoTecnica', 'Procedimento / técnica'],
-  ['evolucao', 'Evolução'],
-  ['encaminhamentos', 'Encaminhamentos'],
-  ['anotacoesLivres', 'Anotações livres'],
-  ['crp', 'CRP'],
-];
-
 export interface Prontuario {
   id: string;
   clinicaId: string;
@@ -526,7 +398,6 @@ export interface Prontuario {
   avaliacao?: ProntuarioAvaliacao;
   plano?: ProntuarioPlano;
   registroEnfermagem?: RegistroEnfermagem;
-  registroPsicologico?: RegistroPsicologico;
 }
 
 export enum TipoDocumento {

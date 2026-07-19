@@ -168,7 +168,6 @@ export class ProntuarioMongoRepository implements ProntuarioRepository {
       avaliacao: object.avaliacao as unknown as Prontuario['avaliacao'],
       plano: object.plano as unknown as Prontuario['plano'],
       registroEnfermagem: object.registroEnfermagem as unknown as Prontuario['registroEnfermagem'],
-      registroPsicologico: object.registroPsicologico as unknown as Prontuario['registroPsicologico'],
       arquivos: object.arquivos as unknown as Prontuario['arquivos'],
       assinado: object.assinado,
       criadoEm: object.criadoEm,

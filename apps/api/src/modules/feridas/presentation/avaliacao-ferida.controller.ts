@@ -13,8 +13,8 @@ import { TenantRequiredGuard } from '../../../common/tenancy/tenant-required.gua
 import { CreateAvaliacaoFeridaDto } from '../application/dto/create-avaliacao-ferida.dto';
 import { AvaliacaoFeridaRequestContext, AvaliacaoFeridaService } from '../application/avaliacao-ferida.service';
 
-const LEITURA_FERIDAS = [Papel.MEDICO, Papel.ENFERMEIRO, Papel.ADMIN, Papel.SECRETARIA];
-const MUTACAO_FERIDAS = [Papel.MEDICO, Papel.ENFERMEIRO, Papel.ADMIN];
+const LEITURA_FERIDAS = [Papel.ENFERMEIRO, Papel.ADMIN, Papel.SECRETARIA];
+const MUTACAO_FERIDAS = [Papel.ENFERMEIRO, Papel.ADMIN];
 
 /** Só POST/GET — avaliação é imutável por construção, sem PATCH/DELETE (ver AvaliacaoFerida no domínio). */
 @Controller('feridas/:feridaId/avaliacoes')

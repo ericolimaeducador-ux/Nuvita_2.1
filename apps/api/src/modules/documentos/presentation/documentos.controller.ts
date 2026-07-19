@@ -19,7 +19,7 @@ import { DocumentoRequestContext, DocumentosService } from '../application/docum
 @Controller('documentos')
 @UseGuards(JwtAuthGuard, TenantRequiredGuard, RolesGuard, PermissoesGuard)
 @RequerModulo(Modulo.DOCUMENTOS)
-@Roles(Papel.SECRETARIA, Papel.MEDICO, Papel.ENFERMEIRO, Papel.ADVOGADO, Papel.ADMIN)
+@Roles(Papel.SECRETARIA, Papel.ENFERMEIRO, Papel.ADMIN)
 export class DocumentosController {
   constructor(private readonly documentosService: DocumentosService) {}
 
