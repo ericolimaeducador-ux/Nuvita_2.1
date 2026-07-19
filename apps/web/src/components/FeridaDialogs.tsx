@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation } from '@tanstack/react-query';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Camera } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -101,6 +102,232 @@ export function NovaFeridaDialog({
   );
 }
 
+type Ponto = { x: number; y: number };
+type PassoMedicao = 'marcador' | 'comprimento' | 'largura';
+
+const PASSO_LABEL: Record<PassoMedicao, string> = {
+  marcador: 'Marque as duas pontas do objeto de referência (moeda, régua, cartão…)',
+  comprimento: 'Marque o maior eixo da ferida (comprimento)',
+  largura: 'Marque o eixo perpendicular (largura)',
+};
+
+const PASSO_COR: Record<PassoMedicao, string> = {
+  marcador: '#F59E0B', // amber — objeto de referência
+  comprimento: '#3B82F6', // azul — comprimento
+  largura: '#EF4444', // vermelho — largura
+};
+
+function distancia(a: Ponto, b: Ponto): number {
+  return Math.hypot(b.x - a.x, b.y - a.y);
+}
+
+/**
+ * Mede comprimento/largura da ferida a partir de uma foto com um objeto de
+ * tamanho conhecido ao lado (marcador) — o enfermeiro marca as duas pontas
+ * do marcador e informa seu tamanho real; a mesma marcação, feita para o
+ * comprimento e a largura da ferida, dá a distância em pixels que, pela
+ * escala do marcador, vira centímetros. Sem detecção automática de imagem:
+ * a marcação é sempre manual, revisável antes de usar (mesma régua de
+ * "exige revisão humana" do resto do motor clínico).
+ */
+function MedicaoPorFotoDialog({
+  open, onOpenChange, onMedido,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  onMedido: (m: { comprimentoCm: number; larguraCm: number }) => void;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const imgRef = useRef<HTMLImageElement | null>(null);
+  const [temImagem, setTemImagem] = useState(false);
+  const [passo, setPasso] = useState<PassoMedicao>('marcador');
+  const [pontosPorPasso, setPontosPorPasso] = useState<Record<PassoMedicao, Ponto[]>>({
+    marcador: [], comprimento: [], largura: [],
+  });
+  const [tamanhoMarcadorCm, setTamanhoMarcadorCm] = useState('');
+
+  function resetar() {
+    setTemImagem(false);
+    setPasso('marcador');
+    setPontosPorPasso({ marcador: [], comprimento: [], largura: [] });
+    setTamanhoMarcadorCm('');
+    imgRef.current = null;
+  }
+
+  function redesenhar() {
+    const canvas = canvasRef.current;
+    const img = imgRef.current;
+    if (!canvas || !img) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    (Object.keys(pontosPorPasso) as PassoMedicao[]).forEach((p) => {
+      const pontos = pontosPorPasso[p];
+      if (pontos.length === 0) return;
+      ctx.strokeStyle = PASSO_COR[p];
+      ctx.fillStyle = PASSO_COR[p];
+      ctx.lineWidth = 3;
+      pontos.forEach((pt) => {
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, 5, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      if (pontos.length === 2) {
+        ctx.beginPath();
+        ctx.moveTo(pontos[0].x, pontos[0].y);
+        ctx.lineTo(pontos[1].x, pontos[1].y);
+        ctx.stroke();
+      }
+    });
+  }
+
+  useEffect(redesenhar);
+
+  // O canvas só existe no DOM depois que `temImagem` vira true (é renderizado
+  // condicionalmente) — por isso o dimensionamento/desenho inicial da imagem
+  // acontece aqui, não dentro do onload do <img>, que roda antes do canvas montar.
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const img = imgRef.current;
+    if (!temImagem || !canvas || !img) return;
+    const larguraMax = Math.min(canvas.parentElement?.clientWidth ?? 560, 560);
+    canvas.width = larguraMax;
+    canvas.height = (img.naturalHeight / img.naturalWidth) * larguraMax;
+    redesenhar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [temImagem]);
+
+  function onEscolherArquivo(e: React.ChangeEvent<HTMLInputElement>) {
+    const arquivo = e.target.files?.[0];
+    if (!arquivo) return;
+    const url = URL.createObjectURL(arquivo);
+    const img = new Image();
+    img.onload = () => {
+      imgRef.current = img;
+      setTemImagem(true);
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
+  }
+
+  function onClicarCanvas(e: React.MouseEvent<HTMLCanvasElement>) {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const atuais = pontosPorPasso[passo];
+    if (atuais.length >= 2) return; // passo já completo — usar "Refazer" pra corrigir
+    const rect = canvas.getBoundingClientRect();
+    const ponto = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    setPontosPorPasso((prev) => ({ ...prev, [passo]: [...prev[passo], ponto] }));
+  }
+
+  function refazerPasso() {
+    setPontosPorPasso((prev) => ({ ...prev, [passo]: [] }));
+  }
+
+  const marcadorPronto = pontosPorPasso.marcador.length === 2 && Number(tamanhoMarcadorCm) > 0;
+  const comprimentoPronto = pontosPorPasso.comprimento.length === 2;
+  const larguraPronto = pontosPorPasso.largura.length === 2;
+
+  const escalaCmPorPx = marcadorPronto
+    ? Number(tamanhoMarcadorCm) / distancia(pontosPorPasso.marcador[0], pontosPorPasso.marcador[1])
+    : undefined;
+  const comprimentoCm = escalaCmPorPx && comprimentoPronto
+    ? distancia(pontosPorPasso.comprimento[0], pontosPorPasso.comprimento[1]) * escalaCmPorPx
+    : undefined;
+  const larguraCm = escalaCmPorPx && larguraPronto
+    ? distancia(pontosPorPasso.largura[0], pontosPorPasso.largura[1]) * escalaCmPorPx
+    : undefined;
+
+  function avancar() {
+    if (passo === 'marcador' && marcadorPronto) setPasso('comprimento');
+    else if (passo === 'comprimento' && comprimentoPronto) setPasso('largura');
+  }
+
+  function usarMedidas() {
+    if (comprimentoCm === undefined || larguraCm === undefined) return;
+    onMedido({ comprimentoCm: Math.round(comprimentoCm * 10) / 10, larguraCm: Math.round(larguraCm * 10) / 10 });
+    onOpenChange(false);
+    resetar();
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { onOpenChange(o); if (!o) resetar(); }}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Medir pela foto</DialogTitle>
+          <DialogDescription>
+            Fotografe a ferida ao lado de um objeto de tamanho conhecido (moeda, régua, cartão) e
+            marque as pontas na imagem — a medida sai da escala do objeto, mas continua conferível
+            e ajustável antes de salvar.
+          </DialogDescription>
+        </DialogHeader>
+
+        {!temImagem ? (
+          <div className="space-y-2">
+            <Label>Foto da ferida com o objeto de referência</Label>
+            <Input type="file" accept="image/*" capture="environment" onChange={onEscolherArquivo} />
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="rounded-lg border bg-muted/30 p-3 text-sm">
+              <p className="font-medium" style={{ color: PASSO_COR[passo] }}>{PASSO_LABEL[passo]}</p>
+              {passo === 'marcador' && pontosPorPasso.marcador.length === 2 && (
+                <div className="mt-2 flex items-center gap-2">
+                  <Label className="text-xs shrink-0">Tamanho real do objeto (cm)</Label>
+                  <Input
+                    className="max-w-28 h-8"
+                    type="number" step="0.1" min="0.1"
+                    value={tamanhoMarcadorCm}
+                    onChange={(e) => setTamanhoMarcadorCm(e.target.value)}
+                    placeholder="ex.: 2,7"
+                  />
+                </div>
+              )}
+            </div>
+
+            <canvas
+              ref={canvasRef}
+              onClick={onClicarCanvas}
+              className="w-full rounded-lg border cursor-crosshair touch-none"
+            />
+
+            <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+              <span>
+                {comprimentoCm !== undefined && `Comprimento: ${comprimentoCm.toFixed(1)}cm`}
+                {comprimentoCm !== undefined && larguraCm !== undefined && ' · '}
+                {larguraCm !== undefined && `Largura: ${larguraCm.toFixed(1)}cm`}
+              </span>
+              <Button type="button" variant="ghost" size="sm" onClick={refazerPasso}>
+                Refazer este passo
+              </Button>
+            </div>
+          </div>
+        )}
+
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          {temImagem && passo !== 'largura' && (
+            <Button
+              type="button"
+              onClick={avancar}
+              disabled={passo === 'marcador' ? !marcadorPronto : !comprimentoPronto}
+            >
+              Próximo
+            </Button>
+          )}
+          {temImagem && passo === 'largura' && (
+            <Button type="button" onClick={usarMedidas} disabled={comprimentoCm === undefined || larguraCm === undefined}>
+              Usar estas medidas
+            </Button>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 /**
  * Formulário de nova avaliação de ferida, sem moldura própria — reusado
  * dentro do `NovaAvaliacaoFeridaDialog` (paciente/ferida já com página
@@ -119,6 +346,7 @@ export function AvaliacaoFeridaForm({
   });
   const [achados, setAchados] = useState<AchadoPerilesional[]>([]);
   const [sinaisInfeccao, setSinaisInfeccao] = useState<SinalInfeccaoResvech[]>([]);
+  const [medirPelaFotoOpen, setMedirPelaFotoOpen] = useState(false);
 
   const somaTecido = useMemo(() => {
     const n = (v: unknown) => Number(v) || 0;
@@ -187,6 +415,12 @@ export function AvaliacaoFeridaForm({
 
   return (
         <form onSubmit={handleSubmit((v) => mut.mutate(v))} className="space-y-4">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium">Medidas</Label>
+            <Button type="button" variant="outline" size="sm" onClick={() => setMedirPelaFotoOpen(true)}>
+              <Camera className="h-3.5 w-3.5 mr-1.5" /> Medir pela foto
+            </Button>
+          </div>
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1">
               <Label>Comprimento (cm)</Label>
@@ -201,6 +435,15 @@ export function AvaliacaoFeridaForm({
               <Input type="number" step="0.1" {...register('profundidadeCm', { required: true, valueAsNumber: true })} />
             </div>
           </div>
+          <MedicaoPorFotoDialog
+            open={medirPelaFotoOpen}
+            onOpenChange={setMedirPelaFotoOpen}
+            onMedido={({ comprimentoCm, larguraCm }) => {
+              setValue('comprimentoCm', comprimentoCm);
+              setValue('larguraCm', larguraCm);
+              toast.success('Medidas preenchidas.', 'Confira e ajuste se necessário antes de salvar.');
+            }}
+          />
 
           <div className="space-y-2">
             <Label className={somaTecido > 100 ? 'text-destructive' : undefined}>
