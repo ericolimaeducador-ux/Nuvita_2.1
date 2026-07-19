@@ -81,11 +81,32 @@ export interface Plano {
   retorno?: string;
 }
 
-/** Registro da consulta de enfermagem (ligação de acompanhamento + chegada da sonda de teste). */
+/**
+ * Registro da consulta de enfermagem em estomaterapia. Complementa (não
+ * duplica) a `AvaliacaoFerida` do módulo `feridas`: aquela cobre T/I/M/E do
+ * TIMERS (tecido, infecção, umidade/exsudato, bordas) por ferida; este
+ * registro cobre o "S" (fatores sociais) e o contexto geral do paciente.
+ */
 export interface RegistroEnfermagem {
-  dataLigacao?: Date;
-  sondaChegouEm?: Date;
-  observacoes?: string;
+  motivoAtendimento?: string;
+  /** Diabetes, doença vascular periférica, insuficiência renal etc. — afetam cicatrização. */
+  comorbidadesRelevantes?: string;
+  /** Acamado, cadeira de rodas, deambula com ou sem auxílio. */
+  mobilidade?: string;
+  /** Risco de lesão por pressão (Braden), 6 a 23. */
+  escoreBraden?: number;
+  estadoNutricional?: string;
+  /** Dor geral do paciente, 0 a 10 (distinta da dor local já registrada por ferida). */
+  dorGeral?: number;
+  /** Cobertura em uso e frequência de troca. */
+  curativoAtual?: string;
+  /** Adesão ao tratamento, suporte familiar/cuidador, acesso a curativos — o "S" do TIMERS. */
+  adesaoTratamento?: string;
+  orientacoesFornecidas?: string;
+  evolucao?: string;
+  planoProximosPassos?: string;
+  /** Registro profissional (COREN) do enfermeiro responsável. */
+  coren?: string;
 }
 
 /**

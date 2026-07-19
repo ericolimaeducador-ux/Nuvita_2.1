@@ -52,15 +52,7 @@ export class ProntuariosService {
       avaliacao: dto.avaliacao ?? {},
       plano: dto.plano ?? {},
       registroPsicologico: dto.registroPsicologico,
-      registroEnfermagem: dto.registroEnfermagem
-        ? {
-            ...dto.registroEnfermagem,
-            dataLigacao: dto.registroEnfermagem.dataLigacao ? new Date(dto.registroEnfermagem.dataLigacao) : undefined,
-            sondaChegouEm: dto.registroEnfermagem.sondaChegouEm
-              ? new Date(dto.registroEnfermagem.sondaChegouEm)
-              : undefined,
-          }
-        : undefined,
+      registroEnfermagem: dto.registroEnfermagem,
       arquivos: dto.arquivos ?? [],
     });
 
@@ -130,15 +122,6 @@ export class ProntuariosService {
     const updated = await this.prontuarios.updateDraft(current.clinicaId, prontuarioId, {
       ...dto,
       dataAtendimento: dto.dataAtendimento ? new Date(dto.dataAtendimento) : undefined,
-      registroEnfermagem: dto.registroEnfermagem
-        ? {
-            ...dto.registroEnfermagem,
-            dataLigacao: dto.registroEnfermagem.dataLigacao ? new Date(dto.registroEnfermagem.dataLigacao) : undefined,
-            sondaChegouEm: dto.registroEnfermagem.sondaChegouEm
-              ? new Date(dto.registroEnfermagem.sondaChegouEm)
-              : undefined,
-          }
-        : undefined,
     });
 
     if (!updated) {

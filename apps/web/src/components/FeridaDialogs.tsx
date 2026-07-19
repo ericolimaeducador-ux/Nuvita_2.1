@@ -101,13 +101,18 @@ export function NovaFeridaDialog({
   );
 }
 
-export function NovaAvaliacaoFeridaDialog({
-  open, onOpenChange, feridaId, onCreated,
+/**
+ * Formulário de nova avaliação de ferida, sem moldura própria — reusado
+ * dentro do `NovaAvaliacaoFeridaDialog` (paciente/ferida já com página
+ * própria) e embutido na tela de atendimento por telemedicina (o enfermeiro
+ * avalia a ferida sem sair da tela, ao lado do vídeo).
+ */
+export function AvaliacaoFeridaForm({
+  feridaId, onCreated, onCancel,
 }: {
-  open: boolean;
-  onOpenChange: (o: boolean) => void;
   feridaId: string;
   onCreated: () => void;
+  onCancel: () => void;
 }) {
   const { register, handleSubmit, watch, setValue, reset } = useForm<Record<string, unknown>>({
     defaultValues: { exsudato: NivelExsudato.NENHUM, escalaDor: 0 },
@@ -172,7 +177,6 @@ export function NovaAvaliacaoFeridaDialog({
         if (avaliacao.escalas.resvech) partes.push(`RESVECH ${avaliacao.escalas.resvech.total}/35`);
       }
       toast.success('Avaliação registrada.', partes.filter(Boolean).join(' · ') || undefined);
-      onOpenChange(false);
       reset();
       setAchados([]);
       setSinaisInfeccao([]);
@@ -182,9 +186,6 @@ export function NovaAvaliacaoFeridaDialog({
   });
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader><DialogTitle>Nova avaliação de ferida</DialogTitle></DialogHeader>
         <form onSubmit={handleSubmit((v) => mut.mutate(v))} className="space-y-4">
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1">
@@ -335,12 +336,34 @@ export function NovaAvaliacaoFeridaDialog({
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+            <Button type="button" variant="outline" onClick={onCancel}>Cancelar</Button>
             <Button type="submit" disabled={mut.isPending || somaTecido > 100 || resvechParcial}>
               {mut.isPending ? 'Salvando...' : 'Registrar avaliação'}
             </Button>
           </DialogFooter>
         </form>
+  );
+}
+
+/** Dialog fino em torno do `AvaliacaoFeridaForm` — usado onde a ferida já
+ * tem página própria (ex.: `FeridaDetailPage`), sem vídeo ao lado. */
+export function NovaAvaliacaoFeridaDialog({
+  open, onOpenChange, feridaId, onCreated,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  feridaId: string;
+  onCreated: () => void;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>Nova avaliação de ferida</DialogTitle></DialogHeader>
+        <AvaliacaoFeridaForm
+          feridaId={feridaId}
+          onCancel={() => onOpenChange(false)}
+          onCreated={() => { onOpenChange(false); onCreated(); }}
+        />
       </DialogContent>
     </Dialog>
   );

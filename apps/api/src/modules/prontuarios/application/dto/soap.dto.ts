@@ -2,7 +2,6 @@ import {
   ArrayMaxSize,
   IsArray,
   IsInt,
-  IsISO8601,
   IsNumber,
   IsOptional,
   IsString,
@@ -192,11 +191,20 @@ export class ArquivosProntuarioDto {
   arquivos?: ArquivoProntuarioDto[];
 }
 
-/** Registro da consulta de enfermagem — ligação de acompanhamento + chegada da sonda de teste. */
+/** Registro da consulta de enfermagem em estomaterapia (complementa a AvaliacaoFerida). */
 export class RegistroEnfermagemDto {
-  @IsOptional() @IsISO8601() dataLigacao?: string;
-  @IsOptional() @IsISO8601() sondaChegouEm?: string;
-  @IsOptional() @IsString() observacoes?: string;
+  @IsOptional() @IsString() motivoAtendimento?: string;
+  @IsOptional() @IsString() comorbidadesRelevantes?: string;
+  @IsOptional() @IsString() mobilidade?: string;
+  @IsOptional() @IsInt() @Min(6) @Max(23) escoreBraden?: number;
+  @IsOptional() @IsString() estadoNutricional?: string;
+  @IsOptional() @IsInt() @Min(0) @Max(10) dorGeral?: number;
+  @IsOptional() @IsString() curativoAtual?: string;
+  @IsOptional() @IsString() adesaoTratamento?: string;
+  @IsOptional() @IsString() orientacoesFornecidas?: string;
+  @IsOptional() @IsString() evolucao?: string;
+  @IsOptional() @IsString() planoProximosPassos?: string;
+  @IsOptional() @IsString() coren?: string;
 }
 
 /** Registro de atendimento psicológico / psicoterapia (Res. CFP 006/2019). */

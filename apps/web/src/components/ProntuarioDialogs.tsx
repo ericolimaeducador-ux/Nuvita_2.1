@@ -14,14 +14,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { prontuariosApi } from '@/api/resources';
 import { apiErrorMessage } from '@/api/client';
-import { formatData } from '@/utils';
 import { toast } from '@/components/ui/use-toast';
 import { useAuth } from '@/auth/AuthContext';
 import {
   TipoAtendimento, TIPO_ATENDIMENTO_LABEL,
   type Prontuario,
   type ProntuarioSubjetivo, type ProntuarioObjetivo, type ExameSegmentar, type SinaisVitais,
-  type ProntuarioAvaliacao, type ProntuarioPlano,
+  type ProntuarioAvaliacao, type ProntuarioPlano, type RegistroEnfermagem,
 } from '@/types';
 
 const EXAME_SEGMENTAR_CAMPOS: { key: keyof ExameSegmentar; label: string }[] = [
@@ -204,15 +203,24 @@ export function ProntuarioDetailDialog({
             )}
 
             {pr.registroEnfermagem && (
-              <div className="glass rounded-xl p-4 border border-primary/20">
-                <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">
-                  Registro de Enfermagem
+              <div className="glass rounded-xl p-4 border border-primary/20 space-y-3">
+                <p className="text-xs font-semibold text-primary uppercase tracking-wider">
+                  Registro de Enfermagem — Estomaterapia
                 </p>
+                <CampoSe label="Motivo do atendimento">{pr.registroEnfermagem.motivoAtendimento}</CampoSe>
                 <div className="grid grid-cols-2 gap-3">
-                  <CampoSe label="Ligação ao paciente">{pr.registroEnfermagem.dataLigacao && formatData(pr.registroEnfermagem.dataLigacao)}</CampoSe>
-                  <CampoSe label="Chegada da sonda">{pr.registroEnfermagem.sondaChegouEm && formatData(pr.registroEnfermagem.sondaChegouEm)}</CampoSe>
+                  <CampoSe label="Comorbidades relevantes">{pr.registroEnfermagem.comorbidadesRelevantes}</CampoSe>
+                  <CampoSe label="Mobilidade">{pr.registroEnfermagem.mobilidade}</CampoSe>
+                  <CampoSe label="Escore de Braden">{pr.registroEnfermagem.escoreBraden}</CampoSe>
+                  <CampoSe label="Estado nutricional">{pr.registroEnfermagem.estadoNutricional}</CampoSe>
+                  <CampoSe label="Dor geral (0-10)">{pr.registroEnfermagem.dorGeral}</CampoSe>
+                  <CampoSe label="Curativo atual">{pr.registroEnfermagem.curativoAtual}</CampoSe>
                 </div>
-                <CampoSe label="Observações">{pr.registroEnfermagem.observacoes}</CampoSe>
+                <CampoSe label="Adesão ao tratamento / suporte">{pr.registroEnfermagem.adesaoTratamento}</CampoSe>
+                <CampoSe label="Orientações fornecidas">{pr.registroEnfermagem.orientacoesFornecidas}</CampoSe>
+                <CampoSe label="Evolução">{pr.registroEnfermagem.evolucao}</CampoSe>
+                <CampoSe label="Plano / próximos passos">{pr.registroEnfermagem.planoProximosPassos}</CampoSe>
+                <CampoSe label="COREN">{pr.registroEnfermagem.coren}</CampoSe>
               </div>
             )}
           </div>
@@ -283,10 +291,9 @@ export function NovoAtendimentoDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, initialTipo, initialData]);
 
-  // Consulta de enfermagem: ligação de acompanhamento + chegada da sonda de teste.
-  const [dataLigacao, setDataLigacao] = useState('');
-  const [sondaChegouEm, setSondaChegouEm] = useState('');
-  const [obsEnfermagem, setObsEnfermagem] = useState('');
+  // Consulta de enfermagem em estomaterapia.
+  const [enf, setEnf] = useState<RegistroEnfermagem>({});
+  const setE = (patch: Partial<RegistroEnfermagem>) => setEnf((r) => ({ ...r, ...patch }));
 
   const [subjetivo, setSubjetivo] = useState<ProntuarioSubjetivo>({});
   const [sinais, setSinais] = useState<SinaisVitais>({});
@@ -312,7 +319,7 @@ export function NovoAtendimentoDialog({
     setSubjetivo({}); setSinais({}); setEstadoGeral(''); setSeg({}); setExameOutros('');
     setAvaliacao({}); setPlano({});
     setCidSearch(''); setCidSelected([]); setCidOpts([]);
-    setDataLigacao(''); setSondaChegouEm(''); setObsEnfermagem('');
+    setEnf({});
   }
 
   async function buscarCid(qstr: string) {
@@ -344,8 +351,9 @@ export function NovoAtendimentoDialog({
 
   function submit() {
     if (isEnfermagem) {
-      if (!dataLigacao && !sondaChegouEm && !obsEnfermagem) {
-        toast.error('Informe ao menos um dado do registro de enfermagem.');
+      const registroEnfermagem = clean(enf);
+      if (!registroEnfermagem) {
+        toast.error('Preencha ao menos um campo do registro de enfermagem.');
         return;
       }
       createMut.mutate({
@@ -354,11 +362,7 @@ export function NovoAtendimentoDialog({
         agendamentoId,
         dataAtendimento: dayjs(data).toISOString(),
         tipo,
-        registroEnfermagem: clean({
-          dataLigacao: dataLigacao ? dayjs(dataLigacao).toISOString() : undefined,
-          sondaChegouEm: sondaChegouEm ? dayjs(sondaChegouEm).toISOString() : undefined,
-          observacoes: obsEnfermagem || undefined,
-        }),
+        registroEnfermagem,
       });
       return;
     }
@@ -492,18 +496,30 @@ export function NovoAtendimentoDialog({
           {isEnfermagem && (
             <div className="space-y-4">
               <Separator />
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Registro de enfermagem</p>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Registro de enfermagem — Estomaterapia</p>
+              <TextField label="Motivo do atendimento" value={enf.motivoAtendimento} onChange={(v) => setE({ motivoAtendimento: v })} />
               <div className="grid grid-cols-2 gap-3">
+                <TextField label="Comorbidades relevantes" value={enf.comorbidadesRelevantes} onChange={(v) => setE({ comorbidadesRelevantes: v })} placeholder="Diabetes, doença vascular periférica…" />
+                <TextField label="Mobilidade" value={enf.mobilidade} onChange={(v) => setE({ mobilidade: v })} placeholder="Acamado, deambula com auxílio…" />
                 <div className="space-y-2">
-                  <Label>Dia em que ligou para o paciente</Label>
-                  <Input type="date" value={dataLigacao} onChange={(e) => setDataLigacao(e.target.value)} />
+                  <Label>Escore de Braden (6-23)</Label>
+                  <Input type="number" min={6} max={23} value={enf.escoreBraden ?? ''} onChange={(e) => setE({ escoreBraden: e.target.value === '' ? undefined : Number(e.target.value) })} />
                 </div>
+                <TextField label="Estado nutricional" value={enf.estadoNutricional} onChange={(v) => setE({ estadoNutricional: v })} rows={1} />
                 <div className="space-y-2">
-                  <Label>Dia em que a sonda chegou na casa do paciente</Label>
-                  <Input type="date" value={sondaChegouEm} onChange={(e) => setSondaChegouEm(e.target.value)} />
+                  <Label>Dor geral (0-10)</Label>
+                  <Input type="number" min={0} max={10} value={enf.dorGeral ?? ''} onChange={(e) => setE({ dorGeral: e.target.value === '' ? undefined : Number(e.target.value) })} />
                 </div>
+                <TextField label="Curativo atual" value={enf.curativoAtual} onChange={(v) => setE({ curativoAtual: v })} placeholder="Cobertura em uso, frequência de troca" rows={1} />
               </div>
-              <TextField label="Observações" value={obsEnfermagem} onChange={setObsEnfermagem} rows={3} />
+              <TextField label="Adesão ao tratamento / suporte familiar / acesso a curativos" value={enf.adesaoTratamento} onChange={(v) => setE({ adesaoTratamento: v })} />
+              <TextField label="Orientações fornecidas" value={enf.orientacoesFornecidas} onChange={(v) => setE({ orientacoesFornecidas: v })} />
+              <TextField label="Evolução" value={enf.evolucao} onChange={(v) => setE({ evolucao: v })} />
+              <TextField label="Plano / próximos passos" value={enf.planoProximosPassos} onChange={(v) => setE({ planoProximosPassos: v })} />
+              <div className="space-y-2">
+                <Label>COREN do enfermeiro responsável</Label>
+                <Input value={enf.coren ?? ''} onChange={(e) => setE({ coren: e.target.value })} placeholder="COREN 000000-SP" />
+              </div>
             </div>
           )}
         </div>

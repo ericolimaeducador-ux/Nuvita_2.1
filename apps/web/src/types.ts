@@ -238,7 +238,7 @@ export const PERMISSOES_PADRAO_POR_PAPEL: Record<Papel, Modulo[]> = {
   ],
   [Papel.ENFERMEIRO]: [
     M.DASHBOARD, M.PACIENTES, M.AGENDA, M.PRONTUARIOS, M.DOCUMENTOS,
-    M.FERIDAS,
+    M.FERIDAS, M.TELEMEDICINA,
   ],
   [Papel.ADVOGADO]: [
     M.DASHBOARD, M.PACIENTES, M.PRONTUARIOS, M.DOCUMENTOS,
@@ -428,11 +428,42 @@ export interface AssinaturaProntuario {
   hash?: string;
 }
 
+/**
+ * Registro da consulta de enfermagem em estomaterapia. Complementa a
+ * AvaliacaoFerida (que cobre T/I/M/E do TIMERS por ferida) com o "S"
+ * (fatores sociais) e o contexto geral do paciente.
+ */
 export interface RegistroEnfermagem {
-  dataLigacao?: string;
-  sondaChegouEm?: string;
-  observacoes?: string;
+  motivoAtendimento?: string;
+  comorbidadesRelevantes?: string;
+  mobilidade?: string;
+  escoreBraden?: number;
+  estadoNutricional?: string;
+  dorGeral?: number;
+  curativoAtual?: string;
+  adesaoTratamento?: string;
+  orientacoesFornecidas?: string;
+  evolucao?: string;
+  planoProximosPassos?: string;
+  coren?: string;
 }
+
+/** Ordem/rótulos de exibição do registro de enfermagem — usado no histórico
+ * de atendimentos e na impressão do prontuário de estomaterapia. */
+export const REGISTRO_ENFERMAGEM_CAMPOS: Array<[keyof RegistroEnfermagem, string]> = [
+  ['motivoAtendimento', 'Motivo do atendimento'],
+  ['comorbidadesRelevantes', 'Comorbidades relevantes'],
+  ['mobilidade', 'Mobilidade'],
+  ['escoreBraden', 'Escore de Braden'],
+  ['estadoNutricional', 'Estado nutricional'],
+  ['dorGeral', 'Dor geral (0-10)'],
+  ['curativoAtual', 'Curativo atual'],
+  ['adesaoTratamento', 'Adesão ao tratamento / suporte'],
+  ['orientacoesFornecidas', 'Orientações fornecidas'],
+  ['evolucao', 'Evolução'],
+  ['planoProximosPassos', 'Plano / próximos passos'],
+  ['coren', 'COREN'],
+];
 
 /** Registro de atendimento psicológico / psicoterapia (Res. CFP 006/2019). */
 export interface RegistroPsicologico {

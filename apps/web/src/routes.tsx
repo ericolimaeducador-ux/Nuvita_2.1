@@ -11,6 +11,7 @@ import { DocumentosPage } from '@/pages/DocumentosPage';
 import { NotificacoesPage } from '@/pages/NotificacoesPage';
 import { FinanceiroPage } from '@/pages/FinanceiroPage';
 import { TelemedicinaPage } from '@/pages/TelemedicinaPage';
+import { AtendimentoEnfermagemPage } from '@/pages/AtendimentoEnfermagemPage';
 import { AtendimentoTelemedicinaPage } from '@/pages/AtendimentoTelemedicinaPage';
 import { ClinicaPage } from '@/pages/ClinicaPage';
 import { ProntuarioImpressaoPage } from '@/pages/ProntuarioImpressaoPage';
@@ -64,6 +65,7 @@ export function AppRoutes() {
           </Route>
           <Route element={<ProtectedRoute modulo={Modulo.TELEMEDICINA} />}>
             <Route path="/telemedicina" element={<TelemedicinaPage />} />
+            <Route path="/atendimento-enfermagem" element={<AtendimentoEnfermagemPage />} />
           </Route>
           <Route element={<ProtectedRoute modulo={Modulo.CLINICA} />}>
             <Route path="/clinica" element={<ClinicaPage />} />
