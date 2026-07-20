@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 import { extractRequestMeta } from '../../../common/http/client-ip';
-import { AuthTokenPayload, PAPEIS_PROFISSIONAIS } from '../../../../../../packages/shared/src/auth';
+import { AuthTokenPayload, PAPEIS_PROFISSIONAIS, Papel } from '../../../../../../packages/shared/src/auth';
 import { CurrentUser } from '../../auth/presentation/decorators/current-user.decorator';
 import { Roles } from '../../auth/presentation/decorators/roles.decorator';
 import { JwtAuthGuard } from '../../auth/presentation/guards/jwt-auth.guard';
@@ -27,14 +27,27 @@ import { ListProntuariosQueryDto } from '../application/dto/list-prontuarios-que
 import { UpdateProntuarioDto } from '../application/dto/update-prontuario.dto';
 import { ProntuarioRequestContext, ProntuariosService } from '../application/prontuarios.service';
 
+/**
+ * LEITURA inclui o ADMIN: ele tem `Modulo.PRONTUARIOS` por padrão e a rota
+ * aparece no menu dele, mas o `@Roles` de classe (só papel profissional) fazia
+ * TODA chamada responder 403 — a tela abria e nada carregava. Supervisão
+ * administrativa poder ler é coerente com o resto do produto (o ADMIN já lê
+ * feridas e pacientes, que também são dado clínico).
+ *
+ * ESCRITA continua exclusiva do papel profissional: criar, editar rascunho,
+ * adendar e sobretudo ASSINAR são atos clínicos com responsabilidade
+ * profissional (COREN) — não podem ser praticados por conta administrativa.
+ */
+const LEITURA_PRONTUARIO = [...PAPEIS_PROFISSIONAIS, Papel.ADMIN];
+
 @Controller('prontuarios')
 @UseGuards(JwtAuthGuard, TenantRequiredGuard, RolesGuard, PermissoesGuard)
 @RequerModulo(Modulo.PRONTUARIOS)
-@Roles(...PAPEIS_PROFISSIONAIS)
 export class ProntuariosController {
   constructor(private readonly prontuariosService: ProntuariosService) {}
 
   @Post()
+  @Roles(...PAPEIS_PROFISSIONAIS)
   create(
     @Body() dto: CreateProntuarioDto,
     @CurrentUser() user: AuthTokenPayload,
@@ -44,6 +57,7 @@ export class ProntuariosController {
   }
 
   @Get()
+  @Roles(...LEITURA_PRONTUARIO)
   listByPaciente(
     @Query() query: ListProntuariosQueryDto,
     @CurrentUser() user: AuthTokenPayload,
@@ -53,6 +67,7 @@ export class ProntuariosController {
   }
 
   @Get('cid10/autocomplete')
+  @Roles(...LEITURA_PRONTUARIO)
   autocompleteCid10(
     @Query() query: Cid10QueryDto,
     @CurrentUser() user: AuthTokenPayload,
@@ -66,6 +81,7 @@ export class ProntuariosController {
   }
 
   @Get(':id')
+  @Roles(...LEITURA_PRONTUARIO)
   findOne(
     @Param('id') prontuarioId: string,
     @Query('clinicaId') clinicaId: string | undefined,
@@ -76,6 +92,7 @@ export class ProntuariosController {
   }
 
   @Patch(':id')
+  @Roles(...PAPEIS_PROFISSIONAIS)
   updateDraft(
     @Param('id') prontuarioId: string,
     @Body() dto: UpdateProntuarioDto,
@@ -92,6 +109,7 @@ export class ProntuariosController {
   }
 
   @Post(':id/assinar')
+  @Roles(...PAPEIS_PROFISSIONAIS)
   sign(
     @Param('id') prontuarioId: string,
     @Query('clinicaId') clinicaId: string | undefined,
@@ -102,6 +120,7 @@ export class ProntuariosController {
   }
 
   @Post(':id/addendums')
+  @Roles(...PAPEIS_PROFISSIONAIS)
   createAddendum(
     @Param('id') prontuarioId: string,
     @Body() dto: CreateAddendumDto,
@@ -118,6 +137,7 @@ export class ProntuariosController {
   }
 
   @Get(':id/addendums')
+  @Roles(...LEITURA_PRONTUARIO)
   listAddendums(
     @Param('id') prontuarioId: string,
     @Query('clinicaId') clinicaId: string | undefined,

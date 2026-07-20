@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { AppConfigService } from '../../../common/security/config.service';
 import { createHmac } from 'crypto';
-import { AuthTokenPayload, ehProfissional } from '../../../../../../packages/shared/src/auth';
+import { AuthTokenPayload, Papel, ehProfissional } from '../../../../../../packages/shared/src/auth';
 import { AUDIT_LOG_REPOSITORY } from '../../auth/auth.constants';
 import { AuditLogRepository } from '../../auth/application/ports/audit-log.repository';
 import { AuditEvent } from '../../auth/domain/audit-event.enum';
@@ -38,7 +38,7 @@ export class ProntuariosService {
   ) {}
 
   async create(dto: CreateProntuarioDto, context: ProntuarioRequestContext): Promise<Prontuario> {
-    this.assertMedico(context.user);
+    this.assertProfissional(context.user);
     const clinicaId = this.resolveClinicaId(context.user, dto.clinicaId);
     const prontuario = await this.prontuarios.create({
       clinicaId,
@@ -75,7 +75,7 @@ export class ProntuariosService {
   }
 
   async listByPaciente(query: ListProntuariosQueryDto, context: ProntuarioRequestContext): Promise<Prontuario[]> {
-    this.assertMedico(context.user);
+    this.assertPodeLer(context.user);
     if (!query.pacienteId) {
       throw new BadRequestException('pacienteId e obrigatorio para listar historico de prontuario.');
     }
@@ -176,6 +176,10 @@ export class ProntuariosService {
     context: ProntuarioRequestContext,
   ) {
     const prontuario = await this.getProntuarioOrThrow(prontuarioId, clinicaId, context);
+    // Adendo é registro clínico: exigido explicitamente aqui porque, ao
+    // contrário de editar/assinar, este fluxo não passa por `assertOwner`.
+    this.assertProfissional(context.user);
+
     if (!prontuario.assinado) {
       throw new ConflictException('Addendum deve ser usado apenas apos assinatura. Edite o rascunho antes disso.');
     }
@@ -207,7 +211,7 @@ export class ProntuariosService {
   }
 
   async autocompleteCid10(query: string, limit: number | undefined, context: ProntuarioRequestContext) {
-    this.assertMedico(context.user);
+    this.assertPodeLer(context.user);
     const result = await this.cid10.autocomplete(query, limit);
 
     await this.audit(AuditEvent.CID10_SEARCHED, context, {
@@ -223,7 +227,10 @@ export class ProntuariosService {
     clinicaId: string | undefined,
     context: ProntuarioRequestContext,
   ): Promise<Prontuario> {
-    this.assertMedico(context.user);
+    // Caminho compartilhado por leitura e escrita: aqui só se exige poder LER.
+    // Quem escreve é barrado logo depois — `updateDraft`/`sign` por
+    // `assertOwner` e `createAddendum` por `assertProfissional`.
+    this.assertPodeLer(context.user);
     const resolvedClinicaId = this.resolveClinicaId(context.user, clinicaId);
     const prontuario = await this.prontuarios.findById(resolvedClinicaId, prontuarioId);
 
@@ -234,10 +241,29 @@ export class ProntuariosService {
     return prontuario;
   }
 
-  private assertMedico(user: AuthTokenPayload): void {
-    // Paridade profissional: médico, enfermeiro e advogado acessam o prontuário.
+  /**
+   * ESCRITA no prontuário é ato clínico com responsabilidade profissional
+   * (COREN) — criar, editar, adendar e assinar ficam restritos ao papel
+   * profissional, mesmo para quem administra a clínica.
+   */
+  private assertProfissional(user: AuthTokenPayload): void {
     if (!ehProfissional(user.papel)) {
-      throw new ForbiddenException('Somente profissionais de atendimento acessam o prontuario.');
+      throw new ForbiddenException('Somente profissionais de atendimento registram no prontuario.');
+    }
+  }
+
+  /**
+   * LEITURA inclui o ADMIN. Ele já tem `Modulo.PRONTUARIOS` por padrão e a rota
+   * no menu; sem isto a tela abria e toda chamada respondia 403.
+   *
+   * Esta checagem é a SEGUNDA camada: o controller já filtra por papel. Ela
+   * existe porque a service também é chamada de fora do HTTP e não pode confiar
+   * apenas no guard — foi justamente ela que continuou barrando o ADMIN depois
+   * de o controller ser liberado.
+   */
+  private assertPodeLer(user: AuthTokenPayload): void {
+    if (!ehProfissional(user.papel) && user.papel !== Papel.ADMIN) {
+      throw new ForbiddenException('Sem permissao para consultar o prontuario.');
     }
   }
 
