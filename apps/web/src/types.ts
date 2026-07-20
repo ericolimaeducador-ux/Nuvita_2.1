@@ -746,28 +746,143 @@ export const FORMA_PAGAMENTO_LABEL: Record<FormaPagamento, string> = {
 };
 
 /**
- * Categoria do lançamento na realidade de uma clínica de estomaterapia:
- * consulta presencial, atendimento avulso por telemedicina, venda/compra de
- * produto (curativos, coberturas, bolsas) e consultoria prestada a hospitais
- * e clínicas de idosos.
+ * Categoria do lançamento na realidade de uma clínica de estomaterapia.
+ *
+ * ENTRADAS — as quatro fontes de receita: consulta, avaliação avulsa de ferida,
+ * venda de produto e consultoria a hospitais/clínicas/ILPI.
+ * SAÍDAS — compra de produto, insumos, aluguel, contas fixas e saídas
+ * esporádicas.
  */
 export enum CategoriaLancamento {
   CONSULTA = 'consulta',
-  TELEMEDICINA_AVULSA = 'telemedicina_avulsa',
+  AVALIACAO_AVULSA = 'avaliacao_avulsa',
   VENDA_PRODUTO = 'venda_produto',
-  COMPRA_PRODUTO = 'compra_produto',
   CONSULTORIA = 'consultoria',
+  COMPRA_PRODUTO = 'compra_produto',
+  INSUMO = 'insumo',
+  ALUGUEL = 'aluguel',
+  CONTA_FIXA = 'conta_fixa',
+  DESPESA_EVENTUAL = 'despesa_eventual',
   OUTRO = 'outro',
 }
 
 export const CATEGORIA_LANCAMENTO_LABEL: Record<CategoriaLancamento, string> = {
   [CategoriaLancamento.CONSULTA]: 'Consulta',
-  [CategoriaLancamento.TELEMEDICINA_AVULSA]: 'Telemedicina avulsa',
+  [CategoriaLancamento.AVALIACAO_AVULSA]: 'Avaliação avulsa de ferida',
   [CategoriaLancamento.VENDA_PRODUTO]: 'Venda de produto',
+  [CategoriaLancamento.CONSULTORIA]: 'Consultoria (hospital/clínica/ILPI)',
   [CategoriaLancamento.COMPRA_PRODUTO]: 'Compra de produto',
-  [CategoriaLancamento.CONSULTORIA]: 'Consultoria (hospital/clínica)',
+  [CategoriaLancamento.INSUMO]: 'Insumos',
+  [CategoriaLancamento.ALUGUEL]: 'Aluguel',
+  [CategoriaLancamento.CONTA_FIXA]: 'Conta fixa',
+  [CategoriaLancamento.DESPESA_EVENTUAL]: 'Saída esporádica',
   [CategoriaLancamento.OUTRO]: 'Outro',
 };
+
+/** Categorias válidas como entrada de caixa (espelha o domínio da API). */
+export const CATEGORIAS_RECEITA: CategoriaLancamento[] = [
+  CategoriaLancamento.CONSULTA,
+  CategoriaLancamento.AVALIACAO_AVULSA,
+  CategoriaLancamento.VENDA_PRODUTO,
+  CategoriaLancamento.CONSULTORIA,
+];
+
+/** Categorias válidas como saída de caixa. */
+export const CATEGORIAS_DESPESA: CategoriaLancamento[] = [
+  CategoriaLancamento.COMPRA_PRODUTO,
+  CategoriaLancamento.INSUMO,
+  CategoriaLancamento.ALUGUEL,
+  CategoriaLancamento.CONTA_FIXA,
+  CategoriaLancamento.DESPESA_EVENTUAL,
+];
+
+/** `OUTRO` serve aos dois lados, por isso não está em nenhuma das listas. */
+export function categoriasDoTipo(tipo: TipoLancamento): CategoriaLancamento[] {
+  const base = tipo === TipoLancamento.RECEITA ? CATEGORIAS_RECEITA : CATEGORIAS_DESPESA;
+  return [...base, CategoriaLancamento.OUTRO];
+}
+
+// ---------- Tabela de preços ----------
+
+export enum TipoServico {
+  CONSULTA = 'consulta',
+  AVALIACAO_AVULSA = 'avaliacao_avulsa',
+  CONSULTORIA = 'consultoria',
+  OUTRO = 'outro',
+}
+
+export const TIPO_SERVICO_LABEL: Record<TipoServico, string> = {
+  [TipoServico.CONSULTA]: 'Consulta',
+  [TipoServico.AVALIACAO_AVULSA]: 'Avaliação avulsa de ferida',
+  [TipoServico.CONSULTORIA]: 'Consultoria',
+  [TipoServico.OUTRO]: 'Outro',
+};
+
+export interface Servico {
+  id: string;
+  clinicaId: string;
+  nome: string;
+  tipo: TipoServico;
+  preco: number;
+  descricao?: string;
+  ativo: boolean;
+  criadoEm: string;
+}
+
+/** Serviço → categoria sugerida no lançamento. */
+export const CATEGORIA_DO_SERVICO: Record<TipoServico, CategoriaLancamento> = {
+  [TipoServico.CONSULTA]: CategoriaLancamento.CONSULTA,
+  [TipoServico.AVALIACAO_AVULSA]: CategoriaLancamento.AVALIACAO_AVULSA,
+  [TipoServico.CONSULTORIA]: CategoriaLancamento.CONSULTORIA,
+  [TipoServico.OUTRO]: CategoriaLancamento.OUTRO,
+};
+
+// ---------- Clientes institucionais (consultoria B2B) ----------
+
+export enum TipoInstituicao {
+  HOSPITAL = 'hospital',
+  CLINICA = 'clinica',
+  ILPI = 'ilpi',
+  OUTRO = 'outro',
+}
+
+export const TIPO_INSTITUICAO_LABEL: Record<TipoInstituicao, string> = {
+  [TipoInstituicao.HOSPITAL]: 'Hospital',
+  [TipoInstituicao.CLINICA]: 'Clínica',
+  [TipoInstituicao.ILPI]: 'ILPI (longa permanência)',
+  [TipoInstituicao.OUTRO]: 'Outro',
+};
+
+export interface Instituicao {
+  id: string;
+  clinicaId: string;
+  nome: string;
+  tipo: TipoInstituicao;
+  cnpj?: string;
+  contatoNome?: string;
+  contatoEmail?: string;
+  contatoTelefone?: string;
+  observacoes?: string;
+  ativo: boolean;
+  criadoEm: string;
+}
+
+// ---------- Recorrências (contrato de consultoria / aluguel / conta fixa) ----------
+
+export interface Recorrencia {
+  id: string;
+  clinicaId: string;
+  descricao: string;
+  tipo: TipoLancamento;
+  categoria: CategoriaLancamento;
+  instituicaoId?: string;
+  valorMensal: number;
+  diaVencimento: number;
+  inicio: string;
+  fim?: string;
+  ativo: boolean;
+  criadoEm: string;
+}
 
 export interface Lancamento {
   id: string;
@@ -783,8 +898,13 @@ export interface Lancamento {
   recebidoEm?: string;
   observacoes?: string;
   categoria?: CategoriaLancamento;
+  servicoId?: string;
   produtoId?: string;
   quantidade?: number;
+  instituicaoId?: string;
+  recorrenciaId?: string;
+  /** Mês de referência `YYYY-MM` — só em lançamento vindo de recorrência. */
+  competencia?: string;
   criadoPor: string;
   criadoEm: string;
 }
@@ -796,6 +916,26 @@ export interface DashboardFinanceiro {
   saldo: number;
   porFormaPagamento: Array<{ forma: string; total: number; quantidade: number }>;
   porCategoria: Array<{ categoria: string; tipo: TipoLancamento; total: number; quantidade: number }>;
+  serieMensal: Array<{ mes: string; receitas: number; despesas: number }>;
+}
+
+export interface LinhaFonteReceita {
+  categoria: string;
+  total: number;
+  quantidade: number;
+  ticketMedio: number;
+}
+
+export interface RelatorioFinanceiro {
+  periodo: { inicio: string; fim: string };
+  totalReceitas: number;
+  totalDespesas: number;
+  saldo: number;
+  totalPendente: number;
+  fontesReceita: LinhaFonteReceita[];
+  despesasPorCategoria: LinhaFonteReceita[];
+  porInstituicao: Array<{ instituicaoId: string; nome: string; total: number; quantidade: number }>;
+  produtosVendidos: Array<{ produtoId: string; nome: string; quantidade: number; total: number }>;
   serieMensal: Array<{ mes: string; receitas: number; despesas: number }>;
 }
 
@@ -937,21 +1077,37 @@ export interface ChecklistDocumentoItem {
   atualizadoEm: string;
 }
 
+// ---------- Catálogo de produtos para ferida ----------
+
+export enum TipoProduto {
+  CURATIVO = 'curativo',
+  COBERTURA = 'cobertura',
+  BOLSA_ESTOMIA = 'bolsa_estomia',
+  ADJUVANTE = 'adjuvante',
+  OUTRO = 'outro',
+}
+
+export const TIPO_PRODUTO_LABEL: Record<TipoProduto, string> = {
+  [TipoProduto.CURATIVO]: 'Curativo',
+  [TipoProduto.COBERTURA]: 'Cobertura',
+  [TipoProduto.BOLSA_ESTOMIA]: 'Bolsa de estomia',
+  [TipoProduto.ADJUVANTE]: 'Adjuvante',
+  [TipoProduto.OUTRO]: 'Outro',
+};
+
 export interface Produto {
   id: string;
-  codigo: number;
-  codigoFabricante?: string;
+  clinicaId: string;
   nome: string;
-  tipo: string;
-  sexo: string;
-  embalagem: string;
-  projeto: 'ALPHA' | 'BETA';
-  french?: number;
-  comprimentoCm?: number;
-  descricaoTecnica: string;
-  descricaoSiafisico?: string;
-  codigoSiafisico?: number;
+  tipo: TipoProduto;
+  precoVenda: number;
+  custo?: number;
+  unidade?: string;
+  apresentacao?: string;
+  fabricante?: string;
+  observacoes?: string;
   ativo: boolean;
+  criadoEm: string;
 }
 
 // ---------- Super Admin ----------

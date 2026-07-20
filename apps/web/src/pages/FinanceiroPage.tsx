@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
-import { Plus, TrendingUp, TrendingDown, Clock, Scale, Check, X } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, Clock, Scale, Check, X, BarChart3, Settings } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { PageHeader } from '@/components/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,13 @@ import { formatData, toItems } from '@/utils';
 import { useAuth } from '@/auth/AuthContext';
 import { toast } from '@/components/ui/use-toast';
 import {
+  BarrasHorizontais,
+  COR_DESPESA,
+  COR_RECEITA,
+  EvolucaoMensal,
+  formatarValor,
+} from '@/components/charts/FinanceiroCharts';
+import {
   FormaPagamento,
   FORMA_PAGAMENTO_LABEL,
   StatusLancamento,
@@ -27,106 +35,16 @@ import {
   TIPO_LANCAMENTO_LABEL,
   CategoriaLancamento,
   CATEGORIA_LANCAMENTO_LABEL,
+  CATEGORIA_DO_SERVICO,
+  categoriasDoTipo,
   type DashboardFinanceiro,
   type Lancamento,
 } from '@/types';
 
-function fmtValor(v: number) {
-  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-}
-
 const PRODUTO_CATEGORIAS = new Set([CategoriaLancamento.VENDA_PRODUTO, CategoriaLancamento.COMPRA_PRODUTO]);
 
-/** Composição por categoria: receita (emerald) x despesa (red) — mesma convenção já usada nos cards. */
-function CategoriaChart({ dados }: { dados: DashboardFinanceiro['porCategoria'] }) {
-  if (dados.length === 0) return <p className="text-sm text-muted-foreground">Sem lançamentos recebidos no período.</p>;
-
-  const porCategoria = new Map<string, { receita: number; despesa: number }>();
-  for (const d of dados) {
-    const atual = porCategoria.get(d.categoria) ?? { receita: 0, despesa: 0 };
-    if (d.tipo === TipoLancamento.RECEITA) atual.receita += d.total; else atual.despesa += d.total;
-    porCategoria.set(d.categoria, atual);
-  }
-  const max = Math.max(1, ...Array.from(porCategoria.values()).flatMap((v) => [v.receita, v.despesa]));
-
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-500" /> Receita</span>
-        <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-red-500" /> Despesa</span>
-      </div>
-      {Array.from(porCategoria.entries()).map(([categoria, v]) => (
-        <div key={categoria} className="space-y-1">
-          <div className="flex items-center justify-between text-sm">
-            <span className="font-medium">{CATEGORIA_LANCAMENTO_LABEL[categoria as CategoriaLancamento] ?? categoria}</span>
-          </div>
-          <div className="space-y-1">
-            {v.receita > 0 && (
-              <div className="flex items-center gap-2" title={`Receita: ${fmtValor(v.receita)}`}>
-                <div className="h-2 flex-1 rounded-full bg-muted overflow-hidden">
-                  <div className="h-2 rounded-full bg-emerald-500" style={{ width: `${(v.receita / max) * 100}%` }} />
-                </div>
-                <span className="w-24 text-right text-xs text-muted-foreground">{fmtValor(v.receita)}</span>
-              </div>
-            )}
-            {v.despesa > 0 && (
-              <div className="flex items-center gap-2" title={`Despesa: ${fmtValor(v.despesa)}`}>
-                <div className="h-2 flex-1 rounded-full bg-muted overflow-hidden">
-                  <div className="h-2 rounded-full bg-red-500" style={{ width: `${(v.despesa / max) * 100}%` }} />
-                </div>
-                <span className="w-24 text-right text-xs text-muted-foreground">{fmtValor(v.despesa)}</span>
-              </div>
-            )}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-/** Evolução mensal (12 meses): receitas x despesas, mesma escala (um único eixo). */
-function SerieMensalChart({ dados }: { dados: DashboardFinanceiro['serieMensal'] }) {
-  if (dados.length === 0) return null;
-
-  const width = 720;
-  const height = 200;
-  const padX = 12;
-  const padY = 16;
-  const max = Math.max(1, ...dados.flatMap((d) => [d.receitas, d.despesas]));
-  const stepX = (width - padX * 2) / (dados.length - 1 || 1);
-  const y = (v: number) => height - padY - (v / max) * (height - padY * 2);
-  const pontos = (chave: 'receitas' | 'despesas') =>
-    dados.map((d, i) => `${padX + i * stepX},${y(d[chave])}`).join(' ');
-
-  return (
-    <div className="space-y-2">
-      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1.5"><span className="h-0.5 w-3 rounded-full bg-emerald-500" /> Receitas</span>
-        <span className="flex items-center gap-1.5"><span className="h-0.5 w-3 rounded-full bg-red-500" /> Despesas</span>
-      </div>
-      <svg viewBox={`0 0 ${width} ${height}`} className="w-full" role="img" aria-label="Evolução mensal de receitas e despesas">
-        <line x1={padX} y1={height - padY} x2={width - padX} y2={height - padY} className="stroke-muted" strokeWidth={1} />
-        <polyline points={pontos('receitas')} fill="none" className="stroke-emerald-500" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-        <polyline points={pontos('despesas')} fill="none" className="stroke-red-500" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-        {dados.map((d, i) => (
-          <g key={d.mes}>
-            <circle cx={padX + i * stepX} cy={y(d.receitas)} r={3} className="fill-emerald-500">
-              <title>{`${d.mes} — Receitas: ${fmtValor(d.receitas)}`}</title>
-            </circle>
-            <circle cx={padX + i * stepX} cy={y(d.despesas)} r={3} className="fill-red-500">
-              <title>{`${d.mes} — Despesas: ${fmtValor(d.despesas)}`}</title>
-            </circle>
-          </g>
-        ))}
-      </svg>
-      <div className="flex justify-between text-[10px] text-muted-foreground px-1">
-        {dados.map((d, i) => (
-          <span key={d.mes} className={i % 2 === 0 ? '' : 'hidden sm:inline'}>{dayjs(`${d.mes}-01`).format('MMM/YY')}</span>
-        ))}
-      </div>
-    </div>
-  );
-}
+/** Sentinela: Radix Select não aceita value vazio. */
+const NENHUM = '__nenhum__';
 
 function lancamentoVariant(s: StatusLancamento): 'warning' | 'success' | 'destructive' {
   if (s === StatusLancamento.PENDENTE) return 'warning';
@@ -139,15 +57,17 @@ export function FinanceiroPage() {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
 
-  const [fTipo, setFTipo] = useState<TipoLancamento | ''>('');
+  const [fTipo, setFTipo] = useState<TipoLancamento>(TipoLancamento.RECEITA);
   const [fDescricao, setFDescricao] = useState('');
   const [fValor, setFValor] = useState('');
   const [fForma, setFForma] = useState<FormaPagamento | ''>('');
   const [fVencimento, setFVencimento] = useState('');
   const [fObs, setFObs] = useState('');
   const [fCategoria, setFCategoria] = useState<CategoriaLancamento | ''>('');
+  const [fServicoId, setFServicoId] = useState(NENHUM);
   const [fProdutoId, setFProdutoId] = useState('');
   const [fQuantidade, setFQuantidade] = useState('1');
+  const [fInstituicaoId, setFInstituicaoId] = useState('');
 
   const dashQ = useQuery<DashboardFinanceiro>({
     queryKey: ['financeiro', 'dashboard'],
@@ -159,10 +79,22 @@ export function FinanceiroPage() {
     queryFn: () => financeiroApi.list(),
   });
 
+  const servicosQ = useQuery({
+    queryKey: ['financeiro', 'servicos'],
+    queryFn: () => financeiroApi.listServicos(),
+    enabled: open,
+  });
+
   const produtosQ = useQuery({
     queryKey: ['produtos'],
     queryFn: () => produtosApi.list(),
     enabled: open && PRODUTO_CATEGORIAS.has(fCategoria as CategoriaLancamento),
+  });
+
+  const instituicoesQ = useQuery({
+    queryKey: ['financeiro', 'instituicoes'],
+    queryFn: () => financeiroApi.listInstituicoes(),
+    enabled: open && fCategoria === CategoriaLancamento.CONSULTORIA,
   });
 
   const createMut = useMutation({
@@ -178,7 +110,7 @@ export function FinanceiroPage() {
 
   const receberMut = useMutation({
     mutationFn: (id: string) => financeiroApi.receber(id),
-    onSuccess: () => { toast.success('Lançamento marcado como recebido.'); void qc.invalidateQueries({ queryKey: ['financeiro'] }); },
+    onSuccess: () => { toast.success('Lançamento baixado.'); void qc.invalidateQueries({ queryKey: ['financeiro'] }); },
     onError: (e) => toast.error('Erro', apiErrorMessage(e)),
   });
 
@@ -189,15 +121,45 @@ export function FinanceiroPage() {
   });
 
   function resetForm() {
-    setFTipo(''); setFDescricao(''); setFValor(''); setFForma(''); setFVencimento(''); setFObs('');
-    setFCategoria(''); setFProdutoId(''); setFQuantidade('1');
+    setFTipo(TipoLancamento.RECEITA); setFDescricao(''); setFValor(''); setFForma('');
+    setFVencimento(''); setFObs(''); setFCategoria(''); setFServicoId(NENHUM);
+    setFProdutoId(''); setFQuantidade('1'); setFInstituicaoId('');
+  }
+
+  /**
+   * Escolher o serviço traz o preço da tabela e a categoria correspondente —
+   * mas o valor segue editável: desconto e caso especial são a regra, não a
+   * exceção, numa clínica.
+   */
+  function aoEscolherServico(servicoId: string) {
+    setFServicoId(servicoId);
+    if (servicoId === NENHUM) return;
+
+    const servico = (servicosQ.data ?? []).find((s) => s.id === servicoId);
+    if (!servico) return;
+
+    setFValor(String(servico.preco));
+    setFCategoria(CATEGORIA_DO_SERVICO[servico.tipo]);
+    if (!fDescricao) setFDescricao(servico.nome);
+  }
+
+  function aoEscolherProduto(produtoId: string) {
+    setFProdutoId(produtoId);
+    const produto = (produtosQ.data ?? []).find((p) => p.id === produtoId);
+    if (!produto) return;
+
+    const qtd = parseInt(fQuantidade, 10) || 1;
+    setFValor((produto.precoVenda * qtd).toFixed(2));
+    if (!fDescricao) setFDescricao(produto.nome);
   }
 
   const precisaProduto = PRODUTO_CATEGORIAS.has(fCategoria as CategoriaLancamento);
+  const precisaInstituicao = fCategoria === CategoriaLancamento.CONSULTORIA;
 
   function submit() {
-    if (!user?.clinicaId || !fTipo || !fDescricao || !fValor) { toast.error('Preencha os campos obrigatórios.'); return; }
-    if (precisaProduto && !fProdutoId) { toast.error('Selecione o produto.'); return; }
+    if (!user?.clinicaId || !fDescricao || !fValor) { toast.error('Preencha os campos obrigatórios.'); return; }
+    if (fCategoria === CategoriaLancamento.VENDA_PRODUTO && !fProdutoId) { toast.error('Selecione o produto.'); return; }
+
     createMut.mutate({
       clinicaId: user.clinicaId,
       tipo: fTipo,
@@ -207,8 +169,10 @@ export function FinanceiroPage() {
       vencimento: fVencimento ? dayjs(fVencimento).toISOString() : undefined,
       observacoes: fObs || undefined,
       categoria: fCategoria || undefined,
-      produtoId: precisaProduto ? fProdutoId : undefined,
-      quantidade: precisaProduto ? parseInt(fQuantidade, 10) || 1 : undefined,
+      servicoId: fServicoId !== NENHUM ? fServicoId : undefined,
+      produtoId: precisaProduto && fProdutoId ? fProdutoId : undefined,
+      quantidade: precisaProduto && fProdutoId ? parseInt(fQuantidade, 10) || 1 : undefined,
+      instituicaoId: precisaInstituicao && fInstituicaoId ? fInstituicaoId : undefined,
     });
   }
 
@@ -216,8 +180,8 @@ export function FinanceiroPage() {
   const lancamentos = toItems<Lancamento>(listQ.data as never);
 
   const statCards = [
-    { label: 'Receitas', value: dash?.totalReceitas ?? 0, icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-500/10' },
-    { label: 'Despesas', value: dash?.totalDespesas ?? 0, icon: TrendingDown, color: 'text-red-600', bg: 'bg-red-500/10' },
+    { label: 'Entradas', value: dash?.totalReceitas ?? 0, icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-500/10' },
+    { label: 'Saídas', value: dash?.totalDespesas ?? 0, icon: TrendingDown, color: 'text-red-600', bg: 'bg-red-500/10' },
     { label: 'Pendente', value: dash?.totalPendente ?? 0, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-500/10' },
     {
       label: 'Saldo',
@@ -228,20 +192,36 @@ export function FinanceiroPage() {
     },
   ];
 
+  const receitasPorCategoria = (dash?.porCategoria ?? [])
+    .filter((c) => c.tipo === TipoLancamento.RECEITA)
+    .map((c) => ({ rotulo: CATEGORIA_LANCAMENTO_LABEL[c.categoria as CategoriaLancamento] ?? c.categoria, valor: c.total }));
+
+  const despesasPorCategoria = (dash?.porCategoria ?? [])
+    .filter((c) => c.tipo === TipoLancamento.DESPESA)
+    .map((c) => ({ rotulo: CATEGORIA_LANCAMENTO_LABEL[c.categoria as CategoriaLancamento] ?? c.categoria, valor: c.total }));
+
   return (
     <div className="p-6">
       <PageHeader
         title="Financeiro"
         extra={
-          <Button onClick={() => setOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" /> Novo lançamento
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" asChild>
+              <Link to="/financeiro/relatorio"><BarChart3 className="mr-2 h-4 w-4" /> Relatório</Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link to="/financeiro/configuracao"><Settings className="mr-2 h-4 w-4" /> Configuração</Link>
+            </Button>
+            <Button onClick={() => setOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" /> Novo lançamento
+            </Button>
+          </div>
         }
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
         {dashQ.isLoading
-          ? [1,2,3,4].map((i) => <Skeleton key={i} className="h-24 w-full" />)
+          ? [1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-24 w-full" />)
           : statCards.map((c) => {
               const Icon = c.icon;
               return (
@@ -251,7 +231,7 @@ export function FinanceiroPage() {
                       <div className={`p-3 rounded-lg ${c.bg}`}><Icon className={`h-5 w-5 ${c.color}`} /></div>
                       <div>
                         <p className="text-xs text-muted-foreground">{c.label}</p>
-                        <p className={`text-lg font-bold ${c.color}`}>{fmtValor(c.value)}</p>
+                        <p className={`text-lg font-bold ${c.color}`}>{formatarValor(c.value)}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -263,129 +243,190 @@ export function FinanceiroPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
         <Card>
           <CardContent className="p-6">
-            <h3 className="text-sm font-semibold mb-4">Composição por categoria</h3>
-            {dashQ.isLoading ? <Skeleton className="h-32 w-full" /> : <CategoriaChart dados={dash?.porCategoria ?? []} />}
+            <h3 className="text-sm font-semibold mb-4">Entradas por fonte (mês)</h3>
+            {dashQ.isLoading
+              ? <Skeleton className="h-32 w-full" />
+              : <BarrasHorizontais dados={receitasPorCategoria} cor={COR_RECEITA} vazio="Nenhuma entrada no mês." />}
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6">
-            <h3 className="text-sm font-semibold mb-4">Evolução mensal (12 meses)</h3>
-            {dashQ.isLoading ? <Skeleton className="h-32 w-full" /> : <SerieMensalChart dados={dash?.serieMensal ?? []} />}
+            <h3 className="text-sm font-semibold mb-4">Saídas por categoria (mês)</h3>
+            {dashQ.isLoading
+              ? <Skeleton className="h-32 w-full" />
+              : <BarrasHorizontais dados={despesasPorCategoria} cor={COR_DESPESA} vazio="Nenhuma saída no mês." />}
           </CardContent>
         </Card>
       </div>
 
+      <Card className="mb-6">
+        <CardContent className="p-6">
+          <h3 className="text-sm font-semibold mb-4">Evolução do caixa (12 meses)</h3>
+          {dashQ.isLoading ? <Skeleton className="h-48 w-full" /> : <EvolucaoMensal dados={dash?.serieMensal ?? []} />}
+        </CardContent>
+      </Card>
+
       <Card>
         <CardContent className="p-6">
           {listQ.isLoading ? (
-            <div className="space-y-3">{[1,2,3].map((i) => <Skeleton key={i} className="h-12 w-full" />)}</div>
+            <div className="space-y-3">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-12 w-full" />)}</div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Descrição</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Valor</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Forma</TableHead>
-                  <TableHead>Vencimento</TableHead>
-                  <TableHead className="w-24">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {lancamentos.map((l) => (
-                  <TableRow key={l.id}>
-                    <TableCell className="max-w-xs truncate font-medium">{l.descricao}</TableCell>
-                    <TableCell>
-                      <Badge variant={l.tipo === TipoLancamento.RECEITA ? 'success' : 'destructive'}>
-                        {TIPO_LANCAMENTO_LABEL[l.tipo] ?? l.tipo}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="font-medium">{fmtValor(l.valor)}</TableCell>
-                    <TableCell><Badge variant={lancamentoVariant(l.status)}>{STATUS_LANCAMENTO_LABEL[l.status] ?? l.status}</Badge></TableCell>
-                    <TableCell>{l.formaPagamento ? (FORMA_PAGAMENTO_LABEL[l.formaPagamento] ?? l.formaPagamento) : '—'}</TableCell>
-                    <TableCell>{formatData(l.vencimento)}</TableCell>
-                    <TableCell>
-                      {l.status === StatusLancamento.PENDENTE && (
-                        <div className="flex gap-1">
-                          <Button variant="ghost" size="icon" title="Marcar como recebido" onClick={() => receberMut.mutate(l.id)}>
-                            <Check className="h-4 w-4 text-emerald-600" />
-                          </Button>
-                          <Button variant="ghost" size="icon" title="Cancelar" onClick={() => cancelarMut.mutate(l.id)}>
-                            <X className="h-4 w-4 text-red-600" />
-                          </Button>
-                        </div>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {lancamentos.length === 0 && (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground py-8">Nenhum lançamento encontrado</TableCell>
+                    <TableHead>Descrição</TableHead>
+                    <TableHead>Categoria</TableHead>
+                    <TableHead>Valor</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Forma</TableHead>
+                    <TableHead>Vencimento</TableHead>
+                    <TableHead className="w-24">Ações</TableHead>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {lancamentos.map((l) => (
+                    <TableRow key={l.id}>
+                      <TableCell className="max-w-xs truncate font-medium">
+                        {l.descricao}
+                        {l.recorrenciaId && (
+                          <Badge variant="secondary" className="ml-2">recorrente</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={l.tipo === TipoLancamento.RECEITA ? 'success' : 'destructive'}>
+                          {l.categoria
+                            ? CATEGORIA_LANCAMENTO_LABEL[l.categoria] ?? l.categoria
+                            : TIPO_LANCAMENTO_LABEL[l.tipo] ?? l.tipo}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="font-medium tabular-nums">{formatarValor(l.valor)}</TableCell>
+                      <TableCell><Badge variant={lancamentoVariant(l.status)}>{STATUS_LANCAMENTO_LABEL[l.status] ?? l.status}</Badge></TableCell>
+                      <TableCell>{l.formaPagamento ? (FORMA_PAGAMENTO_LABEL[l.formaPagamento] ?? l.formaPagamento) : '—'}</TableCell>
+                      <TableCell>{formatData(l.vencimento)}</TableCell>
+                      <TableCell>
+                        {l.status === StatusLancamento.PENDENTE && (
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="icon" title="Marcar como pago/recebido" onClick={() => receberMut.mutate(l.id)}>
+                              <Check className="h-4 w-4 text-emerald-600" />
+                            </Button>
+                            <Button variant="ghost" size="icon" title="Cancelar" onClick={() => cancelarMut.mutate(l.id)}>
+                              <X className="h-4 w-4 text-red-600" />
+                            </Button>
+                          </div>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {lancamentos.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center text-muted-foreground py-8">Nenhum lançamento encontrado</TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
 
       <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) resetForm(); }}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Novo lançamento</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Tipo</Label>
-              <Select value={fTipo} onValueChange={(v) => setFTipo(v as TipoLancamento)}>
-                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+              <Label>Entrada ou saída</Label>
+              <Select
+                value={fTipo}
+                onValueChange={(v) => { setFTipo(v as TipoLancamento); setFCategoria(''); setFServicoId(NENHUM); }}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {Object.values(TipoLancamento).map((t) => <SelectItem key={t} value={t}>{TIPO_LANCAMENTO_LABEL[t]}</SelectItem>)}
+                  {Object.values(TipoLancamento).map((t) => (
+                    <SelectItem key={t} value={t}>{TIPO_LANCAMENTO_LABEL[t]}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="fDesc">Descrição</Label>
-              <Input id="fDesc" value={fDescricao} onChange={(e) => setFDescricao(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="fVal">Valor (R$)</Label>
-              <Input id="fVal" type="number" min="0" step="0.01" placeholder="0,00" value={fValor} onChange={(e) => setFValor(e.target.value)} />
-            </div>
+
+            {fTipo === TipoLancamento.RECEITA && (
+              <div className="space-y-2">
+                <Label>Serviço da tabela de preços</Label>
+                <Select value={fServicoId} onValueChange={aoEscolherServico}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={servicosQ.isLoading ? 'Carregando...' : 'Opcional — preenche o valor'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NENHUM}>Nenhum (valor livre)</SelectItem>
+                    {(servicosQ.data ?? []).map((s) => (
+                      <SelectItem key={s.id} value={s.id}>{s.nome} — {formatarValor(s.preco)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label>Categoria</Label>
-              <Select
-                value={fCategoria}
-                onValueChange={(v) => { setFCategoria(v as CategoriaLancamento); setFProdutoId(''); }}
-              >
-                <SelectTrigger><SelectValue placeholder="Opcional" /></SelectTrigger>
+              <Select value={fCategoria} onValueChange={(v) => { setFCategoria(v as CategoriaLancamento); setFProdutoId(''); }}>
+                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                 <SelectContent>
-                  {Object.values(CategoriaLancamento).map((c) => (
+                  {categoriasDoTipo(fTipo).map((c) => (
                     <SelectItem key={c} value={c}>{CATEGORIA_LANCAMENTO_LABEL[c]}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+
             {precisaProduto && (
               <div className="grid grid-cols-3 gap-2">
                 <div className="col-span-2 space-y-2">
                   <Label>Produto</Label>
-                  <Select value={fProdutoId} onValueChange={setFProdutoId}>
+                  <Select value={fProdutoId} onValueChange={aoEscolherProduto}>
                     <SelectTrigger><SelectValue placeholder={produtosQ.isLoading ? 'Carregando...' : 'Selecione'} /></SelectTrigger>
                     <SelectContent>
                       {(produtosQ.data ?? []).map((p) => (
-                        <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>
+                        <SelectItem key={p.id} value={p.id}>{p.nome} — {formatarValor(p.precoVenda)}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="fQtd">Qtd.</Label>
-                  <Input id="fQtd" type="number" min="1" step="1" value={fQuantidade} onChange={(e) => setFQuantidade(e.target.value)} />
+                  <Input
+                    id="fQtd" type="number" min="1" step="1" value={fQuantidade}
+                    onChange={(e) => { setFQuantidade(e.target.value); if (fProdutoId) aoEscolherProduto(fProdutoId); }}
+                  />
                 </div>
               </div>
             )}
+
+            {precisaInstituicao && (
+              <div className="space-y-2">
+                <Label>Instituição</Label>
+                <Select value={fInstituicaoId} onValueChange={setFInstituicaoId}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>
+                    {(instituicoesQ.data ?? []).map((i) => (
+                      <SelectItem key={i.id} value={i.id}>{i.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="fDesc">Descrição</Label>
+              <Input id="fDesc" value={fDescricao} onChange={(e) => setFDescricao(e.target.value)} />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="fVal">Valor (R$)</Label>
+              <Input id="fVal" type="number" min="0" step="0.01" placeholder="0,00" value={fValor} onChange={(e) => setFValor(e.target.value)} />
+            </div>
+
             <div className="space-y-2">
               <Label>Forma de pagamento</Label>
               <Select value={fForma} onValueChange={(v) => setFForma(v as FormaPagamento)}>
@@ -395,10 +436,12 @@ export function FinanceiroPage() {
                 </SelectContent>
               </Select>
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="fVenc">Vencimento</Label>
               <Input id="fVenc" type="date" value={fVencimento} onChange={(e) => setFVencimento(e.target.value)} />
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="fObsFin">Observações</Label>
               <Textarea id="fObsFin" rows={2} value={fObs} onChange={(e) => setFObs(e.target.value)} />

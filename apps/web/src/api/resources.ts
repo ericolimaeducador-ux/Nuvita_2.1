@@ -9,6 +9,7 @@ import type {
   Documento,
   Etiologia,
   Ferida,
+  Instituicao,
   Lancamento,
   ListUsuariosResult,
   LoginResponse,
@@ -25,9 +26,12 @@ import type {
   PresignUploadResponse,
   Produto,
   Prontuario,
+  Recorrencia,
+  RelatorioFinanceiro,
   SalaAcessoInfo,
   SalaEvento,
   SalaTelemedicina,
+  Servico,
   SinalInfeccaoResvech,
   SinalSala,
   StatusFerida,
@@ -206,8 +210,45 @@ export interface CreateLancamentoPayload {
   agendamentoId?: string;
   observacoes?: string;
   categoria?: string;
+  servicoId?: string;
   produtoId?: string;
   quantidade?: number;
+  instituicaoId?: string;
+}
+
+export interface RelatorioParams {
+  dataInicio?: string;
+  dataFim?: string;
+  categoria?: string;
+  instituicaoId?: string;
+}
+
+export interface ServicoPayload {
+  nome: string;
+  tipo: string;
+  preco: number;
+  descricao?: string;
+}
+
+export interface InstituicaoPayload {
+  nome: string;
+  tipo: string;
+  cnpj?: string;
+  contatoNome?: string;
+  contatoEmail?: string;
+  contatoTelefone?: string;
+  observacoes?: string;
+}
+
+export interface RecorrenciaPayload {
+  descricao: string;
+  tipo: string;
+  categoria: string;
+  instituicaoId?: string;
+  valorMensal: number;
+  diaVencimento: number;
+  inicio: string;
+  fim?: string;
 }
 
 export const financeiroApi = {
@@ -225,6 +266,43 @@ export const financeiroApi = {
       .then((r) => r.data),
   cancelar: (id: string) =>
     api.patch(`/financeiro/lancamentos/${id}/cancelar`).then((r) => r.data),
+
+  relatorio: (params: RelatorioParams = {}) =>
+    api.get<RelatorioFinanceiro>('/financeiro/relatorio', { params }).then((r) => r.data),
+  /** Texto cru do CSV — a página monta o download via Blob. */
+  relatorioCsv: (params: RelatorioParams = {}) =>
+    api.get<string>('/financeiro/relatorio/csv', { params, responseType: 'text' }).then((r) => r.data),
+
+  listServicos: (incluirInativos = false) =>
+    api
+      .get<Servico[]>('/financeiro/servicos', { params: incluirInativos ? { incluirInativos: 'true' } : {} })
+      .then((r) => r.data),
+  createServico: (payload: ServicoPayload) =>
+    api.post<Servico>('/financeiro/servicos', payload).then((r) => r.data),
+  updateServico: (id: string, payload: Partial<ServicoPayload> & { ativo?: boolean }) =>
+    api.patch<Servico>(`/financeiro/servicos/${id}`, payload).then((r) => r.data),
+
+  listInstituicoes: (incluirInativos = false) =>
+    api
+      .get<Instituicao[]>('/financeiro/instituicoes', {
+        params: incluirInativos ? { incluirInativos: 'true' } : {},
+      })
+      .then((r) => r.data),
+  createInstituicao: (payload: InstituicaoPayload) =>
+    api.post<Instituicao>('/financeiro/instituicoes', payload).then((r) => r.data),
+  updateInstituicao: (id: string, payload: Partial<InstituicaoPayload> & { ativo?: boolean }) =>
+    api.patch<Instituicao>(`/financeiro/instituicoes/${id}`, payload).then((r) => r.data),
+
+  listRecorrencias: () =>
+    api.get<Recorrencia[]>('/financeiro/recorrencias').then((r) => r.data),
+  createRecorrencia: (payload: RecorrenciaPayload) =>
+    api.post<Recorrencia>('/financeiro/recorrencias', payload).then((r) => r.data),
+  updateRecorrencia: (
+    id: string,
+    payload: Partial<Pick<RecorrenciaPayload, 'descricao' | 'valorMensal' | 'diaVencimento' | 'fim'>> & {
+      ativo?: boolean;
+    },
+  ) => api.patch<Recorrencia>(`/financeiro/recorrencias/${id}`, payload).then((r) => r.data),
 };
 
 // ---------- Telemedicina ----------
@@ -283,11 +361,26 @@ export const teleAcessoApi = {
 };
 
 // ---------- Produtos ----------
+export interface ProdutoPayload {
+  nome: string;
+  tipo: string;
+  precoVenda: number;
+  custo?: number;
+  unidade?: string;
+  apresentacao?: string;
+  fabricante?: string;
+  observacoes?: string;
+}
+
 export const produtosApi = {
   list: (tipo?: string) =>
     api.get<Produto[]>('/produtos', { params: tipo ? { tipo } : {} }).then((r) => r.data),
-  get: (codigo: number) =>
-    api.get<Produto>(`/produtos/${codigo}`).then((r) => r.data),
+  get: (id: string) => api.get<Produto>(`/produtos/${id}`).then((r) => r.data),
+  create: (payload: ProdutoPayload) => api.post<Produto>('/produtos', payload).then((r) => r.data),
+  update: (id: string, payload: Partial<ProdutoPayload> & { ativo?: boolean }) =>
+    api.patch<Produto>(`/produtos/${id}`, payload).then((r) => r.data),
+  /** Baixa lógica: preserva o vínculo com lançamentos já emitidos. */
+  desativar: (id: string) => api.delete<Produto>(`/produtos/${id}`).then((r) => r.data),
 };
 
 // ---------- Observações do paciente (timeline append-only) ----------
