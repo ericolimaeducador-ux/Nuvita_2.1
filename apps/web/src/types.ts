@@ -919,6 +919,41 @@ export interface DashboardFinanceiro {
   serieMensal: Array<{ mes: string; receitas: number; despesas: number }>;
 }
 
+// ---------- Indicadores operacionais (analytics) ----------
+
+/** Agregação do Mongo: `_id` é a chave do $group. */
+export interface ContagemPorChave {
+  _id: string | null;
+  total: number;
+}
+
+export interface ContagemPorMes {
+  _id: { ano: number; mes: number };
+  total: number;
+}
+
+export interface IndicadoresPacientes {
+  totalAtivos: number;
+  novosPorMes: ContagemPorMes[];
+  porSexo: ContagemPorChave[];
+}
+
+export interface IndicadoresAgendamentos {
+  porStatus: ContagemPorChave[];
+  porTipo: ContagemPorChave[];
+  /** Campo de origem ainda se chama `medicoId` no schema; hoje guarda o enfermeiro. */
+  topProfissionais: ContagemPorChave[];
+  porMes: ContagemPorMes[];
+}
+
+export interface IndicadoresNotificacoes {
+  porStatus: ContagemPorChave[];
+  porCanal: Array<{ _id: string | null; total: number; enviados: number }>;
+  porTipo: ContagemPorChave[];
+  /** Percentual inteiro 0-100. */
+  taxaEntrega: number;
+}
+
 export interface LinhaFonteReceita {
   categoria: string;
   total: number;
@@ -935,7 +970,18 @@ export interface RelatorioFinanceiro {
   fontesReceita: LinhaFonteReceita[];
   despesasPorCategoria: LinhaFonteReceita[];
   porInstituicao: Array<{ instituicaoId: string; nome: string; total: number; quantidade: number }>;
-  produtosVendidos: Array<{ produtoId: string; nome: string; quantidade: number; total: number }>;
+  /**
+   * `custoTotal`/`margem` só vêm quando TODAS as vendas do produto no período
+   * tinham custo registrado — margem parcial pareceria lucro real.
+   */
+  produtosVendidos: Array<{
+    produtoId: string;
+    nome: string;
+    quantidade: number;
+    total: number;
+    custoTotal?: number;
+    margem?: number;
+  }>;
   serieMensal: Array<{ mes: string; receitas: number; despesas: number }>;
 }
 

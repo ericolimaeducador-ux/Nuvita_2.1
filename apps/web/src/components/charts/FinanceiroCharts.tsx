@@ -19,6 +19,14 @@ import dayjs from 'dayjs';
 export const COR_RECEITA = '#059669';
 export const COR_DESPESA = '#dc2626';
 
+/**
+ * Hue única para magnitude não-monetária (contagens de pacientes, agendamentos,
+ * notificações), onde emerald/red não significam nada. O cobalto da marca
+ * (`#0047AB`) foi testado e REPROVA na faixa de luminosidade do validador
+ * (L 0.428, piso 0.43) — este tom passa em tudo contra `#ffffff`.
+ */
+export const COR_CONTAGEM = '#2a78d6';
+
 export function formatarValor(v: number): string {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
@@ -45,10 +53,13 @@ export function BarrasHorizontais({
   dados,
   cor,
   vazio = 'Sem dados no período.',
+  formatar = formatarValor,
 }: {
   dados: ItemBarra[];
   cor: string;
   vazio?: string;
+  /** Trocar para contagens — o padrão formata como moeda. */
+  formatar?: (v: number) => string;
 }) {
   if (dados.length === 0) {
     return <p className="text-sm text-muted-foreground py-4">{vazio}</p>;
@@ -63,7 +74,7 @@ export function BarrasHorizontais({
           <div className="flex items-baseline justify-between gap-3">
             <span className="text-sm font-medium">{d.rotulo}</span>
             {/* Valor sempre visível: o tooltip nunca é o único jeito de ler. */}
-            <span className="text-sm tabular-nums shrink-0">{formatarValor(d.valor)}</span>
+            <span className="text-sm tabular-nums shrink-0">{formatar(d.valor)}</span>
           </div>
           <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
             <div

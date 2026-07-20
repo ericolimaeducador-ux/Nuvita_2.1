@@ -23,7 +23,6 @@ import { useAuth } from '@/auth/AuthContext';
 import { toast } from '@/components/ui/use-toast';
 import {
   ModalidadeAtendimento,
-  MODALIDADE_LABEL,
   Papel,
   PAPEIS_PROFISSIONAIS,
   StatusAgendamento,
@@ -35,6 +34,14 @@ import {
   type Agendamento,
   type Paciente,
 } from '@/types';
+
+/**
+ * `ModalidadeAtendimento` tem um único valor desde a remoção dos papéis
+ * vestigiais (médico/jurídico/psicologia). O formulário não pergunta mais a
+ * modalidade — seria um <Select> de uma opção só — mas o campo continua sendo
+ * enviado, porque o enum segue existindo no modelo e no backend.
+ */
+const MODALIDADE_FIXA = ModalidadeAtendimento.ENFERMAGEM;
 
 function statusVariant(s: StatusAgendamento): 'default' | 'success' | 'destructive' | 'warning' | 'secondary' {
   const map: Record<StatusAgendamento, 'default' | 'success' | 'destructive' | 'warning' | 'secondary'> = {
@@ -56,7 +63,6 @@ export function AgendaPage() {
   const [visao, setVisao] = useState<'calendario' | 'lista'>('calendario');
 
   // Form state
-  const [fModalidade, setFModalidade] = useState<ModalidadeAtendimento>(ModalidadeAtendimento.ENFERMAGEM);
   const [fPacienteId, setFPacienteId] = useState('');
   const [fMedicoId, setFMedicoId] = useState(
     user && PAPEIS_PROFISSIONAIS.includes(user.papel) ? user.id : ''
@@ -104,7 +110,7 @@ export function AgendaPage() {
 
   const agendamentos = toItems<Agendamento>(listQ.data as never);
   const pacientes = toItems<Paciente>(pacientesQ.data as never);
-  const tiposDisponiveis = TIPOS_POR_MODALIDADE[fModalidade] ?? Object.values(TipoAgendamento);
+  const tiposDisponiveis = TIPOS_POR_MODALIDADE[MODALIDADE_FIXA] ?? Object.values(TipoAgendamento);
   const nomePorPacienteId = useMemo(
     () => new Map(pacientes.map((p) => [p.id, p.nome])),
     [pacientes],
@@ -119,7 +125,6 @@ export function AgendaPage() {
   }
 
   function resetForm() {
-    setFModalidade(ModalidadeAtendimento.ENFERMAGEM);
     setFPacienteId('');
     setFMedicoId(user && PAPEIS_PROFISSIONAIS.includes(user.papel) ? user.id : '');
     setFTipo('');
@@ -137,7 +142,7 @@ export function AgendaPage() {
       clinicaId: user?.clinicaId ?? '',
       pacienteId: fPacienteId,
       medicoId: fMedicoId,
-      modalidade: fModalidade,
+      modalidade: MODALIDADE_FIXA,
       dataHoraInicio: dayjs(fInicio).toISOString(),
       dataHoraFim: dayjs(fFim).toISOString(),
       tipo: fTipo as TipoAgendamento,
@@ -149,7 +154,7 @@ export function AgendaPage() {
     <div className="p-6">
       <PageHeader
         title="Agenda"
-        subtitle="Agendamentos das três modalidades: médica, enfermagem e jurídica"
+        subtitle="Consultas e atendimentos de enfermagem em estomaterapia"
         extra={
           <div className="flex items-center gap-2">
             <div className="flex rounded-md border border-border p-0.5">
@@ -207,7 +212,6 @@ export function AgendaPage() {
                 <TableRow>
                   <TableHead>Horário</TableHead>
                   <TableHead>Paciente</TableHead>
-                  <TableHead>Modalidade</TableHead>
                   <TableHead>Tipo</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="w-12" />
@@ -228,7 +232,6 @@ export function AgendaPage() {
                         <div className="font-medium">{a.pacienteNome ?? nomePorPacienteId.get(a.pacienteId) ?? a.pacienteId}</div>
                         {a.pacienteCpf && <div className="text-xs text-muted-foreground">CPF {formatCpf(a.pacienteCpf)}</div>}
                       </TableCell>
-                      <TableCell>{MODALIDADE_LABEL[a.modalidade] ?? a.modalidade}</TableCell>
                       <TableCell>{TIPO_AGENDAMENTO_LABEL[a.tipo] ?? a.tipo}</TableCell>
                       <TableCell>
                         <Badge variant={statusVariant(a.status)}>{STATUS_AGENDAMENTO_LABEL[a.status] ?? a.status}</Badge>
@@ -287,17 +290,10 @@ export function AgendaPage() {
             <DialogTitle>Novo agendamento</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Modalidade</Label>
-              <Select value={fModalidade} onValueChange={(v) => { setFModalidade(v as ModalidadeAtendimento); setFTipo(''); }}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {Object.values(ModalidadeAtendimento).map((m) => (
-                    <SelectItem key={m} value={m}>{MODALIDADE_LABEL[m]}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Sem seletor de modalidade: `ModalidadeAtendimento` tem um único
+                valor (ENFERMAGEM) desde a remoção dos papéis vestigiais, então
+                o campo era um <Select> de uma opção só. O valor continua sendo
+                enviado no submit — o enum segue existindo no modelo. */}
             <div className="space-y-2">
               <Label>Paciente</Label>
               <Select value={fPacienteId} onValueChange={setFPacienteId}>

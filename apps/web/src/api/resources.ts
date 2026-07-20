@@ -9,6 +9,9 @@ import type {
   Documento,
   Etiologia,
   Ferida,
+  IndicadoresAgendamentos,
+  IndicadoresNotificacoes,
+  IndicadoresPacientes,
   Instituicao,
   Lancamento,
   ListUsuariosResult,
@@ -358,6 +361,23 @@ export const teleAcessoApi = {
     const body = new Blob([JSON.stringify({ tipo })], { type: 'application/json' });
     navigator.sendBeacon(url, body);
   },
+};
+
+// ---------- Indicadores operacionais ----------
+export interface IndicadoresParams {
+  dataInicio?: string;
+  dataFim?: string;
+}
+
+// Não há `analytics/financeiro`: foi removido de propósito porque o relatório
+// do financeiro cobre o mesmo com mais detalhe e em regime de caixa.
+export const indicadoresApi = {
+  pacientes: (params: IndicadoresParams = {}) =>
+    api.get<IndicadoresPacientes>('/analytics/pacientes', { params }).then((r) => r.data),
+  agendamentos: (params: IndicadoresParams = {}) =>
+    api.get<IndicadoresAgendamentos>('/analytics/agendamentos', { params }).then((r) => r.data),
+  notificacoes: (params: IndicadoresParams = {}) =>
+    api.get<IndicadoresNotificacoes>('/analytics/notificacoes', { params }).then((r) => r.data),
 };
 
 // ---------- Produtos ----------
