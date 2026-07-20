@@ -276,24 +276,43 @@ export function RelatorioFinanceiroPage() {
             {(rel?.produtosVendidos ?? []).length === 0 ? (
               <p className="text-sm text-muted-foreground py-4">Nenhuma venda de produto no período.</p>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Produto</TableHead>
-                    <TableHead className="text-right">Qtd.</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {(rel?.produtosVendidos ?? []).map((p) => (
-                    <TableRow key={p.produtoId}>
-                      <TableCell className="font-medium">{p.nome}</TableCell>
-                      <TableCell className="text-right tabular-nums">{p.quantidade}</TableCell>
-                      <TableCell className="text-right tabular-nums">{formatarValor(p.total)}</TableCell>
+              <>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Produto</TableHead>
+                      <TableHead className="text-right">Qtd.</TableHead>
+                      <TableHead className="text-right">Receita</TableHead>
+                      <TableHead className="text-right">Margem</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {(rel?.produtosVendidos ?? []).map((p) => (
+                      <TableRow key={p.produtoId}>
+                        <TableCell className="font-medium">{p.nome}</TableCell>
+                        <TableCell className="text-right tabular-nums">{p.quantidade}</TableCell>
+                        <TableCell className="text-right tabular-nums">{formatarValor(p.total)}</TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {p.margem != null ? (
+                            <span className={p.margem >= 0 ? 'text-emerald-600' : 'text-red-600'}>
+                              {formatarValor(p.margem)}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground" title="Alguma venda deste produto não tinha custo registrado">
+                              —
+                            </span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                <p className="text-xs text-muted-foreground mt-3">
+                  A margem usa o custo congelado no momento de cada venda, então reajustar o custo do
+                  produto não altera o histórico. Aparece “—” quando alguma venda do período foi feita
+                  sem custo cadastrado.
+                </p>
+              </>
             )}
           </CardContent>
         </Card>

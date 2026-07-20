@@ -92,6 +92,12 @@ export interface Lancamento {
   /** Produto do catalogo vinculado (venda/compra de produto). */
   produtoId?: string;
   quantidade?: number;
+  /**
+   * Custo unitario do produto NO MOMENTO DA VENDA. E uma copia, nao uma leitura
+   * do catalogo: reajustar o custo do produto amanha nao pode reescrever a
+   * margem de uma venda de ontem.
+   */
+  custoUnitario?: number;
   /** Cliente institucional da consultoria. */
   instituicaoId?: string;
   /** Recorrencia que materializou este lancamento (contrato, aluguel, conta fixa). */
@@ -136,8 +142,19 @@ export interface RelatorioFinanceiro {
   despesasPorCategoria: LinhaFonteReceita[];
   /** Faturamento por cliente institucional (consultoria). */
   porInstituicao: Array<{ instituicaoId: string; nome: string; total: number; quantidade: number }>;
-  /** Produtos mais vendidos no periodo. */
-  produtosVendidos: Array<{ produtoId: string; nome: string; quantidade: number; total: number }>;
+  /**
+   * Produtos mais vendidos no periodo. `custoTotal`/`margem` so ficam definidos
+   * quando TODAS as vendas do produto no periodo tinham custo registrado —
+   * margem parcial seria pior que margem ausente, porque parece lucro real.
+   */
+  produtosVendidos: Array<{
+    produtoId: string;
+    nome: string;
+    quantidade: number;
+    total: number;
+    custoTotal?: number;
+    margem?: number;
+  }>;
   /** Entrada x saida mes a mes dentro do periodo filtrado. */
   serieMensal: Array<{ mes: string; receitas: number; despesas: number }>;
 }

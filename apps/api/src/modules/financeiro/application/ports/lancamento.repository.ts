@@ -22,6 +22,7 @@ export interface CreateLancamentoInput {
   servicoId?: string;
   produtoId?: string;
   quantidade?: number;
+  custoUnitario?: number;
   instituicaoId?: string;
   recorrenciaId?: string;
   competencia?: string;

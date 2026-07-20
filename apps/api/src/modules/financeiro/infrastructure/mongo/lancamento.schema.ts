@@ -26,6 +26,7 @@ export class LancamentoMongo {
   @Prop({ index: true }) servicoId?: string;
   @Prop({ index: true }) produtoId?: string;
   @Prop() quantidade?: number;
+  @Prop() custoUnitario?: number;
   @Prop({ index: true }) instituicaoId?: string;
   @Prop({ index: true }) recorrenciaId?: string;
   @Prop() competencia?: string;

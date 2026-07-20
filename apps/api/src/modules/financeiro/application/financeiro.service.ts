@@ -58,6 +58,16 @@ export class FinanceiroService {
       throw new BadRequestException('Venda de produto exige o produto do catalogo.');
     }
 
+    // Congela o custo do produto NESTE momento. E o que permite ao relatorio
+    // calcular margem real: se o custo do catalogo for reajustado amanha, a
+    // margem das vendas de hoje continua sendo a que de fato aconteceu.
+    // Tambem valida que o produto pertence a clinica (o buscar levanta 404).
+    let custoUnitario: number | undefined;
+    if (dto.produtoId) {
+      const produto = await this.produtos.buscar(context.user, dto.produtoId, dto.clinicaId);
+      custoUnitario = produto.custo;
+    }
+
     const lancamento = await this.lancamentos.create({
       clinicaId,
       pacienteId: dto.pacienteId,
@@ -72,6 +82,7 @@ export class FinanceiroService {
       servicoId: dto.servicoId,
       produtoId: dto.produtoId,
       quantidade: dto.quantidade,
+      custoUnitario,
       instituicaoId: dto.instituicaoId,
       criadoPor: context.user.sub,
     });

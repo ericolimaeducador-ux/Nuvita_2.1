@@ -52,6 +52,7 @@ export class LancamentoMongoRepository implements LancamentoRepository {
       servicoId: input.servicoId,
       produtoId: input.produtoId,
       quantidade: input.quantidade,
+      custoUnitario: input.custoUnitario,
       instituicaoId: input.instituicaoId,
       recorrenciaId: input.recorrenciaId,
       competencia: input.competencia,
@@ -357,17 +358,39 @@ export class LancamentoMongoRepository implements LancamentoRepository {
             _id: '$produtoId',
             quantidade: { $sum: { $ifNull: ['$quantidade', 1] } },
             total: { $sum: '$valor' },
+            // Custo daquela venda = custo unitario congelado x quantidade.
+            custoTotal: {
+              $sum: { $multiply: [{ $ifNull: ['$custoUnitario', 0] }, { $ifNull: ['$quantidade', 1] }] },
+            },
+            // Vendas sem custo registrado (produto cadastrado sem custo, ou
+            // venda anterior a este campo existir).
+            semCusto: { $sum: { $cond: [{ $eq: [{ $ifNull: ['$custoUnitario', null] }, null] }, 1, 0] } },
           },
         },
         { $sort: { total: -1 } },
         { $limit: 20 },
       ])
-      .exec()) as Array<{ _id: string; quantidade: number; total: number }>;
+      .exec()) as Array<{
+      _id: string;
+      quantidade: number;
+      total: number;
+      custoTotal: number;
+      semCusto: number;
+    }>;
 
     return results
       .filter((r) => Boolean(r._id))
-      // nome resolvido na camada de aplicacao, que conhece o catalogo
-      .map((r) => ({ produtoId: r._id, nome: r._id, quantidade: r.quantidade, total: r.total }));
+      .map((r) => ({
+        produtoId: r._id,
+        // nome resolvido na camada de aplicacao, que conhece o catalogo
+        nome: r._id,
+        quantidade: r.quantidade,
+        total: r.total,
+        // Margem so sai quando TODA venda do produto no periodo tinha custo:
+        // somar receita cheia contra custo parcial exibiria um lucro inflado
+        // como se fosse real.
+        ...(r.semCusto === 0 ? { custoTotal: r.custoTotal, margem: r.total - r.custoTotal } : {}),
+      }));
   }
 
   private toEntity(doc: LancamentoDocument): Lancamento {
@@ -389,6 +412,7 @@ export class LancamentoMongoRepository implements LancamentoRepository {
       servicoId: obj.servicoId,
       produtoId: obj.produtoId,
       quantidade: obj.quantidade,
+      custoUnitario: obj.custoUnitario,
       instituicaoId: obj.instituicaoId,
       recorrenciaId: obj.recorrenciaId,
       competencia: obj.competencia,
