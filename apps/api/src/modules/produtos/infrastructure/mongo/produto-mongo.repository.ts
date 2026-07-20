@@ -1,39 +1,53 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
+import {
+  CreateProdutoInput,
+  ProdutoRepository,
+  UpdateProdutoInput,
+} from '../../application/ports/produto.repository';
 import { Produto, TipoProduto } from '../../domain/produto.entity';
-import { ProdutoRepository } from '../../application/ports/produto.repository';
 import { ProdutoDocument, ProdutoMongo } from './produto.schema';
 
 @Injectable()
 export class ProdutoMongoRepository implements ProdutoRepository {
   constructor(@InjectModel(ProdutoMongo.name) private readonly model: Model<ProdutoDocument>) {}
 
-  async findByCodigo(codigo: number): Promise<Produto | null> {
-    const doc = await this.model.findOne({ codigo }).lean();
+  async findById(clinicaId: string, id: string): Promise<Produto | null> {
+    if (!Types.ObjectId.isValid(id)) return null;
+    const doc = await this.model.findOne({ clinicaId, _id: new Types.ObjectId(id) }).lean();
     return doc ? this.toEntity(doc) : null;
   }
 
-  async findAll(tipo?: TipoProduto, ativo?: boolean): Promise<Produto[]> {
-    const filter: Record<string, unknown> = {};
+  async findAll(clinicaId: string, tipo?: TipoProduto, apenasAtivos = true): Promise<Produto[]> {
+    const filter: Record<string, unknown> = { clinicaId };
     if (tipo) filter['tipo'] = tipo;
-    if (ativo !== undefined) filter['ativo'] = ativo;
-    const docs = await this.model.find(filter).sort({ codigo: 1 }).lean();
+    if (apenasAtivos) filter['ativo'] = true;
+
+    const docs = await this.model.find(filter).sort({ nome: 1 }).lean();
     return docs.map((d) => this.toEntity(d));
   }
 
-  async create(data: Omit<Produto, 'id' | 'criadoEm' | 'atualizadoEm'>): Promise<Produto> {
+  async create(data: CreateProdutoInput): Promise<Produto> {
     const doc = await this.model.create(data);
     return this.toEntity(doc.toObject() as unknown as Record<string, unknown>);
   }
 
-  async upsertByCodigo(data: Omit<Produto, 'id' | 'criadoEm' | 'atualizadoEm'>): Promise<Produto> {
-    const doc = await this.model.findOneAndUpdate(
-      { codigo: data.codigo },
-      { $set: { ...data, atualizadoEm: new Date() } },
-      { upsert: true, new: true, lean: true },
-    );
-    return this.toEntity(doc!);
+  async update(clinicaId: string, id: string, data: UpdateProdutoInput): Promise<Produto | null> {
+    if (!Types.ObjectId.isValid(id)) return null;
+    const doc = await this.model
+      .findOneAndUpdate(
+        { clinicaId, _id: new Types.ObjectId(id) },
+        { $set: { ...data, atualizadoEm: new Date() } },
+        { new: true, lean: true },
+      )
+      .exec();
+
+    return doc ? this.toEntity(doc) : null;
+  }
+
+  async desativar(clinicaId: string, id: string): Promise<Produto | null> {
+    return this.update(clinicaId, id, { ativo: false });
   }
 
   private toEntity(doc: Record<string, unknown>): Produto {

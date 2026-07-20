@@ -1,74 +1,108 @@
-import { Inject, Injectable, OnApplicationBootstrap } from '@nestjs/common';
-import { EmbalagemProduto, Produto, ProjetoCatalogo, SexoProduto, TipoProduto } from '../domain/produto.entity';
+import { Inject, Injectable, Logger, NotFoundException, OnApplicationBootstrap } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { AuthTokenPayload } from '../../../../../../packages/shared/src/auth';
+import { resolveTenantClinicaId } from '../../../common/tenancy/resolve-clinica-id';
+import { Produto, TipoProduto } from '../domain/produto.entity';
+import { ProdutoDocument, ProdutoMongo } from '../infrastructure/mongo/produto.schema';
 import { PRODUTO_REPOSITORY } from '../produtos.constants';
+import { CreateProdutoDto, UpdateProdutoDto } from './dto/produto.dto';
 import { ProdutoRepository } from './ports/produto.repository';
-
-const V = TipoProduto.CATETER_VAPRO;
-const A = TipoProduto.COLETOR_ACTICOAT;
-const C = TipoProduto.CATETER_SAMTRONIC;
-const M = SexoProduto.MASCULINO;
-const F = SexoProduto.FEMININO;
-const S = EmbalagemProduto.STANDARD;
-const P = EmbalagemProduto.POCKET;
-const ALPHA = ProjetoCatalogo.ALPHA;
-const BETA = ProjetoCatalogo.BETA;
-
-const CATALOGO: Omit<Produto, 'id' | 'criadoEm' | 'atualizadoEm'>[] = [
-  { codigo: 72082, nome: 'VaPro Feminino 08Fr Standard', tipo: V, sexo: F, embalagem: S, projeto: ALPHA, french: 8, comprimentoCm: 20, descricaoTecnica: 'Cateter uretral hidrofílico TPE feminino pediátrico, 20cm, 08Fr.', descricaoSiafisico: 'CATETER INTERMITENTE HIDROFÍLICO FEMININO PEDIÁTRICO, EM ELASTÔMERO TERMOPLÁSTICO (TPE), SEM FTALATOS, ESTÉRIL, 20CM, 08FR, DE USO ÚNICO', ativo: true },
-  { codigo: 72102, nome: 'VaPro Feminino 10Fr Standard', tipo: V, sexo: F, embalagem: S, projeto: ALPHA, french: 10, comprimentoCm: 20, descricaoTecnica: 'Cateter uretral hidrofílico TPE feminino, 20cm, 10Fr.', descricaoSiafisico: 'CATETER INTERMITENTE HIDROFÍLICO FEMININO, EM ELASTÔMERO TERMOPLÁSTICO (TPE), SEM FTALATOS, ESTÉRIL, 20CM, 10FR, DE USO ÚNICO', ativo: true },
-  { codigo: 72122, nome: 'VaPro Feminino 12Fr Standard', tipo: V, sexo: F, embalagem: S, projeto: ALPHA, french: 12, comprimentoCm: 20, descricaoTecnica: 'Cateter uretral hidrofílico TPE feminino, 20cm, 12Fr.', descricaoSiafisico: 'CATETER INTERMITENTE HIDROFÍLICO FEMININO, EM ELASTÔMERO TERMOPLÁSTICO (TPE), SEM FTALATOS, ESTÉRIL, 20CM, 12FR, DE USO ÚNICO', ativo: true },
-  { codigo: 72142, nome: 'VaPro Feminino 14Fr Standard', tipo: V, sexo: F, embalagem: S, projeto: ALPHA, french: 14, comprimentoCm: 20, descricaoTecnica: 'Cateter uretral hidrofílico TPE feminino, 20cm, 14Fr.', ativo: true },
-  { codigo: 72084, nome: 'VaPro Masculino 08Fr Standard', tipo: V, sexo: M, embalagem: S, projeto: ALPHA, french: 8, comprimentoCm: 40, descricaoTecnica: 'Cateter uretral hidrofílico TPE masculino pediátrico, 40cm, 08Fr.', ativo: true },
-  { codigo: 72104, nome: 'VaPro Masculino 10Fr Standard', tipo: V, sexo: M, embalagem: S, projeto: ALPHA, french: 10, comprimentoCm: 40, descricaoTecnica: 'Cateter uretral hidrofílico TPE masculino, 40cm, 10Fr.', descricaoSiafisico: 'CATETER INTERMITENTE HIDROFÍLICO MASCULINO, EM ELASTÔMERO TERMOPLÁSTICO (TPE), SEM FTALATOS, ESTÉRIL, 40CM, 10FR, DE USO ÚNICO', ativo: true },
-  { codigo: 72124, nome: 'VaPro Masculino 12Fr Standard', tipo: V, sexo: M, embalagem: S, projeto: ALPHA, french: 12, comprimentoCm: 40, descricaoTecnica: 'Cateter uretral hidrofílico TPE masculino, 40cm, 12Fr.', descricaoSiafisico: 'CATETER INTERMITENTE HIDROFÍLICO MASCULINO, EM ELASTÔMERO TERMOPLÁSTICO (TPE), SEM FTALATOS, ESTÉRIL, 40CM, 12FR, DE USO ÚNICO', ativo: true },
-  { codigo: 72144, nome: 'VaPro Masculino 14Fr Standard', tipo: V, sexo: M, embalagem: S, projeto: ALPHA, french: 14, comprimentoCm: 40, descricaoTecnica: 'Cateter uretral hidrofílico TPE masculino, 40cm, 14Fr.', ativo: true },
-  { codigo: 72164, nome: 'VaPro Masculino 16Fr Standard', tipo: V, sexo: M, embalagem: S, projeto: ALPHA, french: 16, comprimentoCm: 40, descricaoTecnica: 'Cateter uretral hidrofílico TPE masculino, 40cm, 16Fr.', ativo: true },
-  { codigo: 70104, nome: 'VaPro Masculino 10Fr Pocket', tipo: V, sexo: M, embalagem: P, projeto: ALPHA, french: 10, comprimentoCm: 40, descricaoTecnica: 'Cateter uretral hidrofílico TPE masculino pocket, 40cm, 10Fr.', ativo: true },
-  { codigo: 70124, nome: 'VaPro Masculino 12Fr Pocket', tipo: V, sexo: M, embalagem: P, projeto: ALPHA, french: 12, comprimentoCm: 40, descricaoTecnica: 'Cateter uretral hidrofílico TPE masculino pocket, 40cm, 12Fr.', ativo: true },
-  { codigo: 4714598, nome: 'ACTICOAT Extended Wear Pequeno 22-25mm', tipo: A, sexo: M, embalagem: S, projeto: ALPHA, descricaoTecnica: 'Dispositivo masculino para incontinência urinária em látex, autoadesivo. Tamanho pequeno 22-25mm.', codigoSiafisico: 9206, ativo: true },
-  { codigo: 4714601, nome: 'ACTICOAT Extended Wear Médio 26-30mm', tipo: A, sexo: M, embalagem: S, projeto: ALPHA, descricaoTecnica: 'Dispositivo masculino para incontinência urinária em látex, autoadesivo. Tamanho médio 26-30mm.', codigoSiafisico: 9207, ativo: true },
-  { codigo: 4714610, nome: 'ACTICOAT Extended Wear Grande 31-35mm', tipo: A, sexo: M, embalagem: S, projeto: ALPHA, descricaoTecnica: 'Dispositivo masculino para incontinência urinária em látex, autoadesivo. Tamanho grande 31-35mm.', codigoSiafisico: 9208, ativo: true },
-  { codigo: 4714628, nome: 'ACTICOAT Extended Wear Extra Grande 36-39mm', tipo: A, sexo: M, embalagem: S, projeto: ALPHA, descricaoTecnica: 'Dispositivo masculino para incontinência urinária em látex, autoadesivo. Tamanho extra grande 36-39mm.', codigoSiafisico: 9209, ativo: true },
-
-  // Samtronic — Urosam Cath Alveus (cateter uretral intermitente hidrofílico
-  // com bolsa coletora de 1000mL). Registro ANVISA 10188530086.
-  { codigo: 11201, codigoFabricante: 'RV11201X', nome: 'Urosam Cath Alveus Masculino CH06 50cm', tipo: C, sexo: M, embalagem: S, projeto: BETA, french: 6, comprimentoCm: 50, descricaoTecnica: 'Cateter uretral intermitente hidrofílico masculino com bolsa coletora, tubo de PVC transparente lubrificado, 50cm, CH06.', descricaoSiafisico: 'CATETER URETRAL INTERMITENTE HIDROFÍLICO MASCULINO COM BOLSA COLETORA DE 1000ML EM POLIETILENO GRADUADA A CADA 100ML, TUBO EM PVC TRANSPARENTE LUBRIFICADO, VÁLVULA ANTIRREFLUXO, LIVRE DE LÁTEX E DEHP, ESTÉRIL, 50CM, CH06, DE USO ÚNICO. REGISTRO ANVISA 10188530086.', ativo: true },
-  { codigo: 11202, codigoFabricante: 'RV11202X', nome: 'Urosam Cath Alveus Masculino CH08 50cm', tipo: C, sexo: M, embalagem: S, projeto: BETA, french: 8, comprimentoCm: 50, descricaoTecnica: 'Cateter uretral intermitente hidrofílico masculino com bolsa coletora, tubo de PVC transparente lubrificado, 50cm, CH08.', descricaoSiafisico: 'CATETER URETRAL INTERMITENTE HIDROFÍLICO MASCULINO COM BOLSA COLETORA DE 1000ML EM POLIETILENO GRADUADA A CADA 100ML, TUBO EM PVC TRANSPARENTE LUBRIFICADO, VÁLVULA ANTIRREFLUXO, LIVRE DE LÁTEX E DEHP, ESTÉRIL, 50CM, CH08, DE USO ÚNICO. REGISTRO ANVISA 10188530086.', ativo: true },
-  { codigo: 11203, codigoFabricante: 'RV11203X', nome: 'Urosam Cath Alveus Masculino CH10 50cm', tipo: C, sexo: M, embalagem: S, projeto: BETA, french: 10, comprimentoCm: 50, descricaoTecnica: 'Cateter uretral intermitente hidrofílico masculino com bolsa coletora, tubo de PVC transparente lubrificado, 50cm, CH10.', descricaoSiafisico: 'CATETER URETRAL INTERMITENTE HIDROFÍLICO MASCULINO COM BOLSA COLETORA DE 1000ML EM POLIETILENO GRADUADA A CADA 100ML, TUBO EM PVC TRANSPARENTE LUBRIFICADO, VÁLVULA ANTIRREFLUXO, LIVRE DE LÁTEX E DEHP, ESTÉRIL, 50CM, CH10, DE USO ÚNICO. REGISTRO ANVISA 10188530086.', ativo: true },
-  { codigo: 11204, codigoFabricante: 'RV11204X', nome: 'Urosam Cath Alveus Masculino CH12 50cm', tipo: C, sexo: M, embalagem: S, projeto: BETA, french: 12, comprimentoCm: 50, descricaoTecnica: 'Cateter uretral intermitente hidrofílico masculino com bolsa coletora, tubo de PVC transparente lubrificado, 50cm, CH12.', descricaoSiafisico: 'CATETER URETRAL INTERMITENTE HIDROFÍLICO MASCULINO COM BOLSA COLETORA DE 1000ML EM POLIETILENO GRADUADA A CADA 100ML, TUBO EM PVC TRANSPARENTE LUBRIFICADO, VÁLVULA ANTIRREFLUXO, LIVRE DE LÁTEX E DEHP, ESTÉRIL, 50CM, CH12, DE USO ÚNICO. REGISTRO ANVISA 10188530086.', ativo: true },
-  { codigo: 11205, codigoFabricante: 'RV11205X', nome: 'Urosam Cath Alveus Masculino CH14 50cm', tipo: C, sexo: M, embalagem: S, projeto: BETA, french: 14, comprimentoCm: 50, descricaoTecnica: 'Cateter uretral intermitente hidrofílico masculino com bolsa coletora, tubo de PVC transparente lubrificado, 50cm, CH14.', descricaoSiafisico: 'CATETER URETRAL INTERMITENTE HIDROFÍLICO MASCULINO COM BOLSA COLETORA DE 1000ML EM POLIETILENO GRADUADA A CADA 100ML, TUBO EM PVC TRANSPARENTE LUBRIFICADO, VÁLVULA ANTIRREFLUXO, LIVRE DE LÁTEX E DEHP, ESTÉRIL, 50CM, CH14, DE USO ÚNICO. REGISTRO ANVISA 10188530086.', ativo: true },
-  { codigo: 11206, codigoFabricante: 'RV11206X', nome: 'Urosam Cath Alveus Masculino CH16 50cm', tipo: C, sexo: M, embalagem: S, projeto: BETA, french: 16, comprimentoCm: 50, descricaoTecnica: 'Cateter uretral intermitente hidrofílico masculino com bolsa coletora, tubo de PVC transparente lubrificado, 50cm, CH16.', descricaoSiafisico: 'CATETER URETRAL INTERMITENTE HIDROFÍLICO MASCULINO COM BOLSA COLETORA DE 1000ML EM POLIETILENO GRADUADA A CADA 100ML, TUBO EM PVC TRANSPARENTE LUBRIFICADO, VÁLVULA ANTIRREFLUXO, LIVRE DE LÁTEX E DEHP, ESTÉRIL, 50CM, CH16, DE USO ÚNICO. REGISTRO ANVISA 10188530086.', ativo: true },
-  { codigo: 11207, codigoFabricante: 'RV11207X', nome: 'Urosam Cath Alveus Masculino CH18 50cm', tipo: C, sexo: M, embalagem: S, projeto: BETA, french: 18, comprimentoCm: 50, descricaoTecnica: 'Cateter uretral intermitente hidrofílico masculino com bolsa coletora, tubo de PVC transparente lubrificado, 50cm, CH18.', descricaoSiafisico: 'CATETER URETRAL INTERMITENTE HIDROFÍLICO MASCULINO COM BOLSA COLETORA DE 1000ML EM POLIETILENO GRADUADA A CADA 100ML, TUBO EM PVC TRANSPARENTE LUBRIFICADO, VÁLVULA ANTIRREFLUXO, LIVRE DE LÁTEX E DEHP, ESTÉRIL, 50CM, CH18, DE USO ÚNICO. REGISTRO ANVISA 10188530086.', ativo: true },
-  { codigo: 11208, codigoFabricante: 'RV11208X', nome: 'Urosam Cath Alveus Masculino CH20 50cm', tipo: C, sexo: M, embalagem: S, projeto: BETA, french: 20, comprimentoCm: 50, descricaoTecnica: 'Cateter uretral intermitente hidrofílico masculino com bolsa coletora, tubo de PVC transparente lubrificado, 50cm, CH20.', descricaoSiafisico: 'CATETER URETRAL INTERMITENTE HIDROFÍLICO MASCULINO COM BOLSA COLETORA DE 1000ML EM POLIETILENO GRADUADA A CADA 100ML, TUBO EM PVC TRANSPARENTE LUBRIFICADO, VÁLVULA ANTIRREFLUXO, LIVRE DE LÁTEX E DEHP, ESTÉRIL, 50CM, CH20, DE USO ÚNICO. REGISTRO ANVISA 10188530086.', ativo: true },
-  { codigo: 11211, codigoFabricante: 'RV11211X', nome: 'Urosam Cath Alveus Feminino CH06 25cm', tipo: C, sexo: F, embalagem: S, projeto: BETA, french: 6, comprimentoCm: 25, descricaoTecnica: 'Cateter uretral intermitente hidrofílico feminino com bolsa coletora, tubo de PVC transparente lubrificado, 25cm, CH06.', descricaoSiafisico: 'CATETER URETRAL INTERMITENTE HIDROFÍLICO FEMININO COM BOLSA COLETORA DE 1000ML EM POLIETILENO GRADUADA A CADA 100ML, TUBO EM PVC TRANSPARENTE LUBRIFICADO, VÁLVULA ANTIRREFLUXO, LIVRE DE LÁTEX E DEHP, ESTÉRIL, 25CM, CH06, DE USO ÚNICO. REGISTRO ANVISA 10188530086.', ativo: true },
-  { codigo: 11212, codigoFabricante: 'RV11212X', nome: 'Urosam Cath Alveus Feminino CH08 25cm', tipo: C, sexo: F, embalagem: S, projeto: BETA, french: 8, comprimentoCm: 25, descricaoTecnica: 'Cateter uretral intermitente hidrofílico feminino com bolsa coletora, tubo de PVC transparente lubrificado, 25cm, CH08.', descricaoSiafisico: 'CATETER URETRAL INTERMITENTE HIDROFÍLICO FEMININO COM BOLSA COLETORA DE 1000ML EM POLIETILENO GRADUADA A CADA 100ML, TUBO EM PVC TRANSPARENTE LUBRIFICADO, VÁLVULA ANTIRREFLUXO, LIVRE DE LÁTEX E DEHP, ESTÉRIL, 25CM, CH08, DE USO ÚNICO. REGISTRO ANVISA 10188530086.', ativo: true },
-  { codigo: 11213, codigoFabricante: 'RV11213X', nome: 'Urosam Cath Alveus Feminino CH10 25cm', tipo: C, sexo: F, embalagem: S, projeto: BETA, french: 10, comprimentoCm: 25, descricaoTecnica: 'Cateter uretral intermitente hidrofílico feminino com bolsa coletora, tubo de PVC transparente lubrificado, 25cm, CH10.', descricaoSiafisico: 'CATETER URETRAL INTERMITENTE HIDROFÍLICO FEMININO COM BOLSA COLETORA DE 1000ML EM POLIETILENO GRADUADA A CADA 100ML, TUBO EM PVC TRANSPARENTE LUBRIFICADO, VÁLVULA ANTIRREFLUXO, LIVRE DE LÁTEX E DEHP, ESTÉRIL, 25CM, CH10, DE USO ÚNICO. REGISTRO ANVISA 10188530086.', ativo: true },
-  { codigo: 11214, codigoFabricante: 'RV11214X', nome: 'Urosam Cath Alveus Feminino CH12 25cm', tipo: C, sexo: F, embalagem: S, projeto: BETA, french: 12, comprimentoCm: 25, descricaoTecnica: 'Cateter uretral intermitente hidrofílico feminino com bolsa coletora, tubo de PVC transparente lubrificado, 25cm, CH12.', descricaoSiafisico: 'CATETER URETRAL INTERMITENTE HIDROFÍLICO FEMININO COM BOLSA COLETORA DE 1000ML EM POLIETILENO GRADUADA A CADA 100ML, TUBO EM PVC TRANSPARENTE LUBRIFICADO, VÁLVULA ANTIRREFLUXO, LIVRE DE LÁTEX E DEHP, ESTÉRIL, 25CM, CH12, DE USO ÚNICO. REGISTRO ANVISA 10188530086.', ativo: true },
-  { codigo: 11215, codigoFabricante: 'RV11215X', nome: 'Urosam Cath Alveus Feminino CH14 25cm', tipo: C, sexo: F, embalagem: S, projeto: BETA, french: 14, comprimentoCm: 25, descricaoTecnica: 'Cateter uretral intermitente hidrofílico feminino com bolsa coletora, tubo de PVC transparente lubrificado, 25cm, CH14.', descricaoSiafisico: 'CATETER URETRAL INTERMITENTE HIDROFÍLICO FEMININO COM BOLSA COLETORA DE 1000ML EM POLIETILENO GRADUADA A CADA 100ML, TUBO EM PVC TRANSPARENTE LUBRIFICADO, VÁLVULA ANTIRREFLUXO, LIVRE DE LÁTEX E DEHP, ESTÉRIL, 25CM, CH14, DE USO ÚNICO. REGISTRO ANVISA 10188530086.', ativo: true },
-  { codigo: 11216, codigoFabricante: 'RV11216X', nome: 'Urosam Cath Alveus Feminino CH16 25cm', tipo: C, sexo: F, embalagem: S, projeto: BETA, french: 16, comprimentoCm: 25, descricaoTecnica: 'Cateter uretral intermitente hidrofílico feminino com bolsa coletora, tubo de PVC transparente lubrificado, 25cm, CH16.', descricaoSiafisico: 'CATETER URETRAL INTERMITENTE HIDROFÍLICO FEMININO COM BOLSA COLETORA DE 1000ML EM POLIETILENO GRADUADA A CADA 100ML, TUBO EM PVC TRANSPARENTE LUBRIFICADO, VÁLVULA ANTIRREFLUXO, LIVRE DE LÁTEX E DEHP, ESTÉRIL, 25CM, CH16, DE USO ÚNICO. REGISTRO ANVISA 10188530086.', ativo: true },
-  { codigo: 11217, codigoFabricante: 'RV11217X', nome: 'Urosam Cath Alveus Feminino CH18 25cm', tipo: C, sexo: F, embalagem: S, projeto: BETA, french: 18, comprimentoCm: 25, descricaoTecnica: 'Cateter uretral intermitente hidrofílico feminino com bolsa coletora, tubo de PVC transparente lubrificado, 25cm, CH18.', descricaoSiafisico: 'CATETER URETRAL INTERMITENTE HIDROFÍLICO FEMININO COM BOLSA COLETORA DE 1000ML EM POLIETILENO GRADUADA A CADA 100ML, TUBO EM PVC TRANSPARENTE LUBRIFICADO, VÁLVULA ANTIRREFLUXO, LIVRE DE LÁTEX E DEHP, ESTÉRIL, 25CM, CH18, DE USO ÚNICO. REGISTRO ANVISA 10188530086.', ativo: true },
-  { codigo: 11218, codigoFabricante: 'RV11218X', nome: 'Urosam Cath Alveus Feminino CH20 25cm', tipo: C, sexo: F, embalagem: S, projeto: BETA, french: 20, comprimentoCm: 25, descricaoTecnica: 'Cateter uretral intermitente hidrofílico feminino com bolsa coletora, tubo de PVC transparente lubrificado, 25cm, CH20.', descricaoSiafisico: 'CATETER URETRAL INTERMITENTE HIDROFÍLICO FEMININO COM BOLSA COLETORA DE 1000ML EM POLIETILENO GRADUADA A CADA 100ML, TUBO EM PVC TRANSPARENTE LUBRIFICADO, VÁLVULA ANTIRREFLUXO, LIVRE DE LÁTEX E DEHP, ESTÉRIL, 25CM, CH20, DE USO ÚNICO. REGISTRO ANVISA 10188530086.', ativo: true },
-];
 
 @Injectable()
 export class ProdutosService implements OnApplicationBootstrap {
-  constructor(@Inject(PRODUTO_REPOSITORY) private readonly produtos: ProdutoRepository) {}
+  private readonly logger = new Logger(ProdutosService.name);
 
+  constructor(
+    @Inject(PRODUTO_REPOSITORY) private readonly produtos: ProdutoRepository,
+    @InjectModel(ProdutoMongo.name) private readonly model: Model<ProdutoDocument>,
+  ) {}
+
+  /**
+   * O catalogo NAO e mais semeado pelo codigo: cada clinica cadastra os proprios
+   * produtos, com os proprios precos. O que roda no boot e so a limpeza do
+   * catalogo antigo — global e de incontinencia urinaria (cateteres uretrais e
+   * coletores), resquicio da base herdada do Nuvita original.
+   */
   async onApplicationBootstrap(): Promise<void> {
-    await this.seedCatalogo();
+    await this.removerCatalogoLegado();
   }
 
-  async seedCatalogo(): Promise<void> {
-    for (const produto of CATALOGO) {
-      await this.produtos.upsertByCodigo(produto);
+  /**
+   * Idempotente e obrigatoria: o schema antigo declarava `codigo` como indice
+   * UNICO global. Sem derrubar esse indice, o segundo produto cadastrado (todos
+   * agora sem `codigo`) quebraria com E11000 em `codigo: null`.
+   *
+   * Os demais indices listados apontam para campos que sumiram junto com o
+   * modelo de cateter (projeto/SIAFISICO/descricaoTecnica) — nao quebram nada,
+   * mas sao removidos para nao deixar indice orfao ocupando espaco e confundindo
+   * quem for inspecionar a colecao.
+   */
+  private async removerCatalogoLegado(): Promise<void> {
+    const CAMPOS_LEGADOS = ['codigo', 'codigoFabricante', 'projeto', 'codigoSiafisico', 'descricaoTecnica'];
+
+    try {
+      const indices = await this.model.collection.indexes();
+      for (const indice of indices) {
+        if (!indice.name || indice.name === '_id_') continue;
+
+        // Indice de texto guarda os campos em `weights`, nao em `key`
+        // (a key vira {_fts, _ftsx}) — por isso os dois sao inspecionados.
+        const campos = [...Object.keys(indice.key ?? {}), ...Object.keys(indice.weights ?? {})];
+        if (campos.some((campo) => CAMPOS_LEGADOS.includes(campo))) {
+          await this.model.collection.dropIndex(indice.name);
+          this.logger.log(`Indice legado removido do catalogo de produtos: ${indice.name}`);
+        }
+      }
+
+      // Itens antigos nao tem clinicaId (eram globais): ja ficariam invisiveis
+      // pelo filtro de tenant, mas sao apagados para nao deixar catalogo de
+      // incontinencia urinaria no banco.
+      const { deletedCount } = await this.model.collection.deleteMany({ clinicaId: { $exists: false } });
+      if (deletedCount) {
+        this.logger.log(`${deletedCount} produto(s) do catalogo legado removido(s).`);
+      }
+    } catch (error) {
+      // Colecao ainda inexistente (primeiro boot) e o caso normal, nao um erro.
+      this.logger.debug(`Limpeza do catalogo legado ignorada: ${(error as Error).message}`);
     }
   }
 
-  async listar(tipo?: TipoProduto): Promise<Produto[]> {
-    return this.produtos.findAll(tipo, true);
+  async listar(user: AuthTokenPayload, tipo?: TipoProduto, clinicaId?: string): Promise<Produto[]> {
+    return this.produtos.findAll(resolveTenantClinicaId(user, clinicaId), tipo);
   }
 
-  async buscarPorCodigo(codigo: number): Promise<Produto | null> {
-    return this.produtos.findByCodigo(codigo);
+  async buscar(user: AuthTokenPayload, id: string, clinicaId?: string): Promise<Produto> {
+    const produto = await this.produtos.findById(resolveTenantClinicaId(user, clinicaId), id);
+    if (!produto) throw new NotFoundException('Produto nao encontrado.');
+    return produto;
+  }
+
+  async criar(user: AuthTokenPayload, dto: CreateProdutoDto, clinicaId?: string): Promise<Produto> {
+    return this.produtos.create({
+      clinicaId: resolveTenantClinicaId(user, clinicaId),
+      nome: dto.nome,
+      tipo: dto.tipo,
+      precoVenda: dto.precoVenda,
+      custo: dto.custo,
+      unidade: dto.unidade,
+      apresentacao: dto.apresentacao,
+      fabricante: dto.fabricante,
+      observacoes: dto.observacoes,
+      ativo: true,
+    });
+  }
+
+  async atualizar(user: AuthTokenPayload, id: string, dto: UpdateProdutoDto, clinicaId?: string): Promise<Produto> {
+    const produto = await this.produtos.update(resolveTenantClinicaId(user, clinicaId), id, dto);
+    if (!produto) throw new NotFoundException('Produto nao encontrado.');
+    return produto;
+  }
+
+  /** Baixa logica: preserva o vinculo com lancamentos ja emitidos. */
+  async desativar(user: AuthTokenPayload, id: string, clinicaId?: string): Promise<Produto> {
+    const produto = await this.produtos.desativar(resolveTenantClinicaId(user, clinicaId), id);
+    if (!produto) throw new NotFoundException('Produto nao encontrado.');
+    return produto;
   }
 }
