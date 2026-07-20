@@ -41,6 +41,11 @@ export class CreateLancamentoDto {
   @IsEnum(CategoriaLancamento)
   categoria?: CategoriaLancamento;
 
+  /** Servico da tabela de precos que originou o valor. */
+  @IsOptional()
+  @IsString()
+  servicoId?: string;
+
   @IsOptional()
   @IsString()
   produtoId?: string;
@@ -49,4 +54,9 @@ export class CreateLancamentoDto {
   @IsInt()
   @IsPositive()
   quantidade?: number;
+
+  /** Cliente institucional (consultoria). */
+  @IsOptional()
+  @IsString()
+  instituicaoId?: string;
 }
