@@ -2,6 +2,10 @@ name: Deploy API to Cloud Run
 
 # Faz build da imagem (Dockerfile na raiz) e deploy da API no Google Cloud Run.
 #
+# Chamado pelo pipeline CI/CD (ci.yml) depois do CI verde, ou manualmente via
+# `gh workflow run deploy-api.yml` (workflow_dispatch — sem passar pelo CI,
+# usado p.ex. na rotação de segredos, que não muda código).
+#
 # Autenticação via Workload Identity Federation (OIDC) — sem chave de SA de longa
 # duração. Secrets (Settings > Secrets and variables > Actions):
 #   - GCP_PROJECT_ID       ID do projeto GCP (ex.: nuvita-499800).
@@ -11,34 +15,27 @@ name: Deploy API to Cloud Run
 #   - CLOUDRUN_ENV_YAML    Conteúdo COMPLETO do cloudrun.env.yaml (segredos da API).
 #                          Gere com `node scripts/gen-cloudrun-env.cjs` e cole aqui.
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'apps/api/**'
-      - 'packages/shared/**'
-      - 'Dockerfile'
-      - '.gcloudignore'
-      - '.github/workflows/deploy-api.yml'
   workflow_dispatch:
-
-# Um deploy por vez; não cancela um deploy em andamento.
-concurrency:
-  group: cloud-run-api
-  cancel-in-progress: false
+  workflow_call:
 
 # id-token: write é obrigatório para o OIDC do Workload Identity Federation.
 permissions:
   contents: read
   id-token: write
 
-env:
-  SERVICE: nuvita2-api
-  REGION: southamerica-east1
-
 jobs:
   deploy:
     name: Build & Deploy
     runs-on: ubuntu-latest
+    # Um deploy por vez; não cancela um deploy em andamento. (No job, não no
+    # workflow: concurrency de workflow é ignorada quando chamado via
+    # workflow_call.)
+    concurrency:
+      group: cloud-run-api
+      cancel-in-progress: false
+    env:
+      SERVICE: nuvita2-api
+      REGION: southamerica-east1
     steps:
       - name: Checkout
         uses: actions/checkout@v4

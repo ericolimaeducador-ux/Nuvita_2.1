@@ -1,14 +1,58 @@
-name: CI
+name: CI/CD
 
+# Pipeline único: CI valida e, só depois de verde, chama os deploys
+# (workflows reutilizáveis). Commit que não toca api/web (ex.: docs) não
+# roda job nenhum além da detecção de mudanças.
+#
+# Disparo manual (workflow_dispatch) roda tudo — CI + deploys — ignorando
+# o filtro de caminho.
 on:
   push:
     branches: [main, integracao]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
+  changes:
+    name: Detecta mudanças
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      api: ${{ steps.filter.outputs.api }}
+      web: ${{ steps.filter.outputs.web }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Filtro de caminhos
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            api:
+              - 'apps/api/**'
+              - 'packages/shared/**'
+              - 'Dockerfile'
+              - '.gcloudignore'
+              - 'package.json'
+              - 'package-lock.json'
+              - '.github/workflows/ci.yml'
+              - '.github/workflows/deploy-api.yml'
+            web:
+              - 'apps/web/**'
+              - 'packages/shared/**'
+              - 'package.json'
+              - 'package-lock.json'
+              - '.github/workflows/ci.yml'
+              - '.github/workflows/deploy-pages.yml'
+
   api:
     name: API — Type-check, Build & Test
+    needs: changes
+    if: needs.changes.outputs.api == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
 
     steps:
@@ -19,6 +63,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '24'
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm install
@@ -44,6 +89,8 @@ jobs:
 
   web:
     name: Web — Type-check & Build
+    needs: changes
+    if: needs.changes.outputs.web == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
 
     steps:
@@ -54,6 +101,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '24'
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm install
@@ -65,3 +113,27 @@ jobs:
       - name: Type check & build
         working-directory: apps/web
         run: npm run build
+
+  # Deploys: só na main, nunca em PR, e só depois do CI da parte afetada
+  # passar. Os workflows chamados continuam aceitando `gh workflow run`
+  # (workflow_dispatch) para deploy manual sem passar pelo CI.
+  deploy-api:
+    name: Deploy API
+    needs: [changes, api]
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && (needs.changes.outputs.api == 'true' || github.event_name == 'workflow_dispatch')
+    permissions:
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/deploy-api.yml
+    secrets: inherit
+
+  deploy-web:
+    name: Deploy Web
+    needs: [changes, web]
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && (needs.changes.outputs.web == 'true' || github.event_name == 'workflow_dispatch')
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/deploy-pages.yml
+    secrets: inherit
