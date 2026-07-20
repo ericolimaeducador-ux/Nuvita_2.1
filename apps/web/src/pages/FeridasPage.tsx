@@ -37,7 +37,7 @@ export function FeridasPage() {
   });
 
   return (
-    <div>
+    <div className="p-6">
       <PageHeader
         title="Feridas"
         description="Selecione um paciente para ver e registrar feridas."

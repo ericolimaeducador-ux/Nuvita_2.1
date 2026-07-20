@@ -69,7 +69,7 @@ export function FeridaDetailPage() {
   const avaliacoes = [...(avaliacoesQ.data ?? [])].reverse(); // mais recente primeiro na listagem
 
   return (
-    <div>
+    <div className="p-6">
       <Button variant="ghost" size="sm" className="mb-4" onClick={() => navigate(-1)}>
         <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
       </Button>
