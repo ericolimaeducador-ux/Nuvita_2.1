@@ -5,7 +5,6 @@ import { resolveTenantClinicaId } from '../../../common/tenancy/resolve-clinica-
 import { Connection } from 'mongoose';
 import {
   ANALYTICS_COLLECTION_AGENDAMENTOS,
-  ANALYTICS_COLLECTION_LANCAMENTOS,
   ANALYTICS_COLLECTION_NOTIFICACOES,
   ANALYTICS_COLLECTION_PACIENTES,
 } from '../analytics.constants';
@@ -63,39 +62,20 @@ export class AnalyticsService {
       ]).toArray(),
     ]);
 
-    return { porStatus, porTipo, topMedicos: porMedico, porMes };
+    // `medicoId` é o nome herdado da coluna no schema (o papel MEDICO não existe
+    // mais; hoje o campo guarda o ENFERMEIRO responsável). Renomear a coluna
+    // mexeria em schema, DTOs e dado em produção — mas a resposta da API já sai
+    // com o nome honesto, para não espalhar o termo errado para consumidores novos.
+    return { porStatus, porTipo, topProfissionais: porMedico, porMes };
   }
 
-  async financeiro(clinicaId: string, dataInicio: Date, dataFim: Date) {
-    const col = this.connection.collection(ANALYTICS_COLLECTION_LANCAMENTOS);
-
-    const [receitasPorMes, despesasPorMes, porFormaPagamento, totalGeral] = await Promise.all([
-      col.aggregate([
-        { $match: { clinicaId, tipo: 'receita', status: 'recebido', criadoEm: { $gte: dataInicio, $lte: dataFim } } },
-        { $group: { _id: { ano: { $year: '$criadoEm' }, mes: { $month: '$criadoEm' } }, total: { $sum: '$valor' }, quantidade: { $sum: 1 } } },
-        { $sort: { '_id.ano': 1, '_id.mes': 1 } },
-      ]).toArray(),
-
-      col.aggregate([
-        { $match: { clinicaId, tipo: 'despesa', status: 'recebido', criadoEm: { $gte: dataInicio, $lte: dataFim } } },
-        { $group: { _id: { ano: { $year: '$criadoEm' }, mes: { $month: '$criadoEm' } }, total: { $sum: '$valor' }, quantidade: { $sum: 1 } } },
-        { $sort: { '_id.ano': 1, '_id.mes': 1 } },
-      ]).toArray(),
-
-      col.aggregate([
-        { $match: { clinicaId, tipo: 'receita', status: 'recebido', criadoEm: { $gte: dataInicio, $lte: dataFim } } },
-        { $group: { _id: '$formaPagamento', total: { $sum: '$valor' }, quantidade: { $sum: 1 } } },
-        { $sort: { total: -1 } },
-      ]).toArray(),
-
-      col.aggregate([
-        { $match: { clinicaId, status: { $ne: 'cancelado' }, criadoEm: { $gte: dataInicio, $lte: dataFim } } },
-        { $group: { _id: { tipo: '$tipo', status: '$status' }, total: { $sum: '$valor' } } },
-      ]).toArray(),
-    ]);
-
-    return { receitasPorMes, despesasPorMes, porFormaPagamento, totalGeral };
-  }
+  /**
+   * `financeiro()` foi REMOVIDO daqui. O relatório do módulo financeiro
+   * (`FinanceiroService.relatorio`) faz o mesmo com mais detalhe e em regime de
+   * caixa; este agregava por `criadoEm`, então uma cobrança lançada em janeiro e
+   * paga em março entrava como receita de janeiro. Duas telas com números
+   * divergentes sobre a mesma pergunta é pior do que uma tela só.
+   */
 
   async notificacoes(clinicaId: string, dataInicio: Date, dataFim: Date) {
     const col = this.connection.collection(ANALYTICS_COLLECTION_NOTIFICACOES);

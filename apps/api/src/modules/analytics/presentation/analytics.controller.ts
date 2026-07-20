@@ -32,12 +32,10 @@ export class AnalyticsController {
     return this.analyticsService.agendamentos(clinicaId, dataInicio, dataFim);
   }
 
-  @Get('financeiro')
-  financeiro(@Query() query: AnalyticsQueryDto, @CurrentUser() user: AuthTokenPayload) {
-    const clinicaId = this.analyticsService.resolveClinicaId(user, query.clinicaId);
-    const { dataInicio, dataFim } = this.period(query);
-    return this.analyticsService.financeiro(clinicaId, dataInicio, dataFim);
-  }
+  // `GET /analytics/financeiro` foi REMOVIDO: o relatório do módulo financeiro
+  // (`/financeiro/relatorio`) cobre o mesmo terreno com mais detalhe, e o
+  // agregado daqui somava por `criadoEm` em vez de `recebidoEm` — manter os dois
+  // significaria duas telas mostrando receitas diferentes para o mesmo período.
 
   @Get('notificacoes')
   notificacoes(@Query() query: AnalyticsQueryDto, @CurrentUser() user: AuthTokenPayload) {
