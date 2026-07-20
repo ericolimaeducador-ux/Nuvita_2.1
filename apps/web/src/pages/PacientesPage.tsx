@@ -22,14 +22,13 @@ import { apiErrorMessage } from '@/api/client';
 import { toItems, formatCpf, formatData, idade } from '@/utils';
 import { useAuth } from '@/auth/AuthContext';
 import { toast } from '@/components/ui/use-toast';
-import { Sexo, SEXO_LABEL, ProjetoPaciente, PROJETO_LABEL, type Paciente } from '@/types';
+import { Sexo, SEXO_LABEL, type Paciente } from '@/types';
 
 const pacienteSchema = z.object({
   nome: z.string().min(1, 'Informe o nome.'),
   cpf: z.string().regex(/^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$/, 'CPF inválido.').optional().or(z.literal('')),
   dataNascimento: z.string().optional(),
   sexo: z.nativeEnum(Sexo, { error: 'Selecione.' }).optional(),
-  projeto: z.nativeEnum(ProjetoPaciente, { error: 'Selecione.' }).optional(),
   telefone: z.string().optional(),
   email: z.string().email('E-mail inválido.').optional().or(z.literal('')),
   consentimento: z.boolean().optional(),
@@ -58,7 +57,6 @@ export function PacientesPage() {
   const [buscaInput, setBuscaInput] = useState('');
   const [busca, setBusca] = useState('');
   const [nascFiltro, setNascFiltro] = useState('');
-  const [projetoFiltro, setProjetoFiltro] = useState<ProjetoPaciente | 'all'>('all');
   const [sort, setSort] = useState<PacienteSort>('recentes');
   const [incluirInativos, setIncluirInativos] = useState(false);
   const [open, setOpen] = useState(false);
@@ -82,7 +80,6 @@ export function PacientesPage() {
     nome: !buscaEhCpf && busca ? busca : undefined,
     cpf: buscaEhCpf ? buscaDigitos : undefined,
     dataNascimento: nascFiltro || undefined,
-    projeto: projetoFiltro !== 'all' ? projetoFiltro : undefined,
     sort,
     incluirInativos: incluirInativos || undefined,
   };
@@ -95,14 +92,13 @@ export function PacientesPage() {
   });
 
   const temFiltros = Boolean(
-    buscaInput || nascFiltro || projetoFiltro !== 'all' || sort !== 'recentes' || incluirInativos,
+    buscaInput || nascFiltro || sort !== 'recentes' || incluirInativos,
   );
 
   function limparFiltros() {
     setBuscaInput('');
     setBusca('');
     setNascFiltro('');
-    setProjetoFiltro('all');
     setSort('recentes');
     setIncluirInativos(false);
   }
@@ -138,7 +134,6 @@ export function PacientesPage() {
       cpf: v.cpf || undefined,
       dataNascimento: v.dataNascimento ? dayjs(v.dataNascimento).format('YYYY-MM-DD') : undefined,
       sexo: v.sexo || undefined,
-      projeto: v.projeto || undefined,
       telefone: v.telefone || undefined,
       email: v.email || undefined,
       endereco: temEndereco ? enderecoCampos : undefined,
@@ -201,19 +196,6 @@ export function PacientesPage() {
               </Select>
             </div>
 
-            <div className="space-y-1">
-              <Label>Projeto</Label>
-              <Select value={projetoFiltro} onValueChange={(v) => setProjetoFiltro(v as ProjetoPaciente | 'all')}>
-                <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os projetos</SelectItem>
-                  {Object.values(ProjetoPaciente).map((pj) => (
-                    <SelectItem key={pj} value={pj}>{PROJETO_LABEL[pj]}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
             <div className="flex items-center gap-2 pb-2.5">
               <Checkbox
                 id="incluirInativos"
@@ -241,7 +223,6 @@ export function PacientesPage() {
                   <TableHead>Nascimento</TableHead>
                   <TableHead>Idade</TableHead>
                   <TableHead>Sexo</TableHead>
-                  <TableHead>Projeto</TableHead>
                   <TableHead>Telefone</TableHead>
                   <TableHead>Situação</TableHead>
                   <TableHead className="w-14" />
@@ -255,9 +236,6 @@ export function PacientesPage() {
                     <TableCell>{formatData(p.dataNascimento)}</TableCell>
                     <TableCell>{idade(p.dataNascimento)}</TableCell>
                     <TableCell>{p.sexo ? SEXO_LABEL[p.sexo] : '—'}</TableCell>
-                    <TableCell>
-                      {p.projeto ? <Badge variant="secondary">{PROJETO_LABEL[p.projeto]}</Badge> : '—'}
-                    </TableCell>
                     <TableCell>{p.telefone || '—'}</TableCell>
                     <TableCell>
                       <Badge variant={p.ativo === false ? 'secondary' : 'success'}>
@@ -336,15 +314,6 @@ export function PacientesPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label>Projeto (opcional)</Label>
-                <Select onValueChange={(v) => setValue('projeto', v as ProjetoPaciente)}>
-                  <SelectTrigger><SelectValue placeholder="Sem projeto" /></SelectTrigger>
-                  <SelectContent>
-                    {Object.values(ProjetoPaciente).map((pj) => <SelectItem key={pj} value={pj}>{PROJETO_LABEL[pj]}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
               <div className="space-y-2">
                 <Label htmlFor="telefone">Telefone</Label>
                 <Input id="telefone" placeholder="(00) 00000-0000" {...register('telefone')} />

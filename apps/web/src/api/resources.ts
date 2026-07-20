@@ -22,7 +22,6 @@ import type {
   NivelExsudato,
   ObservacaoPaciente,
   Paciente,
-  ProjetoPaciente,
   PageResult,
   Papel,
   PerfilTecidual,
@@ -85,8 +84,6 @@ export interface ListPacientesParams {
   limit?: number;
   incluirInativos?: boolean;
   clinicaId?: string;
-  programaIU?: boolean;
-  projeto?: ProjetoPaciente;
 }
 export const pacientesApi = {
   list: (params: ListPacientesParams = {}) =>

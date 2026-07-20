@@ -1,5 +1,5 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { AuthTokenPayload, Papel } from '../../../../../../packages/shared/src/auth';
+import { AuthTokenPayload } from '../../../../../../packages/shared/src/auth';
 import { resolveTenantClinicaId } from '../../../common/tenancy/resolve-clinica-id';
 import { AUDIT_LOG_REPOSITORY } from '../../auth/auth.constants';
 import { AuditLogRepository } from '../../auth/application/ports/audit-log.repository';
@@ -11,7 +11,7 @@ import { ListPacientesQueryDto } from './dto/list-pacientes-query.dto';
 import { UpdatePacienteDto } from './dto/update-paciente.dto';
 import { UpdateObservacoesPacienteDto } from './dto/update-observacoes-paciente.dto';
 import { PACIENTE_REPOSITORY } from '../pacientes.constants';
-import { Paciente, ProjetoPaciente } from '../domain/paciente.entity';
+import { Paciente } from '../domain/paciente.entity';
 import { PacienteRepository } from './ports/paciente.repository';
 
 export interface RequestAuditContext {
@@ -48,8 +48,6 @@ export class PacientesService {
             versao: dto.consentimentoLGPD.versao,
           }
         : undefined,
-      programaIU: dto.programaIU ?? false,
-      projeto: dto.projeto,
     });
 
     await this.audit(AuditEvent.PATIENT_CREATED, context, {
@@ -62,32 +60,17 @@ export class PacientesService {
 
   async list(query: ListPacientesQueryDto, context: RequestAuditContext) {
     const clinicaId = this.resolveClinicaId(context.user, query.clinicaId);
-    const { projeto, projetoExcluir, semResultados } = this.resolveVisibilidadeProjeto(
-      context.user.papel,
-      query.projeto,
-    );
-
-    // Papel restrito pediu um projeto que não pode ver (PSI): lista vazia sem consultar o banco.
-    if (semResultados) {
-      await this.audit(query.nome ? AuditEvent.PATIENT_SEARCHED : AuditEvent.PATIENT_LISTED, context, {
-        clinicaId,
-        criterio: query.nome ? 'nome' : 'lista',
-        quantidade: 0,
-      });
-      return { items: [], hasMore: false };
-    }
 
     if (query.cpf) {
       const paciente = await this.pacientes.findByCpf(clinicaId, query.cpf, query.incluirInativos);
-      const visivel = paciente && this.podeVerPaciente(context.user.papel, paciente.projeto);
       await this.audit(AuditEvent.PATIENT_SEARCHED, context, {
         clinicaId,
         criterio: 'cpf',
-        pacienteId: visivel ? paciente!.id : undefined,
+        pacienteId: paciente ? paciente.id : undefined,
       });
 
       return {
-        items: visivel ? [paciente!] : [],
+        items: paciente ? [paciente] : [],
         hasMore: false,
       };
     }
@@ -99,9 +82,6 @@ export class PacientesService {
           cursor: query.cursor,
           limit: query.limit,
           incluirInativos: query.incluirInativos,
-          programaIU: query.programaIU,
-          projeto,
-          projetoExcluir,
           dataNascimento: query.dataNascimento,
           sort: query.sort,
         })
@@ -110,9 +90,6 @@ export class PacientesService {
           cursor: query.cursor,
           limit: query.limit,
           incluirInativos: query.incluirInativos,
-          programaIU: query.programaIU,
-          projeto,
-          projetoExcluir,
           dataNascimento: query.dataNascimento,
           sort: query.sort,
         });
@@ -130,7 +107,7 @@ export class PacientesService {
     const resolvedClinicaId = this.resolveClinicaId(context.user, clinicaId);
     const paciente = await this.pacientes.findById(resolvedClinicaId, pacienteId);
 
-    if (!paciente || !this.podeVerPaciente(context.user.papel, paciente.projeto)) {
+    if (!paciente) {
       throw new NotFoundException('Paciente nao encontrado.');
     }
 
@@ -164,7 +141,7 @@ export class PacientesService {
     context: RequestAuditContext,
   ): Promise<Paciente> {
     const resolvedClinicaId = this.resolveClinicaId(context.user, clinicaId);
-    await this.assertPacienteVisivel(resolvedClinicaId, pacienteId, context.user.papel);
+    await this.assertPacienteVisivel(resolvedClinicaId, pacienteId);
     const paciente = await this.pacientes.update(resolvedClinicaId, pacienteId, {
       ...dto,
       dataNascimento: dto.dataNascimento ? new Date(dto.dataNascimento) : undefined,
@@ -197,7 +174,7 @@ export class PacientesService {
     context: RequestAuditContext,
   ): Promise<Paciente> {
     const resolvedClinicaId = this.resolveClinicaId(context.user, clinicaId);
-    await this.assertPacienteVisivel(resolvedClinicaId, pacienteId, context.user.papel);
+    await this.assertPacienteVisivel(resolvedClinicaId, pacienteId);
     const paciente = await this.pacientes.update(resolvedClinicaId, pacienteId, { observacoes: dto.observacoes });
 
     if (!paciente) {
@@ -215,7 +192,7 @@ export class PacientesService {
 
   async deactivate(pacienteId: string, clinicaId: string | undefined, context: RequestAuditContext): Promise<Paciente> {
     const resolvedClinicaId = this.resolveClinicaId(context.user, clinicaId);
-    await this.assertPacienteVisivel(resolvedClinicaId, pacienteId, context.user.papel);
+    await this.assertPacienteVisivel(resolvedClinicaId, pacienteId);
     const paciente = await this.pacientes.deactivate(resolvedClinicaId, pacienteId);
 
     if (!paciente) {
@@ -268,27 +245,10 @@ export class PacientesService {
     }
   }
 
-  /**
-   * Existia pra isolar pacientes do Projeto PSI (atendimento psicológico) —
-   * só o papel PSICOLOGO os enxergava. Removido o papel, a visibilidade por
-   * projeto (Alpha/Beta) passa a ser sempre um filtro livre, igual já era
-   * pra admin/secretaria.
-   */
-  private resolveVisibilidadeProjeto(
-    _papel: Papel,
-    projetoSolicitado?: ProjetoPaciente,
-  ): { projeto?: ProjetoPaciente; projetoExcluir?: ProjetoPaciente; semResultados?: boolean } {
-    return { projeto: projetoSolicitado };
-  }
-
-  private podeVerPaciente(_papel: Papel, _projetoPaciente?: ProjetoPaciente): boolean {
-    return true;
-  }
-
-  /** Barra update/desativação de paciente fora da visibilidade do papel, mesmo sabendo o ID direto. */
-  private async assertPacienteVisivel(clinicaId: string, pacienteId: string, papel: Papel): Promise<void> {
+  /** Barra update/desativação de paciente inexistente, mesmo sabendo o ID direto. */
+  private async assertPacienteVisivel(clinicaId: string, pacienteId: string): Promise<void> {
     const paciente = await this.pacientes.findById(clinicaId, pacienteId);
-    if (!paciente || !this.podeVerPaciente(papel, paciente.projeto)) {
+    if (!paciente) {
       throw new NotFoundException('Paciente nao encontrado.');
     }
   }

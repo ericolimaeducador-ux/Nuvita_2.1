@@ -1,6 +1,5 @@
-import { IsEnum, IsIn, IsInt, IsMongoId, IsOptional, IsString, Matches, Max, Min } from 'class-validator';
+import { IsIn, IsInt, IsMongoId, IsOptional, IsString, Matches, Max, Min } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
-import { ProjetoPaciente } from '../../domain/paciente.entity';
 import { PACIENTE_SORTS, PacienteSort } from '../ports/paciente.repository';
 
 export class ListPacientesQueryDto {
@@ -40,12 +39,4 @@ export class ListPacientesQueryDto {
   @IsOptional()
   @Transform(({ value }) => value === true || value === 'true')
   incluirInativos?: boolean;
-
-  @IsOptional()
-  @Transform(({ value }) => value === true || value === 'true')
-  programaIU?: boolean;
-
-  @IsOptional()
-  @IsEnum(ProjetoPaciente)
-  projeto?: ProjetoPaciente;
 }

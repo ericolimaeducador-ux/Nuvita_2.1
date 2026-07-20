@@ -50,7 +50,6 @@ export class PacienteMongoRepository implements PacienteRepository {
       endereco: this.encryptJsonOptional(input.endereco),
       convenio: this.encryptJsonOptional(input.convenio),
       consentimentoLGPD: input.consentimentoLGPD,
-      projeto: input.projeto,
       ativo: true,
     };
     if (input.cpf) {
@@ -215,8 +214,6 @@ export class PacienteMongoRepository implements PacienteRepository {
     if (input.endereco !== undefined) update.endereco = this.encryptJsonOptional(input.endereco);
     if (input.convenio !== undefined) update.convenio = this.encryptJsonOptional(input.convenio);
     if (input.consentimentoLGPD !== undefined) update.consentimentoLGPD = input.consentimentoLGPD;
-    if (input.programaIU !== undefined) update.programaIU = input.programaIU;
-    if (input.projeto !== undefined) update.projeto = input.projeto;
     if (input.observacoes !== undefined) update.observacoes = this.encryptOptional(input.observacoes);
 
     return update;
@@ -254,8 +251,6 @@ export class PacienteMongoRepository implements PacienteRepository {
       convenio: this.decryptJsonOptional<Convenio>(object.convenio),
       consentimentoLGPD: object.consentimentoLGPD,
       observacoes: this.decryptOptional(object.observacoes),
-      programaIU: object.programaIU ?? false,
-      projeto: object.projeto,
       ativo: object.ativo,
       criadoEm: object.criadoEm,
       atualizadoEm: object.atualizadoEm,
@@ -273,15 +268,9 @@ export class PacienteMongoRepository implements PacienteRepository {
     };
   }
 
-  /** Filtros comuns de list/searchByName (tenant, ativo, programaIU, dia de nascimento). */
+  /** Filtros comuns de list/searchByName (tenant, ativo, dia de nascimento). */
   private listQuery(input: ListPacientesInput): Record<string, unknown> {
     const query = this.baseQuery(input.clinicaId, input.incluirInativos);
-    if (input.programaIU !== undefined) query.programaIU = input.programaIU;
-    if (input.projeto !== undefined) {
-      query.projeto = input.projeto;
-    } else if (input.projetoExcluir !== undefined) {
-      query.projeto = { $ne: input.projetoExcluir };
-    }
     if (input.dataNascimento) {
       // Campo gravado como meia-noite UTC; intervalo de 24h cobre o dia inteiro.
       const inicio = new Date(`${input.dataNascimento}T00:00:00.000Z`);

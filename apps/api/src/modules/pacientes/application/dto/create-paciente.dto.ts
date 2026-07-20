@@ -1,5 +1,4 @@
 import {
-  IsBoolean,
   IsEmail,
   IsEnum,
   IsISO8601,
@@ -11,7 +10,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ProjetoPaciente, Sexo } from '../../domain/paciente.entity';
+import { Sexo } from '../../domain/paciente.entity';
 import { ConsentimentoLGpdDto } from './consentimento-lgpd.dto';
 import { ConvenioDto } from './convenio.dto';
 import { EnderecoDto } from './endereco.dto';
@@ -62,12 +61,4 @@ export class CreatePacienteDto {
   @ValidateNested()
   @Type(() => ConsentimentoLGpdDto)
   consentimentoLGPD?: ConsentimentoLGpdDto;
-
-  @IsOptional()
-  @IsBoolean()
-  programaIU?: boolean;
-
-  @IsOptional()
-  @IsEnum(ProjetoPaciente)
-  projeto?: ProjetoPaciente;
 }
