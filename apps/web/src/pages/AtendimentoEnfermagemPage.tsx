@@ -1,5 +1,5 @@
 import { MutableRefObject, useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import dayjs from 'dayjs';
@@ -609,6 +609,8 @@ const STATUS_BADGE: Partial<Record<StatusAgendamento, string>> = {
 export function AtendimentoEnfermagemPage() {
   const { user } = useAuth();
   const ehEnfermeiro = user?.papel === Papel.ENFERMEIRO;
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const [status, setStatus] = useState<'ativos' | StatusAgendamento>('ativos');
   const [novoAberto, setNovoAberto] = useState(false);
@@ -671,6 +673,19 @@ export function AtendimentoEnfermagemPage() {
       : itens.filter((a) => a.status === status);
     return [...filtrados].sort((a, b) => dayjs(a.dataHoraInicio).valueOf() - dayjs(b.dataHoraInicio).valueOf());
   }, [agendamentosQ.data, status]);
+
+  // "Atender" clicado a partir do Dashboard: chega aqui via router state, abre
+  // a sala direto (mesmo padrão do "iniciar atendimento" na ficha do paciente)
+  // e limpa o state pra não reabrir num refresh/voltar.
+  useEffect(() => {
+    const autoAtenderId = (location.state as { autoAtenderAgendamentoId?: string } | null)?.autoAtenderAgendamentoId;
+    if (!autoAtenderId) return;
+    const alvo = toItems<Agendamento>(agendamentosQ.data).find((a) => a.id === autoAtenderId);
+    if (!alvo) return;
+    atender(alvo);
+    navigate(location.pathname, { replace: true, state: null });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state, agendamentosQ.data]);
 
   if (sessao) {
     return (

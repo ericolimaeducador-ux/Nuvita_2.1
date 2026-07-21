@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import dayjs from 'dayjs';
-import { Link } from 'react-router-dom';
-import { Users, Calendar, CheckCircle, FileText } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Users, Calendar, CheckCircle, FileText, Stethoscope } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { agendaApi, pacientesApi } from '@/api/resources';
@@ -30,6 +31,11 @@ function statusVariant(s: StatusAgendamento): 'default' | 'success' | 'destructi
 
 export function DashboardPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
+
+  function atender(a: Agendamento) {
+    navigate('/atendimento-enfermagem', { state: { autoAtenderAgendamentoId: a.id } });
+  }
 
   const hojeIni = dayjs().startOf('day').toISOString();
   const hojeFim = dayjs().endOf('day').toISOString();
@@ -116,6 +122,7 @@ export function DashboardPage() {
                   <TableHead>Tipo</TableHead>
                   <TableHead>Paciente</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead className="w-28" />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -125,11 +132,18 @@ export function DashboardPage() {
                       {dayjs(a.dataHoraInicio).format('HH:mm')} – {dayjs(a.dataHoraFim).format('HH:mm')}
                     </TableCell>
                     <TableCell>{TIPO_AGENDAMENTO_LABEL[a.tipo] ?? a.tipo}</TableCell>
-                    <TableCell>{a.pacienteId}</TableCell>
+                    <TableCell>{a.pacienteNome ?? a.pacienteId}</TableCell>
                     <TableCell>
                       <Badge variant={statusVariant(a.status)}>
                         {STATUS_AGENDAMENTO_LABEL[a.status] ?? a.status}
                       </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {(a.status === StatusAgendamento.AGENDADO || a.status === StatusAgendamento.CONFIRMADO) && (
+                        <Button size="sm" variant="ghost" onClick={() => atender(a)}>
+                          <Stethoscope className="h-3.5 w-3.5 mr-1.5" /> Atender
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}

@@ -179,21 +179,6 @@ npm run dev -w @nuvita/web
 > em dev (`envFilePath: ['.env.local', '.env']` relativo a `apps/api`).
 > Nunca aponte o dev local para banco de produção.
 
-### Dados de demonstração
-
-```bash
-# Cria a primeira clínica + admin via CLI protegida por BOOTSTRAP_SECRET
-npm run cli -w @nuvita/api -- bootstrap-admin \
-  --secret "<BOOTSTRAP_SECRET do .env>" \
-  --nome "Clínica Exemplo" --cnpj "00.000.000/0001-00" --plano basico \
-  --admin-nome "Admin" --admin-email "admin@exemplo.com" \
-  --admin-password "SenhaForte123!" \
-  --fuso-horario "America/Sao_Paulo" --duracao-consulta-padrao 30
-```
-
-O comando devolve o segredo TOTP (`base32`) do admin criado — use-o para
-gerar o código 2FA no primeiro login.
-
 ### Stack completa via Docker
 
 ```bash
