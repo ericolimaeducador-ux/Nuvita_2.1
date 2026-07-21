@@ -163,6 +163,13 @@ export class ClinicasService {
     return this.clinicas.findById(id);
   }
 
+  /** Identidade da clínica do tenant autenticado — usada no timbre de documentos gerados. */
+  async me(clinicaId: string): Promise<Clinica> {
+    const clinica = await this.clinicas.findById(clinicaId);
+    if (!clinica) throw new NotFoundException('Clinica nao encontrada.');
+    return clinica;
+  }
+
   private async hashPassword(password: string): Promise<string> {
     return bcrypt.hash(password, this.configService.getConfig().bcryptRounds);
   }

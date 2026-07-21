@@ -18,6 +18,10 @@ import { AtendimentoEnfermagemPage } from '@/pages/AtendimentoEnfermagemPage';
 import { AtendimentoTelemedicinaPage } from '@/pages/AtendimentoTelemedicinaPage';
 import { ClinicaPage } from '@/pages/ClinicaPage';
 import { ProntuarioImpressaoPage } from '@/pages/ProntuarioImpressaoPage';
+import { ComprovantePagamentoPage } from '@/pages/ComprovantePagamentoPage';
+import { DeclaracaoComparecimentoPage } from '@/pages/DeclaracaoComparecimentoPage';
+import { ReceituarioEnfermagemImpressaoPage } from '@/pages/ReceituarioEnfermagemImpressaoPage';
+import { TermoConsentimentoImpressaoPage } from '@/pages/TermoConsentimentoImpressaoPage';
 import { FeridasPage } from '@/pages/FeridasPage';
 import { FeridaDetailPage } from '@/pages/FeridaDetailPage';
 import { SuperAdminPage } from '@/pages/SuperAdminPage';
@@ -38,6 +42,18 @@ export function AppRoutes() {
             (sem sidebar/header do site) tanto na tela quanto no print/PDF. */}
         <Route element={<ProtectedRoute modulo={Modulo.PACIENTES} />}>
           <Route path="/pacientes/:id/prontuario/:prontuarioId/imprimir" element={<ProntuarioImpressaoPage />} />
+        </Route>
+        <Route element={<ProtectedRoute modulo={Modulo.PRONTUARIOS} />}>
+          <Route path="/pacientes/:id/receituario/:receituarioId/imprimir" element={<ReceituarioEnfermagemImpressaoPage />} />
+        </Route>
+        <Route element={<ProtectedRoute modulo={Modulo.DOCUMENTOS} />}>
+          <Route path="/pacientes/:id/termos/:termoId/imprimir" element={<TermoConsentimentoImpressaoPage />} />
+        </Route>
+        <Route element={<ProtectedRoute modulo={Modulo.FINANCEIRO} />}>
+          <Route path="/financeiro/lancamentos/:id/comprovante" element={<ComprovantePagamentoPage />} />
+        </Route>
+        <Route element={<ProtectedRoute modulo={Modulo.AGENDA} />}>
+          <Route path="/agendamentos/:id/declaracao/imprimir" element={<DeclaracaoComparecimentoPage />} />
         </Route>
         <Route element={<AppLayout />}>
           {/* /dashboard fica sem gate: é o destino dos redirects e todo papel o tem por padrão. */}

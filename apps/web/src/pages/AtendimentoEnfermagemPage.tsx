@@ -21,6 +21,7 @@ import {
 import { toast } from '@/components/ui/use-toast';
 import { SalaVideo } from '@/components/SalaVideo';
 import { NovaFeridaDialog, AvaliacaoFeridaForm } from '@/components/FeridaDialogs';
+import { ReceituarioEnfermagemDialog } from '@/components/ReceituarioEnfermagemDialog';
 import { useAuth } from '@/auth/AuthContext';
 import { agendaApi, feridasApi, pacientesApi, prontuariosApi, telemedicinaApi } from '@/api/resources';
 import { apiErrorMessage } from '@/api/client';
@@ -274,6 +275,7 @@ function PainelFeridas({ pacienteId, clinicaId }: { pacienteId: string; clinicaI
   const qc = useQueryClient();
   const [novaFeridaOpen, setNovaFeridaOpen] = useState(false);
   const [feridaSelecionadaId, setFeridaSelecionadaId] = useState<string | null>(null);
+  const [receituarioOpen, setReceituarioOpen] = useState(false);
 
   const feridasQ = useQuery({
     queryKey: ['feridas-paciente', pacienteId],
@@ -291,9 +293,14 @@ function PainelFeridas({ pacienteId, clinicaId }: { pacienteId: string; clinicaI
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
           <Bandage className="h-3.5 w-3.5" /> Feridas do paciente
         </p>
-        <Button variant="ghost" size="sm" onClick={() => setNovaFeridaOpen(true)}>
-          <Plus className="h-3.5 w-3.5 mr-1.5" /> Nova ferida
-        </Button>
+        <div className="flex gap-1">
+          <Button variant="ghost" size="sm" onClick={() => setReceituarioOpen(true)}>
+            <Plus className="h-3.5 w-3.5 mr-1.5" /> Receituário
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => setNovaFeridaOpen(true)}>
+            <Plus className="h-3.5 w-3.5 mr-1.5" /> Nova ferida
+          </Button>
+        </div>
       </div>
 
       {feridasQ.isLoading ? (
@@ -338,6 +345,12 @@ function PainelFeridas({ pacienteId, clinicaId }: { pacienteId: string; clinicaI
         pacienteId={pacienteId}
         clinicaId={clinicaId}
         onCreated={refetch}
+      />
+      <ReceituarioEnfermagemDialog
+        pacienteId={pacienteId}
+        feridaId={feridaSelecionadaId ?? undefined}
+        open={receituarioOpen}
+        onOpenChange={setReceituarioOpen}
       />
     </div>
   );

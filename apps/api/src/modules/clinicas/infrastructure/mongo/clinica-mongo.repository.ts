@@ -43,6 +43,15 @@ export class ClinicaMongoRepository implements ClinicaRepository {
     if (input.nome !== undefined) update.nome = input.nome;
     if (input.plano !== undefined) update.plano = input.plano;
     if (input.ativo !== undefined) update.ativo = input.ativo;
+    if (input.telefone !== undefined) update.telefone = input.telefone;
+    if (input.endereco !== undefined) update.endereco = input.endereco;
+    // Dot-notation em vez de substituir `configuracoes` inteiro — preserva
+    // campos existentes (fusoHorario, duracaoConsultaPadrao...) não enviados.
+    if (input.configuracoes) {
+      for (const [key, value] of Object.entries(input.configuracoes)) {
+        if (value !== undefined) update[`configuracoes.${key}`] = value;
+      }
+    }
 
     const document = await this.model.findByIdAndUpdate(id, { $set: update }, { new: true }).exec();
     return document ? this.toEntity(document) : null;
@@ -54,6 +63,7 @@ export class ClinicaMongoRepository implements ClinicaRepository {
       id: object._id.toString(),
       nome: object.nome,
       cnpj: object.cnpj,
+      telefone: object.telefone,
       endereco: object.endereco as unknown as Clinica['endereco'],
       plano: object.plano,
       configuracoes: object.configuracoes as unknown as Clinica['configuracoes'],

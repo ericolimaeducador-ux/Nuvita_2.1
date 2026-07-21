@@ -70,6 +70,16 @@ const clinicaSchema = z.object({
   nome: z.string().min(1, 'Informe o nome.'),
   plano: z.enum(['basico', 'profissional', 'enterprise']),
   ativo: z.boolean(),
+  telefone: z.string().optional(),
+  logradouro: z.string().optional(),
+  numero: z.string().optional(),
+  bairro: z.string().optional(),
+  cidade: z.string().optional(),
+  estado: z.string().optional(),
+  cep: z.string().optional(),
+  logoUrl: z.string().optional(),
+  responsavelTecnicoNome: z.string().optional(),
+  responsavelTecnicoRegistro: z.string().optional(),
 });
 type ClinicaForm = z.infer<typeof clinicaSchema>;
 
@@ -194,7 +204,26 @@ export function SuperAdminPage() {
 
   const clinicaMut = useMutation({
     mutationFn: ({ id, payload }: { id: string; payload: ClinicaForm }) =>
-      superAdminApi.updateClinica(id, payload),
+      superAdminApi.updateClinica(id, {
+        nome: payload.nome,
+        plano: payload.plano,
+        ativo: payload.ativo,
+        telefone: payload.telefone || undefined,
+        endereco: {
+          logradouro: payload.logradouro || undefined,
+          numero: payload.numero || undefined,
+          bairro: payload.bairro || undefined,
+          cidade: payload.cidade || undefined,
+          estado: payload.estado || undefined,
+          cep: payload.cep || undefined,
+        },
+        configuracoes: {
+          logoUrl: payload.logoUrl || undefined,
+          responsavelTecnico: payload.responsavelTecnicoNome && payload.responsavelTecnicoRegistro
+            ? { nome: payload.responsavelTecnicoNome, registroProfissional: payload.responsavelTecnicoRegistro }
+            : undefined,
+        },
+      }),
     onSuccess: () => {
       toast.success('Clínica atualizada.');
       setClinicaTarget(null);
@@ -205,7 +234,21 @@ export function SuperAdminPage() {
 
   function openEditClinica(c: ClinicaAdmin) {
     setClinicaTarget(c);
-    clinicaForm.reset({ nome: c.nome, plano: c.plano, ativo: c.ativo });
+    clinicaForm.reset({
+      nome: c.nome,
+      plano: c.plano,
+      ativo: c.ativo,
+      telefone: c.telefone ?? '',
+      logradouro: c.endereco?.logradouro ?? '',
+      numero: c.endereco?.numero ?? '',
+      bairro: c.endereco?.bairro ?? '',
+      cidade: c.endereco?.cidade ?? '',
+      estado: c.endereco?.estado ?? '',
+      cep: c.endereco?.cep ?? '',
+      logoUrl: c.configuracoes?.logoUrl ?? '',
+      responsavelTecnicoNome: c.configuracoes?.responsavelTecnico?.nome ?? '',
+      responsavelTecnicoRegistro: c.configuracoes?.responsavelTecnico?.registroProfissional ?? '',
+    });
   }
 
   function openEdit(u: UsuarioAdmin) {
@@ -798,6 +841,58 @@ export function SuperAdminPage() {
             </div>
             <p className="text-xs text-muted-foreground">
               CNPJ: <span className="font-mono">{clinicaTarget?.cnpj}</span> (não editável)
+            </p>
+
+            <p className="text-xs font-medium text-muted-foreground pt-2 border-t">
+              Timbre dos documentos (comprovante, receituário, declaração, termo)
+            </p>
+            <div className="space-y-1.5">
+              <Label>Telefone</Label>
+              <Input {...clinicaForm.register('telefone')} placeholder="(00) 00000-0000" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label>Logradouro / número</Label>
+                <div className="flex gap-2">
+                  <Input {...clinicaForm.register('logradouro')} placeholder="Rua..." />
+                  <Input {...clinicaForm.register('numero')} placeholder="Nº" className="w-16" />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Bairro</Label>
+                <Input {...clinicaForm.register('bairro')} />
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-1.5">
+                <Label>Cidade</Label>
+                <Input {...clinicaForm.register('cidade')} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>UF</Label>
+                <Input {...clinicaForm.register('estado')} maxLength={2} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>CEP</Label>
+                <Input {...clinicaForm.register('cep')} />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>URL do logo</Label>
+              <Input {...clinicaForm.register('logoUrl')} placeholder="https://..." />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label>Responsável técnico</Label>
+                <Input {...clinicaForm.register('responsavelTecnicoNome')} placeholder="Nome" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Registro profissional</Label>
+                <Input {...clinicaForm.register('responsavelTecnicoRegistro')} placeholder="COREN-MG 000000" />
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Responsável técnico só é usado no recibo para reembolso junto a convênio/seguradora.
             </p>
             <DialogFooter>
               <Button type="button" variant="ghost" onClick={() => setClinicaTarget(null)}>Cancelar</Button>

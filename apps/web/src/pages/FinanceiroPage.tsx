@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
-import { Plus, TrendingUp, TrendingDown, Clock, Scale, Check, X, BarChart3, Settings } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, Clock, Scale, Check, X, BarChart3, Settings, Receipt } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { PageHeader } from '@/components/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
@@ -305,16 +305,25 @@ export function FinanceiroPage() {
                       <TableCell>{l.formaPagamento ? (FORMA_PAGAMENTO_LABEL[l.formaPagamento] ?? l.formaPagamento) : '—'}</TableCell>
                       <TableCell>{formatData(l.vencimento)}</TableCell>
                       <TableCell>
-                        {l.status === StatusLancamento.PENDENTE && (
-                          <div className="flex gap-1">
-                            <Button variant="ghost" size="icon" title="Marcar como pago/recebido" onClick={() => receberMut.mutate(l.id)}>
-                              <Check className="h-4 w-4 text-emerald-600" />
+                        <div className="flex gap-1">
+                          {l.status === StatusLancamento.PENDENTE && (
+                            <>
+                              <Button variant="ghost" size="icon" title="Marcar como pago/recebido" onClick={() => receberMut.mutate(l.id)}>
+                                <Check className="h-4 w-4 text-emerald-600" />
+                              </Button>
+                              <Button variant="ghost" size="icon" title="Cancelar" onClick={() => cancelarMut.mutate(l.id)}>
+                                <X className="h-4 w-4 text-red-600" />
+                              </Button>
+                            </>
+                          )}
+                          {l.status === StatusLancamento.RECEBIDO && (
+                            <Button variant="ghost" size="icon" title="Emitir comprovante" asChild>
+                              <Link to={`/financeiro/lancamentos/${l.id}/comprovante`} target="_blank">
+                                <Receipt className="h-4 w-4 text-muted-foreground" />
+                              </Link>
                             </Button>
-                            <Button variant="ghost" size="icon" title="Cancelar" onClick={() => cancelarMut.mutate(l.id)}>
-                              <X className="h-4 w-4 text-red-600" />
-                            </Button>
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

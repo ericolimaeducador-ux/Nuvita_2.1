@@ -225,6 +225,24 @@ export interface Endereco {
   cep?: string;
 }
 
+export interface ResponsavelTecnico {
+  nome: string;
+  registroProfissional: string;
+}
+
+/** Identidade da clínica do tenant — usada no timbre de documentos gerados. */
+export interface Clinica {
+  id: string;
+  nome: string;
+  cnpj: string;
+  telefone?: string;
+  endereco?: Endereco;
+  configuracoes: {
+    logoUrl?: string;
+    responsavelTecnico?: ResponsavelTecnico;
+  };
+}
+
 export interface ConsentimentoLGPD {
   aceito: boolean;
   dataAceite: string;
@@ -269,6 +287,16 @@ export interface Agendamento {
   /** Enriquecidos pelo backend na leitura — identificação segura do paciente. */
   pacienteNome?: string;
   pacienteCpf?: string;
+}
+
+export interface DeclaracaoComparecimento {
+  pacienteNome?: string;
+  pacienteCpf?: string;
+  dataHoraInicio: string;
+  dataHoraFim: string;
+  modalidade: ModalidadeAtendimento;
+  profissionalNome?: string;
+  profissionalRegistro?: string;
 }
 
 export interface SinaisVitais {
@@ -424,8 +452,7 @@ export interface Documento {
   criadoEm: string;
 }
 
-// Espelho de packages/shared/src/checklist-documentos/documentos-padrao.ts —
-// usado como sugestão de nome ao anexar um documento.
+// Sugestões de nome ao anexar um documento (dropdown do NovoDocumentoDialog).
 export const DOCUMENTOS_PADRAO: string[] = [
   'RG ou CNH (documento de identificação com foto)',
   'Comprovante de endereço',
@@ -1087,26 +1114,6 @@ export interface ObservacaoPaciente {
   criadoEm: string;
 }
 
-export enum StatusChecklistDocumento {
-  PENDENTE = 'pendente',
-  RECEBIDO = 'recebido',
-}
-export const STATUS_CHECKLIST_DOCUMENTO_LABEL: Record<StatusChecklistDocumento, string> = {
-  [StatusChecklistDocumento.PENDENTE]: 'Pendente',
-  [StatusChecklistDocumento.RECEBIDO]: 'Recebido',
-};
-
-export interface ChecklistDocumentoItem {
-  id: string;
-  clinicaId: string;
-  pacienteId: string;
-  nome: string;
-  status: StatusChecklistDocumento;
-  observacao?: string;
-  criadoPor: string;
-  criadoEm: string;
-  atualizadoEm: string;
-}
 
 // ---------- Catálogo de produtos para ferida ----------
 
@@ -1138,6 +1145,53 @@ export interface Produto {
   fabricante?: string;
   observacoes?: string;
   ativo: boolean;
+  criadoEm: string;
+}
+
+// ---------- Termo de consentimento (fotografia/pesquisa) ----------
+export enum TipoTermo {
+  FOTOGRAFIA_PESQUISA = 'fotografia_pesquisa',
+}
+
+export const TIPO_TERMO_LABEL: Record<TipoTermo, string> = {
+  [TipoTermo.FOTOGRAFIA_PESQUISA]: 'Fotografia da lesão e uso em pesquisa científica',
+};
+
+export interface AssinaturaTermo {
+  nomeAssinante: string;
+  dataAssinatura: string;
+  hash: string;
+  assinadoPor: string;
+}
+
+export interface TermoConsentimento {
+  id: string;
+  clinicaId: string;
+  pacienteId: string;
+  tipo: TipoTermo;
+  versaoTexto: string;
+  texto: string;
+  assinatura?: AssinaturaTermo;
+  criadoPor: string;
+  criadoEm: string;
+}
+
+// ---------- Receituário de enfermagem (insumos de curativo) ----------
+export interface ItemReceituario {
+  produtoId?: string;
+  nome: string;
+  quantidade: number;
+  instrucoesUso: string;
+}
+
+export interface ReceituarioEnfermagem {
+  id: string;
+  clinicaId: string;
+  pacienteId: string;
+  feridaId?: string;
+  enfermeiroId: string;
+  itens: ItemReceituario[];
+  observacoes?: string;
   criadoEm: string;
 }
 

@@ -4,15 +4,18 @@ import type {
   Agendamento,
   AvaliacaoFerida,
   BordasFerida,
-  ChecklistDocumentoItem,
+  Clinica,
   DashboardFinanceiro,
+  DeclaracaoComparecimento,
   Documento,
+  Endereco,
   Etiologia,
   Ferida,
   IndicadoresAgendamentos,
   IndicadoresNotificacoes,
   IndicadoresPacientes,
   Instituicao,
+  ItemReceituario,
   Lancamento,
   ListUsuariosResult,
   LoginResponse,
@@ -28,7 +31,10 @@ import type {
   PresignUploadResponse,
   Produto,
   Prontuario,
+  ReceituarioEnfermagem,
   Recorrencia,
+  TermoConsentimento,
+  TipoTermo,
   RelatorioFinanceiro,
   SalaAcessoInfo,
   SalaEvento,
@@ -69,6 +75,8 @@ export const clinicasApi = {
   // Cria um usuário (profissional ou secretaria) dentro da clínica do ADMIN.
   criarUsuario: (clinicaId: string, payload: CriarUsuarioPayload) =>
     api.post(`/clinicas/${clinicaId}/usuarios`, payload).then((r) => r.data),
+  // Identidade da clínica do tenant — usada no timbre dos documentos gerados.
+  me: () => api.get<Clinica>('/clinicas/me').then((r) => r.data),
 };
 
 // ---------- Pacientes ----------
@@ -138,6 +146,8 @@ export const agendaApi = {
       .then((r) => r.data),
   concluir: (id: string) =>
     api.patch(`/agendamentos/${id}/concluir`).then((r) => r.data),
+  declaracaoComparecimento: (id: string) =>
+    api.get<DeclaracaoComparecimento>(`/agendamentos/${id}/declaracao-comparecimento`).then((r) => r.data),
 };
 
 // ---------- Prontuários ----------
@@ -258,6 +268,8 @@ export const financeiroApi = {
     api
       .get<PageResult<Lancamento> | Lancamento[]>('/financeiro/lancamentos', { params })
       .then((r) => r.data),
+  get: (id: string) =>
+    api.get<Lancamento>(`/financeiro/lancamentos/${id}`).then((r) => r.data),
   create: (payload: CreateLancamentoPayload) =>
     api.post<Lancamento>('/financeiro/lancamentos', payload).then((r) => r.data),
   receber: (id: string, formaPagamento?: string) =>
@@ -408,6 +420,28 @@ export const observacoesPacienteApi = {
     api.get<ObservacaoPaciente[]>('/observacoes-paciente', { params: { pacienteId } }).then((r) => r.data),
 };
 
+// ---------- Termo de consentimento (fotografia/pesquisa) ----------
+export const termosConsentimentoApi = {
+  create: (payload: { pacienteId: string; tipo: TipoTermo }) =>
+    api.post<TermoConsentimento>('/termos-consentimento', payload).then((r) => r.data),
+  listByPaciente: (pacienteId: string) =>
+    api.get<TermoConsentimento[]>('/termos-consentimento', { params: { pacienteId } }).then((r) => r.data),
+  get: (id: string) =>
+    api.get<TermoConsentimento>(`/termos-consentimento/${id}`).then((r) => r.data),
+  assinar: (id: string, nomeAssinante: string) =>
+    api.post<TermoConsentimento>(`/termos-consentimento/${id}/assinar`, { nomeAssinante }).then((r) => r.data),
+};
+
+// ---------- Receituário de enfermagem (insumos de curativo) ----------
+export const receituarioEnfermagemApi = {
+  create: (payload: { pacienteId: string; feridaId?: string; itens: ItemReceituario[]; observacoes?: string }) =>
+    api.post<ReceituarioEnfermagem>('/receituario-enfermagem', payload).then((r) => r.data),
+  listByPaciente: (pacienteId: string) =>
+    api.get<ReceituarioEnfermagem[]>('/receituario-enfermagem', { params: { pacienteId } }).then((r) => r.data),
+  get: (id: string) =>
+    api.get<ReceituarioEnfermagem>(`/receituario-enfermagem/${id}`).then((r) => r.data),
+};
+
 // ---------- Feridas ----------
 export const feridasApi = {
   create: (payload: {
@@ -452,22 +486,6 @@ export const avaliacaoFeridaApi = {
     api.get<AvaliacaoFerida>(`/feridas/${feridaId}/avaliacoes/${avaliacaoId}`).then((r) => r.data),
 };
 
-// ---------- Checklist de Documentos ----------
-export const checklistDocumentosApi = {
-  create: (payload: { pacienteId: string; nome: string; observacao?: string }) =>
-    api.post<ChecklistDocumentoItem>('/checklist-documentos', payload).then((r) => r.data),
-  listByPaciente: (pacienteId: string) =>
-    api.get<ChecklistDocumentoItem[]>('/checklist-documentos', { params: { pacienteId } }).then((r) => r.data),
-  update: (id: string, payload: { status?: string; observacao?: string; nome?: string }) =>
-    api.patch<ChecklistDocumentoItem>(`/checklist-documentos/${id}`, payload).then((r) => r.data),
-  remove: (id: string) =>
-    api.delete<{ ok: true }>(`/checklist-documentos/${id}`).then((r) => r.data),
-  criarPadrao: (pacienteId: string) =>
-    api.post<ChecklistDocumentoItem[]>('/checklist-documentos/padrao', { pacienteId }).then((r) => r.data),
-  resumoPendentes: () =>
-    api.get<{ pendentes: number }>('/checklist-documentos/resumo-pendentes').then((r) => r.data),
-};
-
 // ---------- Super Admin ----------
 export interface ListUsersParams {
   papel?: Papel;
@@ -503,11 +521,19 @@ export interface TwoFactorSetup {
   base32: string;
 }
 
+export interface ResponsavelTecnico {
+  nome: string;
+  registroProfissional: string;
+}
+
 export interface ClinicaAdmin {
   id: string;
   nome: string;
   cnpj: string;
+  telefone?: string;
+  endereco?: Endereco;
   plano: 'basico' | 'profissional' | 'enterprise';
+  configuracoes?: { logoUrl?: string; responsavelTecnico?: ResponsavelTecnico };
   ativo: boolean;
   criadoEm: string;
   totalUsuarios: number;
@@ -517,6 +543,9 @@ export interface UpdateClinicaPayload {
   nome?: string;
   plano?: ClinicaAdmin['plano'];
   ativo?: boolean;
+  telefone?: string;
+  endereco?: Endereco;
+  configuracoes?: { logoUrl?: string; responsavelTecnico?: ResponsavelTecnico };
 }
 
 export const superAdminApi = {

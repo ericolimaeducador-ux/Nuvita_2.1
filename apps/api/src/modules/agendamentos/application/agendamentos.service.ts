@@ -1,8 +1,9 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { AuthTokenPayload } from '../../../../../../packages/shared/src/auth';
 import { resolveTenantClinicaId } from '../../../common/tenancy/resolve-clinica-id';
-import { AUDIT_LOG_REPOSITORY } from '../../auth/auth.constants';
+import { AUDIT_LOG_REPOSITORY, USER_REPOSITORY } from '../../auth/auth.constants';
 import { AuditLogRepository } from '../../auth/application/ports/audit-log.repository';
+import { UserRepository } from '../../auth/application/ports/user.repository';
 import { AuditEvent } from '../../auth/domain/audit-event.enum';
 import { PacientesService } from '../../pacientes/application/pacientes.service';
 import { AGENDAMENTO_REPOSITORY } from '../agendamentos.constants';
@@ -26,6 +27,7 @@ export class AgendamentosService {
   constructor(
     @Inject(AGENDAMENTO_REPOSITORY) private readonly agendamentos: AgendamentoRepository,
     @Inject(AUDIT_LOG_REPOSITORY) private readonly auditLogs: AuditLogRepository,
+    @Inject(USER_REPOSITORY) private readonly users: UserRepository,
     private readonly pacientesService: PacientesService,
   ) {}
 
@@ -130,6 +132,36 @@ export class AgendamentosService {
     await this.audit(AuditEvent.APPOINTMENT_CONCLUDED, context, { clinicaId: resolvedClinicaId, agendamentoId: id });
 
     return agendamento;
+  }
+
+  /** Dados formatados para a declaração de comparecimento (impressa no frontend).
+   * Exige agendamento CONCLUIDO — só se declara presença de fato ocorrida. */
+  async declaracaoComparecimento(id: string, clinicaId: string | undefined, context: RequestAuditContext) {
+    const resolvedClinicaId = this.resolveClinicaId(context.user, clinicaId);
+    const agendamento = await this.agendamentos.findById(resolvedClinicaId, id);
+    if (!agendamento) throw new NotFoundException('Agendamento nao encontrado.');
+
+    if (agendamento.status !== StatusAgendamento.CONCLUIDO) {
+      throw new BadRequestException('So e possivel emitir declaracao de comparecimento para atendimento concluido.');
+    }
+
+    const [enriquecido] = await this.comDadosDoPaciente(resolvedClinicaId, [agendamento]);
+    const profissional = await this.users.findById(agendamento.medicoId);
+
+    await this.audit(AuditEvent.ATTENDANCE_CERTIFICATE_ISSUED, context, {
+      clinicaId: resolvedClinicaId,
+      agendamentoId: id,
+    });
+
+    return {
+      pacienteNome: enriquecido.pacienteNome,
+      pacienteCpf: enriquecido.pacienteCpf,
+      dataHoraInicio: agendamento.dataHoraInicio,
+      dataHoraFim: agendamento.dataHoraFim,
+      modalidade: agendamento.modalidade,
+      profissionalNome: profissional?.nome,
+      profissionalRegistro: profissional?.registroProfissional,
+    };
   }
 
   async createBloqueio(dto: CreateBloqueioDto, context: RequestAuditContext) {

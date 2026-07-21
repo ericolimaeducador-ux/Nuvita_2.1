@@ -1,5 +1,28 @@
-import { IsBoolean, IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsEnum, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 import { PlanoClinica } from '../../../clinicas/domain/clinica.entity';
+import { EnderecoClinicaDto } from '../../../clinicas/application/dto/create-clinica.dto';
+
+export class ResponsavelTecnicoDto {
+  @IsString()
+  @IsNotEmpty()
+  nome!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  registroProfissional!: string;
+}
+
+export class UpdateConfiguracoesClinicaDto {
+  @IsOptional()
+  @IsString()
+  logoUrl?: string;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => ResponsavelTecnicoDto)
+  responsavelTecnico?: ResponsavelTecnicoDto;
+}
 
 export class UpdateClinicaDto {
   @IsOptional()
@@ -14,4 +37,18 @@ export class UpdateClinicaDto {
   @IsOptional()
   @IsBoolean()
   ativo?: boolean;
+
+  @IsOptional()
+  @IsString()
+  telefone?: string;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => EnderecoClinicaDto)
+  endereco?: EnderecoClinicaDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => UpdateConfiguracoesClinicaDto)
+  configuracoes?: UpdateConfiguracoesClinicaDto;
 }

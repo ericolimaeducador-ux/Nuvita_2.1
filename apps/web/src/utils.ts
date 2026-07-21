@@ -15,6 +15,13 @@ export function formatCpf(cpf?: string): string {
   return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
 }
 
+export function formatCnpj(cnpj?: string): string {
+  if (!cnpj) return '—';
+  const d = cnpj.replace(/\D/g, '');
+  if (d.length !== 14) return cnpj;
+  return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`;
+}
+
 export function idade(dataNascimento?: string): string {
   if (!dataNascimento) return '—';
   const nasc = new Date(dataNascimento);

@@ -20,9 +20,10 @@ import { ProntuariosModule } from './modules/prontuarios/prontuarios.module';
 import { TelemedicinaModule } from './modules/telemedicina/telemedicina.module';
 import { ProdutosModule } from './modules/produtos/produtos.module';
 import { SuperAdminModule } from './modules/super-admin/super-admin.module';
-import { ChecklistDocumentosModule } from './modules/checklist-documentos/checklist-documentos.module';
 import { ObservacoesPacienteModule } from './modules/observacoes-paciente/observacoes-paciente.module';
 import { FeridasModule } from './modules/feridas/feridas.module';
+import { ReceituarioEnfermagemModule } from './modules/receituario-enfermagem/receituario-enfermagem.module';
+import { TermosConsentimentoModule } from './modules/termos-consentimento/termos-consentimento.module';
 
 @Module({
   imports: [
@@ -58,9 +59,10 @@ import { FeridasModule } from './modules/feridas/feridas.module';
     HealthModule,
     ProdutosModule,
     SuperAdminModule,
-    ChecklistDocumentosModule,
     ObservacoesPacienteModule,
     FeridasModule,
+    ReceituarioEnfermagemModule,
+    TermosConsentimentoModule,
   ],
   providers: [
     // AuthThrottlerGuard = ThrottlerGuard rastreando pelo X-Forwarded-For do

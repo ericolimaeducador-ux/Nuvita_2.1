@@ -1,4 +1,4 @@
-import { Clinica } from '../../domain/clinica.entity';
+import { Clinica, ConfiguracoesClinica, EnderecoClinica } from '../../domain/clinica.entity';
 import { CreateClinicaDto } from '../dto/create-clinica.dto';
 
 export type CreateClinicaInput = Omit<CreateClinicaDto, 'primeiroAdmin'>;
@@ -7,6 +7,10 @@ export interface UpdateClinicaInput {
   nome?: string;
   plano?: Clinica['plano'];
   ativo?: boolean;
+  telefone?: string;
+  endereco?: EnderecoClinica;
+  /** Mesclado com a `configuracoes` existente (nunca substitui o objeto inteiro). */
+  configuracoes?: Partial<ConfiguracoesClinica>;
 }
 
 export interface ClinicaRepository {

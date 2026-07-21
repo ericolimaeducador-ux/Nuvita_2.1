@@ -105,6 +105,17 @@ export class AgendamentosController {
     return this.agendamentosService.conclude(id, clinicaId, this.ctx(req, user));
   }
 
+  @Get(':id/declaracao-comparecimento')
+  @Roles(Papel.SECRETARIA, ...PAPEIS_PROFISSIONAIS, Papel.ADMIN)
+  declaracaoComparecimento(
+    @Param('id') id: string,
+    @Query('clinicaId') clinicaId: string | undefined,
+    @CurrentUser() user: AuthTokenPayload,
+    @Req() req: Request,
+  ) {
+    return this.agendamentosService.declaracaoComparecimento(id, clinicaId, this.ctx(req, user));
+  }
+
   private ctx(req: Request, user: AuthTokenPayload): RequestAuditContext {
     return { ...extractRequestMeta(req), user };
   }

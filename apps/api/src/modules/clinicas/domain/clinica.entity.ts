@@ -14,6 +14,13 @@ export interface EnderecoClinica {
   cep?: string;
 }
 
+/** Profissional legalmente responsável pela clínica perante o conselho de classe. */
+export interface ResponsavelTecnico {
+  nome: string;
+  /** Ex.: COREN-MG 123456. */
+  registroProfissional: string;
+}
+
 export interface ConfiguracoesClinica {
   logoUrl?: string;
   corPrimaria?: string;
@@ -21,12 +28,15 @@ export interface ConfiguracoesClinica {
   emailRemetente?: string;
   fusoHorario: string;
   duracaoConsultaPadrao: number;
+  /** Usado no timbre de recibos para reembolso junto a convênio/seguradora. */
+  responsavelTecnico?: ResponsavelTecnico;
 }
 
 export interface Clinica {
   id: string;
   nome: string;
   cnpj: string;
+  telefone?: string;
   endereco?: EnderecoClinica;
   plano: PlanoClinica;
   configuracoes: ConfiguracoesClinica;

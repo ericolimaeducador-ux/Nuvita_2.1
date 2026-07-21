@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -7,11 +7,13 @@ import { z } from 'zod';
 import dayjs from 'dayjs';
 import {
   ArrowLeft, User, Download, Plus, FileText, CalendarClock, ChevronDown, Stethoscope,
-  ListChecks, Trash2, Pencil, Bandage,
+  Trash2, Pencil, Bandage,
 } from 'lucide-react';
 import { ProntuarioDetailDialog, NovoAtendimentoDialog } from '@/components/ProntuarioDialogs';
 import { NovoDocumentoDialog } from '@/components/NovoDocumentoDialog';
 import { NovaFeridaDialog } from '@/components/FeridaDialogs';
+import { ReceituarioEnfermagemDialog } from '@/components/ReceituarioEnfermagemDialog';
+import { TermoConsentimentoDialog } from '@/components/TermoConsentimentoDialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -27,15 +29,14 @@ import { toast } from '@/components/ui/use-toast';
 import { useAuth } from '@/auth/AuthContext';
 import {
   pacientesApi, prontuariosApi, agendaApi, documentosApi, feridasApi,
-  checklistDocumentosApi,
-  observacoesPacienteApi,
+  observacoesPacienteApi, receituarioEnfermagemApi,
 } from '@/api/resources';
 import { apiErrorMessage } from '@/api/client';
 import { formatCpf, formatData, idade, toItems, formatEndereco } from '@/utils';
 import {
   Sexo, SEXO_LABEL, STATUS_AGENDAMENTO_LABEL, TIPO_ATENDIMENTO_LABEL,
   Modulo, Papel,
-  StatusChecklistDocumento, STATUS_CHECKLIST_DOCUMENTO_LABEL, TIPO_DOCUMENTO_LABEL,
+  TIPO_DOCUMENTO_LABEL,
   ETIOLOGIA_LABEL, STATUS_FERIDA_LABEL, StatusFerida,
   StatusAgendamento, TipoAtendimento, TIPO_ATENDIMENTO_POR_AGENDAMENTO,
   type Agendamento, type Prontuario, type Documento, type Paciente,
@@ -120,6 +121,7 @@ export function PacienteDetailPage() {
 
   const [novoDocOpen, setNovoDocOpen] = useState(false);
   const [docParaExcluir, setDocParaExcluir] = useState<Documento | null>(null);
+  const [termoOpen, setTermoOpen] = useState(false);
 
   const pacQ = useQuery({ queryKey: ['paciente', id], queryFn: () => pacientesApi.get(id), enabled: !!id });
   const prontQ = useQuery({ queryKey: ['prontuarios', 'paciente', id], queryFn: () => prontuariosApi.list({ pacienteId: id }), enabled: !!id });
@@ -283,8 +285,8 @@ export function PacienteDetailPage() {
       {/* Observações gerais — campo livre p/ qualquer profissional de atendimento */}
       <ObservacoesSecao pacienteId={id} observacoesAtuais={p.observacoes} />
 
-      {/* Checklist de documentos (secretaria/admin) */}
-      {permissoes.includes(Modulo.DOCUMENTOS) && <ChecklistDocumentosSecao pacienteId={id} />}
+      {/* Receituário de enfermagem (insumos de curativo) */}
+      {permissoes.includes(Modulo.PRONTUARIOS) && <ReceituarioEnfermagemSecao pacienteId={id} />}
 
       {/* Documentos */}
       <Secao
@@ -293,9 +295,14 @@ export function PacienteDetailPage() {
         contagem={toItems<Documento>(docsQ.data as never).length}
         defaultOpen={false}
         acao={
-          <Button size="sm" variant="outline" onClick={() => setNovoDocOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" /> Novo documento
-          </Button>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={() => setTermoOpen(true)}>
+              Termo de consentimento
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setNovoDocOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" /> Novo documento
+            </Button>
+          </div>
         }
       >
         {docsQ.isLoading ? (
@@ -359,6 +366,13 @@ export function PacienteDetailPage() {
                             Iniciar atendimento
                           </Button>
                         )}
+                        {a.status === StatusAgendamento.CONCLUIDO && (
+                          <Button variant="ghost" size="sm" asChild>
+                            <Link to={`/agendamentos/${a.id}/declaracao/imprimir`} target="_blank">
+                              Declaração de comparecimento
+                            </Link>
+                          </Button>
+                        )}
                       </TableCell>
                     </TableRow>
                   );
@@ -389,6 +403,7 @@ export function PacienteDetailPage() {
         open={novoDocOpen}
         onOpenChange={setNovoDocOpen}
       />
+      <TermoConsentimentoDialog pacienteId={id} open={termoOpen} onOpenChange={setTermoOpen} />
       <Dialog open={!!docParaExcluir} onOpenChange={(o) => { if (!o) setDocParaExcluir(null); }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -413,6 +428,54 @@ export function PacienteDetailPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+function ReceituarioEnfermagemSecao({ pacienteId }: { pacienteId: string }) {
+  const { user } = useAuth();
+  const [novoOpen, setNovoOpen] = useState(false);
+
+  const listQ = useQuery({
+    queryKey: ['receituario-enfermagem', pacienteId],
+    queryFn: () => receituarioEnfermagemApi.listByPaciente(pacienteId),
+  });
+  const receituarios = listQ.data ?? [];
+
+  return (
+    <Secao
+      icon={<FileText className="h-4 w-4" />}
+      titulo="Receituário de enfermagem"
+      contagem={receituarios.length}
+      defaultOpen={false}
+      acao={
+        user?.papel === Papel.ENFERMEIRO && (
+          <Button size="sm" variant="outline" onClick={() => setNovoOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" /> Emitir receituário
+          </Button>
+        )
+      }
+    >
+      {listQ.isLoading ? (
+        <Skeleton className="h-16 w-full" />
+      ) : receituarios.length === 0 ? (
+        <Vazio>Nenhum receituário emitido.</Vazio>
+      ) : (
+        <div className="space-y-1.5">
+          {receituarios.map((r) => (
+            <div key={r.id} className="flex items-center gap-3 glass rounded-lg p-2.5">
+              <span className="text-sm text-foreground flex-1 min-w-0 truncate">
+                {r.itens.map((i) => i.nome).join(', ')}
+              </span>
+              <span className="text-xs text-muted-foreground shrink-0">{dayjs(r.criadoEm).format('DD/MM/YYYY')}</span>
+              <Button variant="ghost" size="sm" asChild>
+                <Link to={`/pacientes/${pacienteId}/receituario/${r.id}/imprimir`} target="_blank">Ver</Link>
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+      <ReceituarioEnfermagemDialog pacienteId={pacienteId} open={novoOpen} onOpenChange={setNovoOpen} />
+    </Secao>
   );
 }
 
@@ -478,115 +541,6 @@ function FeridasSecao({ pacienteId }: { pacienteId: string }) {
         clinicaId={user?.clinicaId}
         onCreated={() => listQ.refetch()}
       />
-    </Secao>
-  );
-}
-
-/** Checklist administrativo de documentos pendentes/recebidos (secretaria/admin),
- * independente dos arquivos em si (seção Documentos, que é upload de fato). */
-function ChecklistDocumentosSecao({ pacienteId }: { pacienteId: string }) {
-  const qc = useQueryClient();
-  const [novoNome, setNovoNome] = useState('');
-
-  const listQ = useQuery({
-    queryKey: ['checklist-documentos', pacienteId],
-    queryFn: () => checklistDocumentosApi.listByPaciente(pacienteId),
-  });
-
-  const invalidate = () => qc.invalidateQueries({ queryKey: ['checklist-documentos', pacienteId] });
-
-  const createMut = useMutation({
-    mutationFn: () => checklistDocumentosApi.create({ pacienteId, nome: novoNome.trim() }),
-    onSuccess: () => { setNovoNome(''); void invalidate(); },
-    onError: (e) => toast.error('Erro', apiErrorMessage(e)),
-  });
-
-  const criarPadraoMut = useMutation({
-    mutationFn: () => checklistDocumentosApi.criarPadrao(pacienteId),
-    onSuccess: () => void invalidate(),
-    onError: (e) => toast.error('Erro', apiErrorMessage(e)),
-  });
-
-  const toggleMut = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: StatusChecklistDocumento }) =>
-      checklistDocumentosApi.update(id, { status }),
-    onSuccess: () => void invalidate(),
-    onError: (e) => toast.error('Erro', apiErrorMessage(e)),
-  });
-
-  const removeMut = useMutation({
-    mutationFn: (id: string) => checklistDocumentosApi.remove(id),
-    onSuccess: () => void invalidate(),
-    onError: (e) => toast.error('Erro', apiErrorMessage(e)),
-  });
-
-  const itens = listQ.data ?? [];
-  const pendentes = itens.filter((i) => i.status === StatusChecklistDocumento.PENDENTE).length;
-
-  return (
-    <Secao icon={<ListChecks className="h-4 w-4" />} titulo="Checklist de documentos" contagem={itens.length} defaultOpen={false}>
-      <div className="space-y-3">
-        <div className="flex gap-2">
-          <Input
-            placeholder="Nome do documento (ex.: RG, comprovante de residência…)"
-            value={novoNome}
-            onChange={(e) => setNovoNome(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter' && novoNome.trim().length >= 2) createMut.mutate(); }}
-          />
-          <Button
-            size="sm"
-            disabled={novoNome.trim().length < 2 || createMut.isPending}
-            onClick={() => createMut.mutate()}
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            className="shrink-0"
-            disabled={criarPadraoMut.isPending}
-            onClick={() => criarPadraoMut.mutate()}
-          >
-            {criarPadraoMut.isPending ? 'Criando…' : 'Usar lista padrão'}
-          </Button>
-        </div>
-
-        {listQ.isLoading ? (
-          <Skeleton className="h-16 w-full" />
-        ) : itens.length === 0 ? (
-          <Vazio>Nenhum documento no checklist. Use "Usar lista padrão" ou adicione manualmente.</Vazio>
-        ) : (
-          <div className="space-y-1.5">
-            {pendentes > 0 && (
-              <p className="text-xs font-medium text-amber-500">⚠ {pendentes} documento{pendentes !== 1 ? 's' : ''} pendente{pendentes !== 1 ? 's' : ''}</p>
-            )}
-            {itens.map((item) => (
-              <div key={item.id} className="flex items-center gap-3 glass rounded-lg p-2.5">
-                <button
-                  type="button"
-                  onClick={() => toggleMut.mutate({
-                    id: item.id,
-                    status: item.status === StatusChecklistDocumento.PENDENTE
-                      ? StatusChecklistDocumento.RECEBIDO
-                      : StatusChecklistDocumento.PENDENTE,
-                  })}
-                >
-                  <Badge
-                    variant={item.status === StatusChecklistDocumento.RECEBIDO ? 'success' : 'warning'}
-                    className="cursor-pointer"
-                  >
-                    {STATUS_CHECKLIST_DOCUMENTO_LABEL[item.status]}
-                  </Badge>
-                </button>
-                <span className="text-sm text-foreground flex-1 min-w-0 truncate">{item.nome}</span>
-                <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => removeMut.mutate(item.id)}>
-                  <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
-                </Button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
     </Secao>
   );
 }

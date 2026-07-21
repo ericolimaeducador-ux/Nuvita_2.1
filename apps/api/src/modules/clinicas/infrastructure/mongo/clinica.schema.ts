@@ -12,6 +12,9 @@ export class ClinicaMongo {
   @Prop({ required: true, unique: true, index: true })
   cnpj!: string;
 
+  @Prop()
+  telefone?: string;
+
   @Prop({ type: MongooseSchema.Types.Mixed })
   endereco?: Record<string, unknown>;
 
