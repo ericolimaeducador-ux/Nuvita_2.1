@@ -39,7 +39,7 @@ export default defineConfig(({ command }) => ({
   server: {
     port: 5173,
     proxy: {
-      '^/(auth|clinicas|pacientes|agendamentos|prontuarios|documentos|notificacoes|financeiro|telemedicina|super-admin|analytics|produtos|health|checklist-documentos|observacoes-paciente|feridas|receituario-enfermagem|termos-consentimento)(?=$|[/?])':
+      '^/(auth|clinicas|pacientes|agendamentos|prontuarios|documentos|notificacoes|financeiro|telemedicina|super-admin|analytics|produtos|health|observacoes-paciente|feridas|receituario-enfermagem|termos-consentimento)(?=$|[/?])':
         apiProxy,
     },
   },

@@ -32,7 +32,7 @@ import {
   observacoesPacienteApi, receituarioEnfermagemApi,
 } from '@/api/resources';
 import { apiErrorMessage } from '@/api/client';
-import { formatCpf, formatData, idade, toItems, formatEndereco } from '@/utils';
+import { formatCpf, formatData, formatTelefone, idade, toItems, formatEndereco } from '@/utils';
 import {
   Sexo, SEXO_LABEL, STATUS_AGENDAMENTO_LABEL, TIPO_ATENDIMENTO_LABEL,
   Modulo, Papel,
@@ -646,7 +646,7 @@ function DadosCadastraisSecao({ paciente: p, pacienteId }: { paciente: Paciente;
         <DescItem label="CPF" value={formatCpf(p.cpf)} />
         <DescItem label="Nascimento" value={formatData(p.dataNascimento)} />
         <DescItem label="Sexo" value={p.sexo ? SEXO_LABEL[p.sexo] : '—'} />
-        <DescItem label="Telefone" value={p.telefone || '—'} />
+        <DescItem label="Telefone" value={formatTelefone(p.telefone)} />
         <DescItem label="E-mail" value={p.email || '—'} />
         <DescItem label="Consentimento LGPD" value={p.consentimentoLGPD?.aceito ? 'Aceito' : 'Pendente'} />
         <div className="col-span-2 sm:col-span-3">

@@ -19,7 +19,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { pacientesApi, type PacienteSort } from '@/api/resources';
 import { apiErrorMessage } from '@/api/client';
-import { toItems, formatCpf, formatData, idade } from '@/utils';
+import { toItems, formatCpf, formatData, formatTelefone, idade } from '@/utils';
 import { useAuth } from '@/auth/AuthContext';
 import { toast } from '@/components/ui/use-toast';
 import { Sexo, SEXO_LABEL, type Paciente } from '@/types';
@@ -236,7 +236,7 @@ export function PacientesPage() {
                     <TableCell>{formatData(p.dataNascimento)}</TableCell>
                     <TableCell>{idade(p.dataNascimento)}</TableCell>
                     <TableCell>{p.sexo ? SEXO_LABEL[p.sexo] : '—'}</TableCell>
-                    <TableCell>{p.telefone || '—'}</TableCell>
+                    <TableCell>{formatTelefone(p.telefone)}</TableCell>
                     <TableCell>
                       <Badge variant={p.ativo === false ? 'secondary' : 'success'}>
                         {p.ativo === false ? 'Inativo' : 'Ativo'}
