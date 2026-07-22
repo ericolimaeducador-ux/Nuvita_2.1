@@ -59,6 +59,12 @@ export function TermoConsentimentoImpressaoPage() {
           <div><span className="font-semibold">Nome:</span> {paciente?.nome ?? '—'}</div>
         </section>
 
+        <section className="mb-5">
+          <h2 className="text-xs font-bold uppercase text-gray-500 mb-2 border-b border-gray-300 pb-1">Profissional Responsável</h2>
+          <div><span className="font-semibold">Nome:</span> {t.criadoPorNome}</div>
+          {t.criadoPorRegistro ? <div><span className="font-semibold">Registro (COREN):</span> {t.criadoPorRegistro}</div> : null}
+        </section>
+
         <section className="mb-6 whitespace-pre-line leading-relaxed">{t.texto}</section>
 
         {t.assinatura ? (

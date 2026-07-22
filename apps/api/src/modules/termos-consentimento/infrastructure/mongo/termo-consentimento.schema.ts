@@ -39,6 +39,12 @@ export class TermoConsentimentoMongo {
   @Prop({ required: true })
   criadoPor!: string;
 
+  @Prop({ required: true })
+  criadoPorNome!: string;
+
+  @Prop()
+  criadoPorRegistro?: string;
+
   @Prop({ default: Date.now, immutable: true })
   criadoEm!: Date;
 }

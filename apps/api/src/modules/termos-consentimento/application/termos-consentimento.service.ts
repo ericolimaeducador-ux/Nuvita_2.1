@@ -34,6 +34,8 @@ export class TermosConsentimentoService {
       tipo: dto.tipo,
       versaoTexto: VERSAO_TEXTO_TERMO[dto.tipo],
       criadoPor: context.user.sub,
+      criadoPorNome: context.user.nome ?? context.user.email,
+      criadoPorRegistro: context.user.registroProfissional,
     });
     return this.comTexto(termo);
   }

@@ -9,23 +9,25 @@ export enum TipoTermo {
  * ESCALAS_VERSION persistido por avaliação de ferida).
  */
 export const VERSAO_TEXTO_TERMO: Record<TipoTermo, string> = {
-  [TipoTermo.FOTOGRAFIA_PESQUISA]: 'fotografia-pesquisa-1.0.0',
+  [TipoTermo.FOTOGRAFIA_PESQUISA]: 'fotografia-pesquisa-1.1.0',
 };
 
 export const TEXTO_TERMO: Record<TipoTermo, string> = {
   [TipoTermo.FOTOGRAFIA_PESQUISA]: `TERMO DE CONSENTIMENTO LIVRE E ESCLARECIDO — FOTOGRAFIA DE LESÃO E USO EM PESQUISA CIENTÍFICA
 
-Eu, paciente (ou responsável legal) desta clínica de estomaterapia, declaro que fui informado(a) de forma clara sobre os seguintes pontos e que concordo livremente com eles:
+Eu, paciente (ou responsável legal) desta clínica de estomaterapia, declaro ter sido devidamente informado(a) e esclarecido(a) pelo(a) enfermeiro(a) estomaterapeuta responsável pelo meu atendimento (identificado(a) abaixo) sobre a necessidade e os objetivos do registro fotográfico das minhas lesões, e concordo livremente com os pontos a seguir:
 
-1. Serão realizadas fotografias da(s) minha(s) lesão(ões) como parte do acompanhamento clínico do meu tratamento, permitindo o registro objetivo da evolução da ferida ao longo do tempo.
+1. Objetivo clínico
+Serão realizadas fotografias da(s) minha(s) lesão(ões) como parte do acompanhamento do meu tratamento. Essas imagens comporão o meu prontuário eletrônico, documentando a evolução clínica e permitindo a avaliação da cicatrização e a escolha das melhores condutas terapêuticas.
 
-2. As fotografias e os dados clínicos associados (idade, etiologia da lesão, características da ferida e evolução do tratamento) poderão ser utilizados, de forma anonimizada, em estudos científicos, publicações acadêmicas, apresentações em congressos ou materiais de ensino, sem que meu nome ou qualquer outro dado que permita minha identificação direta seja divulgado.
+2. Uso científico e educacional
+Autorizo, adicionalmente, que estas imagens e os dados clínicos associados (idade, etiologia da lesão, características da ferida e evolução do tratamento) sejam utilizados, de forma anonimizada, em congressos, jornadas, simpósios, publicações em revistas científicas, livros, materiais didáticos e discussão de casos entre profissionais de saúde para fins de aprimoramento técnico.
 
-3. Este consentimento não é obrigatório para meu atendimento — a recusa em autorizar o uso das imagens para fins de pesquisa não implica em qualquer prejuízo ao meu tratamento clínico.
+3. Anonimato e privacidade (LGPD)
+Minha identidade será preservada em sigilo em qualquer publicação ou apresentação. As fotografias focarão estritamente a área da lesão, sem meu rosto, tatuagens ou marcas que permitam minha identificação. Meus dados e imagens serão armazenados de forma segura, em conformidade com a Lei Geral de Proteção de Dados Pessoais (Lei nº 13.709/2018), com acesso restrito à equipe assistencial responsável pelo meu tratamento.
 
-4. Posso revogar esta autorização a qualquer momento, mediante solicitação por escrito à clínica, sem que isso afete meu acompanhamento em curso.
-
-5. As fotografias serão armazenadas de forma segura, em conformidade com a Lei Geral de Proteção de Dados (Lei nº 13.709/2018), com acesso restrito à equipe assistencial responsável pelo meu tratamento.
+4. Voluntariedade e revogação
+Este consentimento para uso científico é voluntário e não é condição para meu atendimento — a recusa não implica qualquer prejuízo ao meu tratamento. Posso revogar esta autorização a qualquer momento, mediante solicitação à clínica, sem que isso afete meu acompanhamento em curso.
 
 Ao confirmar minha identidade digitando meu nome completo, declaro que li e compreendi as informações acima e que autorizo, de forma livre e esclarecida, a fotografia da(s) minha(s) lesão(ões) e o uso dos dados nos termos descritos.`,
 };
@@ -51,5 +53,10 @@ export interface TermoConsentimento {
   versaoTexto: string;
   assinatura?: AssinaturaTermo;
   criadoPor: string;
+  /** Snapshot do nome/registro (COREN) de quem criou o termo — mesmo
+   * racional da versaoTexto: uma alteração futura no cadastro do
+   * profissional nunca deve mudar retroativamente o que já foi impresso. */
+  criadoPorNome: string;
+  criadoPorRegistro?: string;
   criadoEm: Date;
 }
