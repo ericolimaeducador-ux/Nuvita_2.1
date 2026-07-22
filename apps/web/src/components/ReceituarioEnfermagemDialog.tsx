@@ -10,7 +10,7 @@ import { ProdutoCombobox } from '@/components/ProdutoCombobox';
 import { toast } from '@/components/ui/use-toast';
 import { produtosApi, receituarioEnfermagemApi } from '@/api/resources';
 import { apiErrorMessage } from '@/api/client';
-import { TipoProduto, type ItemReceituario } from '@/types';
+import { type ItemReceituario } from '@/types';
 
 const CATALOGO_LIVRE = '__livre__';
 
@@ -40,13 +40,14 @@ export function ReceituarioEnfermagemDialog({
   const [observacoes, setObservacoes] = useState('');
 
   const produtosQ = useQuery({
-    queryKey: ['produtos', 'curativo'],
+    queryKey: ['produtos', 'catalogo'],
     queryFn: () => produtosApi.list(),
     enabled: open,
   });
-  const produtosCurativo = (produtosQ.data ?? []).filter((p) =>
-    [TipoProduto.CURATIVO, TipoProduto.COBERTURA, TipoProduto.ADJUVANTE].includes(p.tipo) && p.ativo,
-  );
+  // Todo o catalogo ativo, sem filtrar por tipo: a clinica e de estomaterapia e
+  // prescreve tanto cobertura de ferida quanto bolsa de estomia, fita e fixador
+  // — filtrar por tipo escondia mais de um terco do catalogo do enfermeiro.
+  const produtosCurativo = (produtosQ.data ?? []).filter((p) => p.ativo);
 
   const mut = useMutation({
     mutationFn: () => {
