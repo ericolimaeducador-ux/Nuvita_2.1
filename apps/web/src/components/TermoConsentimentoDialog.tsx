@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -54,11 +54,19 @@ export function TermoConsentimentoDialog({
     onError: (e) => toast.error('Erro', apiErrorMessage(e)),
   });
 
+  // O diálogo é 100% controlado pelo `open` prop (sem DialogTrigger) — o Radix
+  // só chama onOpenChange para fechar (ESC/overlay), nunca para abrir. Por
+  // isso o rascunho precisa ser criado aqui, reagindo à mudança do prop, e não
+  // dentro de um onOpenChange (que nunca dispararia com `o === true`).
+  useEffect(() => {
+    if (!open || listQ.isLoading) return;
+    if (rascunhoExistente || criarMut.data || criarMut.isPending) return;
+    criarMut.mutate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, listQ.isLoading, rascunhoExistente]);
+
   function handleOpenChange(o: boolean) {
     onOpenChange(o);
-    if (o && !rascunhoExistente && !criarMut.data && !criarMut.isPending) {
-      criarMut.mutate();
-    }
     if (!o) {
       setNomeAssinante('');
       criarMut.reset();
