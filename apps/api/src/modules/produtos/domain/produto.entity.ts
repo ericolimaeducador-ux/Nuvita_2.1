@@ -26,6 +26,8 @@ export interface Produto {
   id: string;
   clinicaId: string;
   nome: string;
+  /** Codigo interno para busca rapida no receituario (unico por clinica, nao globalmente). */
+  codigo?: string;
   tipo: TipoProduto;
   /** Preco cobrado do paciente, em reais. */
   precoVenda: number;

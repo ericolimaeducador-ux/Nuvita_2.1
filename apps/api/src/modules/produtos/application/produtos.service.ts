@@ -68,8 +68,13 @@ export class ProdutosService implements OnApplicationBootstrap {
     }
   }
 
-  async listar(user: AuthTokenPayload, tipo?: TipoProduto, clinicaId?: string): Promise<Produto[]> {
-    return this.produtos.findAll(resolveTenantClinicaId(user, clinicaId), tipo);
+  async listar(
+    user: AuthTokenPayload,
+    tipo?: TipoProduto,
+    clinicaId?: string,
+    incluirInativos?: boolean,
+  ): Promise<Produto[]> {
+    return this.produtos.findAll(resolveTenantClinicaId(user, clinicaId), tipo, !incluirInativos);
   }
 
   async buscar(user: AuthTokenPayload, id: string, clinicaId?: string): Promise<Produto> {
@@ -82,6 +87,7 @@ export class ProdutosService implements OnApplicationBootstrap {
     return this.produtos.create({
       clinicaId: resolveTenantClinicaId(user, clinicaId),
       nome: dto.nome,
+      codigo: dto.codigo,
       tipo: dto.tipo,
       precoVenda: dto.precoVenda,
       custo: dto.custo,

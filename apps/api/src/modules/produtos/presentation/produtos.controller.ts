@@ -23,7 +23,7 @@ export class ProdutosController {
   @Get()
   @Roles(...LEITURA_CATALOGO)
   listar(@Query() query: ListProdutosQueryDto, @CurrentUser() user: AuthTokenPayload) {
-    return this.service.listar(user, query.tipo, query.clinicaId);
+    return this.service.listar(user, query.tipo, query.clinicaId, query.incluirInativos === 'true');
   }
 
   @Get(':id')

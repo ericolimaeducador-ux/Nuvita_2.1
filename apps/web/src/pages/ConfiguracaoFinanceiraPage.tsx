@@ -178,23 +178,31 @@ function AbaServicos() {
 function AbaProdutos() {
   const qc = useQueryClient();
   const [aberto, setAberto] = useState(false);
+  const [busca, setBusca] = useState('');
   const [nome, setNome] = useState('');
+  const [codigo, setCodigo] = useState('');
   const [tipo, setTipo] = useState<TipoProduto>(TipoProduto.COBERTURA);
   const [precoVenda, setPrecoVenda] = useState('');
   const [custo, setCusto] = useState('');
   const [apresentacao, setApresentacao] = useState('');
 
-  const q = useQuery({ queryKey: ['produtos'], queryFn: () => produtosApi.list() });
+  const q = useQuery({ queryKey: ['produtos', 'todos'], queryFn: () => produtosApi.list(undefined, true) });
+
+  const termo = busca.trim().toLowerCase();
+  const produtos = (q.data ?? []).filter(
+    (p) => !termo || p.nome.toLowerCase().includes(termo) || (p.codigo ?? '').toLowerCase().includes(termo),
+  );
 
   const criar = useMutation({
     mutationFn: () => produtosApi.create({
       nome, tipo, precoVenda: parseFloat(precoVenda),
+      codigo: codigo || undefined,
       custo: custo ? parseFloat(custo) : undefined,
       apresentacao: apresentacao || undefined,
     }),
     onSuccess: () => {
       toast.success('Produto cadastrado.');
-      setAberto(false); setNome(''); setPrecoVenda(''); setCusto(''); setApresentacao('');
+      setAberto(false); setNome(''); setCodigo(''); setPrecoVenda(''); setCusto(''); setApresentacao('');
       void qc.invalidateQueries({ queryKey: ['produtos'] });
     },
     onError: (e) => toast.error('Erro', apiErrorMessage(e)),
@@ -206,31 +214,46 @@ function AbaProdutos() {
     onError: (e) => toast.error('Erro', apiErrorMessage(e)),
   });
 
+  const reativar = useMutation({
+    mutationFn: (id: string) => produtosApi.update(id, { ativo: true }),
+    onSuccess: () => { toast.success('Produto reativado.'); void qc.invalidateQueries({ queryKey: ['produtos'] }); },
+    onError: (e) => toast.error('Erro', apiErrorMessage(e)),
+  });
+
   return (
     <Card>
       <CardContent className="p-6">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-4 gap-3">
           <p className="text-sm text-muted-foreground">
             Curativos, coberturas, bolsas e adjuvantes que a clínica revende ao paciente.
           </p>
           <Button size="sm" onClick={() => setAberto(true)}><Plus className="mr-2 h-4 w-4" /> Novo produto</Button>
         </div>
+        <Input
+          className="mb-4 max-w-xs"
+          placeholder="Buscar por nome ou código..."
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+        />
 
         {q.isLoading ? <Carregando /> : (
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Código</TableHead>
                 <TableHead>Produto</TableHead>
                 <TableHead>Tipo</TableHead>
                 <TableHead className="text-right">Venda</TableHead>
                 <TableHead className="text-right">Custo</TableHead>
                 <TableHead className="text-right">Margem</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead className="w-16" />
               </TableRow>
             </TableHeader>
             <TableBody>
-              {(q.data ?? []).map((p) => (
+              {produtos.map((p) => (
                 <TableRow key={p.id}>
+                  <TableCell className="text-muted-foreground">{p.codigo ?? '—'}</TableCell>
                   <TableCell className="font-medium">
                     {p.nome}
                     {p.apresentacao && <span className="text-muted-foreground"> · {p.apresentacao}</span>}
@@ -244,15 +267,28 @@ function AbaProdutos() {
                       : '—'}
                   </TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="icon" title="Desativar" onClick={() => desativar.mutate(p.id)}>
-                      <Power className="h-4 w-4" />
-                    </Button>
+                    {!p.ativo ? (
+                      <Badge variant="secondary">{p.precoVenda === 0 ? 'Preço pendente' : 'Inativo'}</Badge>
+                    ) : (
+                      <Badge variant="success">Ativo</Badge>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {p.ativo ? (
+                      <Button variant="ghost" size="icon" title="Desativar" onClick={() => desativar.mutate(p.id)}>
+                        <Power className="h-4 w-4" />
+                      </Button>
+                    ) : (
+                      <Button variant="ghost" size="icon" title="Reativar" onClick={() => reativar.mutate(p.id)}>
+                        <Power className="h-4 w-4 text-primary" />
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
-              {(q.data ?? []).length === 0 && (
-                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                  Nenhum produto cadastrado.
+              {produtos.length === 0 && (
+                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                  {termo ? 'Nenhum produto encontrado.' : 'Nenhum produto cadastrado.'}
                 </TableCell></TableRow>
               )}
             </TableBody>
@@ -266,6 +302,10 @@ function AbaProdutos() {
               <div className="space-y-2">
                 <Label htmlFor="pNome">Nome</Label>
                 <Input id="pNome" value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Espuma de prata" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="pCodigo">Código (opcional)</Label>
+                <Input id="pCodigo" value={codigo} onChange={(e) => setCodigo(e.target.value)} placeholder="COB-001" />
               </div>
               <div className="space-y-2">
                 <Label>Tipo</Label>

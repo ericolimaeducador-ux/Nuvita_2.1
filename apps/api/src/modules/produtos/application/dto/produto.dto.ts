@@ -14,6 +14,11 @@ export class CreateProdutoDto {
   @MaxLength(160)
   nome!: string;
 
+  @IsOptional()
+  @IsString()
+  @MaxLength(40)
+  codigo?: string;
+
   @IsEnum(TipoProduto)
   tipo!: TipoProduto;
 
@@ -52,6 +57,11 @@ export class UpdateProdutoDto {
   @IsString()
   @MaxLength(160)
   nome?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(40)
+  codigo?: string;
 
   @IsOptional()
   @IsEnum(TipoProduto)
@@ -100,4 +110,9 @@ export class ListProdutosQueryDto {
   @IsOptional()
   @IsString()
   clinicaId?: string;
+
+  /** `true` inclui tambem os inativos (ex.: importados sem preco ainda) — tela de configuracao. */
+  @IsOptional()
+  @IsString()
+  incluirInativos?: string;
 }

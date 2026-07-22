@@ -1,0 +1,146 @@
+[
+  {
+    "categoria": "Ostomia",
+    "subcategoria": "Bolsa Coletora de Ostomia - Sistema de Uma Peça",
+    "nomeComercial": "SenSura Mio (1 peça)",
+    "fabricante": "Coloplast",
+    "composicao": "Bolsa com barreira cutânea integrada e tecnologia elástica Mio",
+    "indicacao": "Colostomia, ileostomia ou urostomia em qualquer fase (pós-operatório a longo prazo)"
+  },
+  {
+    "categoria": "Ostomia",
+    "subcategoria": "Bolsa Coletora de Ostomia - Sistema de Uma Peça",
+    "nomeComercial": "Assura 1 peça / New Image 1 peça",
+    "fabricante": "Coloplast / Hollister",
+    "composicao": "Bolsa de sistema único com barreira de pectina/hidrocoloide",
+    "indicacao": "Colostomia/ileostomia, pele periestomal sensível"
+  },
+  {
+    "categoria": "Ostomia",
+    "subcategoria": "Bolsa Coletora de Ostomia - Sistema de Duas Peças",
+    "nomeComercial": "SenSura Click / Alterna",
+    "fabricante": "Coloplast",
+    "composicao": "Sistema de 2 peças: placa (base) + bolsa acoplável por encaixe",
+    "indicacao": "Colostomia, ileostomia, urostomia - permite troca da bolsa sem remover a placa"
+  },
+  {
+    "categoria": "Ostomia",
+    "subcategoria": "Bolsa Coletora de Ostomia - Sistema de Duas Peças",
+    "nomeComercial": "New Image 2 peças (Flextend / CeraPlus)",
+    "fabricante": "Hollister",
+    "composicao": "Sistema de 2 peças com barreira CeraPlus (ceramida)",
+    "indicacao": "Ostomias com pele periestomal irritada, uso de longo prazo"
+  },
+  {
+    "categoria": "Ostomia",
+    "subcategoria": "Bolsa Coletora de Ostomia - Sistema de Duas Peças",
+    "nomeComercial": "Esteem Synergy (2 peças)",
+    "fabricante": "ConvaTec",
+    "composicao": "Sistema de 2 peças com tecnologia de barreira Aloe Vera / Duraprep",
+    "indicacao": "Colostomia/ileostomia com necessidade de troca frequente da bolsa mantendo a placa"
+  },
+  {
+    "categoria": "Ostomia",
+    "subcategoria": "Bolsa Coletora - Tipo de Drenagem",
+    "nomeComercial": "Bolsa Drenável (Colostomia/Ileostomia)",
+    "fabricante": "Coloplast/Hollister/ConvaTec",
+    "composicao": "Bolsa com extremidade aberta e clamp/velcro de fechamento",
+    "indicacao": "Colostomias e ileostomias com efluente líquido/pastoso frequente"
+  },
+  {
+    "categoria": "Ostomia",
+    "subcategoria": "Bolsa Coletora - Tipo de Drenagem",
+    "nomeComercial": "Bolsa Fechada (Colostomia)",
+    "fabricante": "Coloplast/Hollister/ConvaTec",
+    "composicao": "Bolsa sem sistema de drenagem, descartável integralmente",
+    "indicacao": "Colostomias com efluente sólido/pastoso formado (colostomia descendente/sigmoide)"
+  },
+  {
+    "categoria": "Ostomia",
+    "subcategoria": "Bolsa Coletora - Tipo de Drenagem",
+    "nomeComercial": "Bolsa Coletora de Urostomia",
+    "fabricante": "Coloplast/Hollister/ConvaTec",
+    "composicao": "Bolsa com válvula antirrefluxo e torneira de drenagem, conectável a coletor noturno",
+    "indicacao": "Urostomias (derivação urinária tipo Bricker)"
+  },
+  {
+    "categoria": "Ostomia",
+    "subcategoria": "Acessórios de Ostomia",
+    "nomeComercial": "Pasta Protetora (Stomahesive Paste / Brava Pasta)",
+    "fabricante": "ConvaTec / Coloplast",
+    "composicao": "Pasta de pectina/hidrocoloide sem álcool",
+    "indicacao": "Preenchimento de irregularidades periestomais, prevenção de vazamento"
+  },
+  {
+    "categoria": "Ostomia",
+    "subcategoria": "Acessórios de Ostomia",
+    "nomeComercial": "Pó Protetor (Stomahesive Powder / Brava Pó)",
+    "fabricante": "ConvaTec / Coloplast",
+    "composicao": "Pó de hidrocoloide/pectina",
+    "indicacao": "Pele periestomal irritada, macerada ou com perda de substância"
+  },
+  {
+    "categoria": "Ostomia",
+    "subcategoria": "Acessórios de Ostomia",
+    "nomeComercial": "Anel/Faixa Moldável (Barrier Ring - Brava, Adapt)",
+    "fabricante": "Coloplast / Hollister",
+    "composicao": "Anel de hidrocoloide moldável",
+    "indicacao": "Correção de contornos irregulares periestomais, proteção extra contra vazamento"
+  },
+  {
+    "categoria": "Ostomia",
+    "subcategoria": "Acessórios de Ostomia",
+    "nomeComercial": "Cinto/Faixa de Ostomia (Ostomy Belt)",
+    "fabricante": "Hollister / Coloplast",
+    "composicao": "Cinto elástico ajustável com fixação em gancho",
+    "indicacao": "Suporte adicional para fixação da bolsa em pacientes obesos, hérnia periestomal ou atividade física"
+  },
+  {
+    "categoria": "Ostomia",
+    "subcategoria": "Acessórios de Ostomia",
+    "nomeComercial": "Filtro de Carvão / Válvula de Flatos",
+    "fabricante": "ConvaTec/Coloplast/Hollister",
+    "composicao": "Filtro de carvão ativado integrado ou adesivo",
+    "indicacao": "Controle de odor e distensão da bolsa por gases"
+  },
+  {
+    "categoria": "Ostomia",
+    "subcategoria": "Acessórios de Ostomia",
+    "nomeComercial": "Desodorante para Bolsa de Ostomia (Gota/Spray)",
+    "fabricante": "Hollister (Adapt) / Coloplast (Brava)",
+    "composicao": "Solução neutralizadora de odor",
+    "indicacao": "Redução de odor no esvaziamento e uso diário da bolsa"
+  },
+  {
+    "categoria": "Ostomia",
+    "subcategoria": "Acessórios de Ostomia",
+    "nomeComercial": "Sistema de Irrigação de Colostomia",
+    "fabricante": "Coloplast (Irrigation System)",
+    "composicao": "Kit de irrigação com cone, bolsa de água e manga coletora",
+    "indicacao": "Colostomias descendentes/sigmoides para controle regular da eliminação (irrigação transcolostômica)"
+  },
+  {
+    "categoria": "Ostomia",
+    "subcategoria": "Acessórios de Ostomia",
+    "nomeComercial": "Espessante de Efluente (Adapt Thickening Gelling)",
+    "fabricante": "Hollister",
+    "composicao": "Sachê em pó gelificante",
+    "indicacao": "Ileostomias com efluente muito líquido, prevenção de desidratação e vazamento"
+  },
+  {
+    "categoria": "Ostomia",
+    "subcategoria": "Acessórios de Ostomia",
+    "nomeComercial": "Guia de Medida de Estoma (Stoma Measuring Guide)",
+    "fabricante": "Coloplast/Hollister/ConvaTec",
+    "composicao": "Molde plástico com aberturas graduadas",
+    "indicacao": "Mensuração do diâmetro do estoma para recorte correto da barreira"
+  },
+  {
+    "categoria": "Ostomia",
+    "subcategoria": "Acessórios de Ostomia",
+    "nomeComercial": "Tesoura Curva para Ostomia",
+    "fabricante": "ConvaTec/Coloplast",
+    "composicao": "Tesoura de ponta curva específica para recorte de placas",
+    "indicacao": "Recorte preciso da abertura da barreira cutânea conforme medida do estoma"
+  }
+]

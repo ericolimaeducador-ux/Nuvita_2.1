@@ -1,0 +1,354 @@
+[
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Hidrocoloide",
+    "nomeComercial": "Duoderm Extra Fino / Duoderm CGF",
+    "fabricante": "Convatec",
+    "composicao": "Placa de hidrocoloide (carboximetilcelulose sódica, gelatina, pectina)",
+    "indicacao": "Feridas superficiais a pouco exsudativas, prevenção de lesão por pressão (LPP) estágio I-II, proteção de pele íntegra sob fricção"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Hidrocoloide",
+    "nomeComercial": "Comfeel Plus",
+    "fabricante": "Coloplast",
+    "composicao": "Placa de hidrocoloide com alginato",
+    "indicacao": "Feridas exsudativas leves a moderadas, úlceras venosas e por pressão"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Hidrocoloide",
+    "nomeComercial": "Hidrocurativo Curatec",
+    "fabricante": "Curatec",
+    "composicao": "Placa de hidrocoloide nacional",
+    "indicacao": "Feridas superficiais, LPP estágio I-II, prevenção de fricção em calcâneos/sacro"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Espuma de Poliuretano (Foam)",
+    "nomeComercial": "Allevyn Life / Allevyn Gentle",
+    "fabricante": "Smith & Nephew",
+    "composicao": "Espuma de poliuretano multicamada com adesivo de silicone",
+    "indicacao": "Feridas exsudativas moderadas a intensas, úlceras venosas, LPP estágio II-IV"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Espuma de Poliuretano (Foam)",
+    "nomeComercial": "Mepilex / Mepilex Border",
+    "fabricante": "Mölnlycke",
+    "composicao": "Espuma de poliuretano com Safetac (silicone macio)",
+    "indicacao": "Feridas exsudativas, LPP, úlceras de perna, feridas cirúrgicas, pele frágil/perilesional"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Espuma de Poliuretano (Foam)",
+    "nomeComercial": "Biatain / Biatain Silicone",
+    "fabricante": "Coloplast",
+    "composicao": "Espuma de poliuretano com absorção vertical",
+    "indicacao": "Feridas altamente exsudativas (úlceras venosas, LPP estágio III-IV)"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Espuma de Poliuretano (Foam)",
+    "nomeComercial": "Curafoam / Espuma Curatec",
+    "fabricante": "Curatec",
+    "composicao": "Espuma de poliuretano nacional, com ou sem adesivo em silicone",
+    "indicacao": "Feridas exsudativas moderadas, cobertura secundária"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Alginato de Cálcio / Hidrofibra",
+    "nomeComercial": "Kaltostat",
+    "fabricante": "Convatec",
+    "composicao": "Fibra de alginato de cálcio e sódio",
+    "indicacao": "Feridas altamente exsudativas, cavitárias, com ou sem sangramento leve (efeito hemostático)"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Alginato de Cálcio / Hidrofibra",
+    "nomeComercial": "Aquacel / Aquacel Ag",
+    "fabricante": "Convatec",
+    "composicao": "Hidrofibra de carboximetilcelulose sódica (Aquacel Ag contém prata iônica)",
+    "indicacao": "Feridas exsudativas profundas, cavitárias, com sinais de infecção (versão Ag)"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Alginato de Cálcio / Hidrofibra",
+    "nomeComercial": "Algicell / Alginato Curatec",
+    "fabricante": "Curatec / Cremer",
+    "composicao": "Alginato de cálcio nacional em placa ou fita",
+    "indicacao": "Feridas cavitárias exsudativas, úlceras por pressão profundas"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Hidrogel",
+    "nomeComercial": "Nu-Gel",
+    "fabricante": "Systagenix / 3M",
+    "composicao": "Hidrogel amorfo à base de propilenoglicol e carboximetilcelulose",
+    "indicacao": "Feridas secas, com tecido desvitalizado (esfacelo/necrose) - desbridamento autolítico"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Hidrogel",
+    "nomeComercial": "Intrasite Gel",
+    "fabricante": "Smith & Nephew",
+    "composicao": "Hidrogel amorfo à base de carboximetilcelulose",
+    "indicacao": "Desbridamento autolítico de tecido necrótico/esfacelo, feridas secas"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Hidrogel",
+    "nomeComercial": "Hidratamax / Gel Curatec",
+    "fabricante": "Curatec",
+    "composicao": "Hidrogel nacional em bisnaga",
+    "indicacao": "Feridas secas, queimaduras superficiais, desbridamento autolítico"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Filme de Poliuretano Transparente",
+    "nomeComercial": "Tegaderm",
+    "fabricante": "3M",
+    "composicao": "Filme transparente semipermeável de poliuretano",
+    "indicacao": "Proteção de pele íntegra, fixação de cateteres, feridas superficiais sem exsudato"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Filme de Poliuretano Transparente",
+    "nomeComercial": "Opsite Flexigrid",
+    "fabricante": "Smith & Nephew",
+    "composicao": "Filme de poliuretano com grade de aplicação",
+    "indicacao": "Cobertura secundária, proteção de sítios de inserção de cateter, feridas superficiais"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Curativo com Prata",
+    "nomeComercial": "Acticoat / Acticoat Flex",
+    "fabricante": "Smith & Nephew",
+    "composicao": "Curativo de barreira com prata nanocristalina",
+    "indicacao": "Feridas infectadas ou com alto risco de infecção, queimaduras, feridas críticas colonizadas"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Curativo com Prata",
+    "nomeComercial": "Mepilex Ag / Mepilex Border Ag",
+    "fabricante": "Mölnlycke",
+    "composicao": "Espuma de poliuretano com prata e Safetac",
+    "indicacao": "Feridas exsudativas infectadas ou colonizadas criticamente"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Curativo com Prata",
+    "nomeComercial": "Aquacel Ag+ Extra",
+    "fabricante": "Convatec",
+    "composicao": "Hidrofibra com prata iônica e tecnologia Hydrolock",
+    "indicacao": "Feridas exsudativas com sinais de infecção local, biofilme"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Colágeno / Bioativos",
+    "nomeComercial": "Colagenase (Iruxol Mono / Kollagenase)",
+    "fabricante": "Abbott / Farmoquímica",
+    "composicao": "Enzima colagenase (desbridante enzimático)",
+    "indicacao": "Desbridamento enzimático de tecido necrótico/esfacelo em feridas"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Colágeno / Bioativos",
+    "nomeComercial": "Papaína gel (2%, 4%, 6%, 10%)",
+    "fabricante": "Farmácias de manipulação / Herbarium",
+    "composicao": "Enzima proteolítica extraída do mamão (Carica papaya)",
+    "indicacao": "Desbridamento químico de tecido necrótico (concentração conforme tipo de tecido: 2% epitelização, 4-6% granulação, 10% necrose)"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Colágeno / Bioativos",
+    "nomeComercial": "Fibracol Plus",
+    "fabricante": "Systagenix",
+    "composicao": "Matriz de colágeno e alginato",
+    "indicacao": "Feridas exsudativas em fase de granulação, úlceras crônicas"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Colágeno / Bioativos",
+    "nomeComercial": "Promogran / Promogran Prisma",
+    "fabricante": "Systagenix (3M)",
+    "composicao": "Matriz de colágeno oxidado regenerado (ORC) e celulose (com prata na versão Prisma)",
+    "indicacao": "Feridas crônicas estagnadas, exsudativas, controle de proteases (MMPs)"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Terapia por Pressão Negativa (TPN)",
+    "nomeComercial": "VAC Therapy (KCI / 3M)",
+    "fabricante": "3M/KCI",
+    "composicao": "Sistema de terapia por pressão negativa com espuma de poliuretano ou espuma de álcool polivinílico (PVA)",
+    "indicacao": "Feridas complexas, extensas, deiscências cirúrgicas, LPP estágio III-IV, feridas com grande perda tecidual"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Terapia por Pressão Negativa (TPN)",
+    "nomeComercial": "Renasys / Avelle (Pressão Negativa Portátil)",
+    "fabricante": "Smith & Nephew",
+    "composicao": "Sistema portátil de pressão negativa a vácuo",
+    "indicacao": "Feridas crônicas e agudas de médio porte, tratamento domiciliar"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Carvão Ativado",
+    "nomeComercial": "Carbonet / Actisorb Plus 25",
+    "fabricante": "Smith & Nephew / 3M",
+    "composicao": "Curativo de carvão ativado (Actisorb com prata)",
+    "indicacao": "Feridas com odor fétido, exsudativas, infectadas (Actisorb)"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Protetor Cutâneo / Barreira",
+    "nomeComercial": "Cavilon Película Protetora (spray e aplicador)",
+    "fabricante": "3M",
+    "composicao": "Terpolímero acrílico em solução não alcoólica",
+    "indicacao": "Proteção de pele perilesional, prevenção de dermatite associada à incontinência (DAI), fixação de bordas adesivas"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Protetor Cutâneo / Barreira",
+    "nomeComercial": "Cavilon Creme Barreira",
+    "fabricante": "3M",
+    "composicao": "Dimeticona em base emoliente",
+    "indicacao": "Prevenção e tratamento de dermatite amoniacal/de fraldas, proteção perianal em incontinência"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Protetor Cutâneo / Barreira",
+    "nomeComercial": "Desitin / Hipoglós (pasta de óxido de zinco)",
+    "fabricante": "Johnson & Johnson / Hypera",
+    "composicao": "Óxido de zinco em pasta",
+    "indicacao": "Prevenção de dermatite de fraldas e assadura em incontinência urinária/fecal"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Protetor Cutâneo / Barreira",
+    "nomeComercial": "Coloplast Brava Barreira em Pó / Placa Protetora",
+    "fabricante": "Coloplast",
+    "composicao": "Pó de hidrocoloide / placa protetora com pectina",
+    "indicacao": "Proteção de pele periestomal irritada ou macerada, absorção de umidade excessiva"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Telas / Coberturas Não Aderentes",
+    "nomeComercial": "Adaptic / Adaptic Touch",
+    "fabricante": "3M/KCI",
+    "composicao": "Malha de acetato de celulose impregnada com emulsão de petrolato (ou silicone na versão Touch)",
+    "indicacao": "Feridas em fase de granulação/epitelização, queimaduras superficiais, sítios doadores de enxerto"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Telas / Coberturas Não Aderentes",
+    "nomeComercial": "Rayon / Curativo não aderente (Melolin, Curity)",
+    "fabricante": "Smith & Nephew / Cardinal",
+    "composicao": "Compressa de rayon/algodão não aderente com camada de contato",
+    "indicacao": "Feridas cirúrgicas limpas, feridas superficiais com pouco exsudato"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Telas / Coberturas Não Aderentes",
+    "nomeComercial": "Mepitel / Mepitel One",
+    "fabricante": "Mölnlycke",
+    "composicao": "Malha de silicone macio (Safetac) não aderente",
+    "indicacao": "Queimaduras, feridas dolorosas, sítio doador de enxerto, pele frágil"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Terapias Tópicas Adjuvantes",
+    "nomeComercial": "Açúcar cristal (terapia tópica)",
+    "fabricante": "Genérico",
+    "composicao": "Sacarose",
+    "indicacao": "Feridas infectadas/contaminadas como coadjuvante (ação osmótica antibacteriana) - uso histórico no SUS"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Terapias Tópicas Adjuvantes",
+    "nomeComercial": "Ácidos Graxos Essenciais (AGE) - Dersani, Kaerus",
+    "fabricante": "Farmoquímica / Cristália",
+    "composicao": "Óleo composto por ácidos linoleico, cáprico, caprílico e vitamina E",
+    "indicacao": "Prevenção de LPP em pele íntegra sob risco, hidratação, estímulo à granulação"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Terapias Tópicas Adjuvantes",
+    "nomeComercial": "Sulfadiazina de Prata 1%",
+    "fabricante": "Aché / Cristália / EMS (Dermazine, Platsul-A)",
+    "composicao": "Sulfadiazina de prata (antimicrobiano tópico)",
+    "indicacao": "Queimaduras de 2º e 3º grau, prevenção de infecção em feridas extensas"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Terapias Tópicas Adjuvantes",
+    "nomeComercial": "PVPI Tópico (Povidine, Riodeine)",
+    "fabricante": "Farmax / Rioquímica",
+    "composicao": "Iodopovidona 10%",
+    "indicacao": "Antissepsia de pele íntegra e ferida cirúrgica limpa; uso restrito em feridas abertas"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Terapias Tópicas Adjuvantes",
+    "nomeComercial": "Clorexidina Degermante e Alcoólica 0,5%/2%",
+    "fabricante": "Rioquímica / Vic Pharma",
+    "composicao": "Digluconato de clorexidina",
+    "indicacao": "Antissepsia de pele para procedimentos, higienização de mãos, preparo de pele para inserção de cateteres"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Terapias Tópicas Adjuvantes",
+    "nomeComercial": "Soro Fisiológico 0,9% (ampola/frasco)",
+    "fabricante": "Diversos (Fresenius, Farmace, Equiplex)",
+    "composicao": "Cloreto de sódio 0,9%",
+    "indicacao": "Limpeza padrão-ouro de feridas, irrigação, hidratação de curativos"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Fitas e Fixadores",
+    "nomeComercial": "Micropore",
+    "fabricante": "3M",
+    "composicao": "Fita adesiva de papel microporoso hipoalergênica",
+    "indicacao": "Fixação de curativos e cateteres em pele íntegra"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Fitas e Fixadores",
+    "nomeComercial": "Hypafix / Fixomull",
+    "fabricante": "BSN Medical",
+    "composicao": "Fita adesiva não tecida hipoalergênica",
+    "indicacao": "Fixação extensa de curativos, cateteres e coberturas"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Fitas e Fixadores",
+    "nomeComercial": "Removedor de Adesivo (Appeel / Niltac)",
+    "fabricante": "CliniMed / Coloplast",
+    "composicao": "Silicone em spray ou lenço",
+    "indicacao": "Remoção atraumática de adesivos e placas, prevenção de lesão de pele por fita adesiva (MARSI)"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Equipamentos e Suportes",
+    "nomeComercial": "Colchão de Pressão Alternada (PCP)",
+    "fabricante": "ArjoHuntleigh / Sinapse",
+    "composicao": "Colchão pneumático com células infláveis alternadas por compressor",
+    "indicacao": "Prevenção e tratamento de lesão por pressão em pacientes acamados/alto risco (Escala de Braden ≤ 12)"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Equipamentos e Suportes",
+    "nomeComercial": "Coxim/Almofada de Espuma Viscoelástica ou Gel",
+    "fabricante": "Bioflorence / Orthopauher",
+    "composicao": "Espuma viscoelástica ou gel de silicone",
+    "indicacao": "Alívio de pressão em calcâneos, cotovelos, região sacral e assento (cadeirantes)"
+  },
+  {
+    "categoria": "Curativos / Tratamento de Feridas",
+    "subcategoria": "Equipamentos e Suportes",
+    "nomeComercial": "Bota Anti-equino/Órtese de Posicionamento de Calcâneo",
+    "fabricante": "Orthopauher / Bioflorence",
+    "composicao": "Bota acolchoada com espuma e velcro de fixação",
+    "indicacao": "Prevenção de LPP em calcâneo e pé equino em pacientes acamados"
+  }
+]

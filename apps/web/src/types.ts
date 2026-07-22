@@ -1137,6 +1137,7 @@ export interface Produto {
   id: string;
   clinicaId: string;
   nome: string;
+  codigo?: string;
   tipo: TipoProduto;
   precoVenda: number;
   custo?: number;
@@ -1173,6 +1174,8 @@ export interface TermoConsentimento {
   texto: string;
   assinatura?: AssinaturaTermo;
   criadoPor: string;
+  criadoPorNome: string;
+  criadoPorRegistro?: string;
   criadoEm: string;
 }
 

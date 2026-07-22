@@ -12,6 +12,9 @@ export class ProdutoMongo {
   @Prop({ required: true, index: true })
   nome!: string;
 
+  @Prop()
+  codigo?: string;
+
   @Prop({ required: true, enum: Object.values(TipoProduto), index: true })
   tipo!: TipoProduto;
 
@@ -46,3 +49,6 @@ export class ProdutoMongo {
 export const ProdutoSchema = SchemaFactory.createForClass(ProdutoMongo);
 // Nome unico dentro da clinica (evita cadastro duplicado do mesmo item).
 ProdutoSchema.index({ clinicaId: 1, nome: 1 }, { unique: true });
+// Codigo unico dentro da clinica quando informado — sparse pois produtos sem
+// codigo (cadastro livre) nao podem colidir em codigo: null.
+ProdutoSchema.index({ clinicaId: 1, codigo: 1 }, { unique: true, sparse: true });

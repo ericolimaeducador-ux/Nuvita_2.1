@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ProdutoCombobox } from '@/components/ProdutoCombobox';
 import { toast } from '@/components/ui/use-toast';
 import { produtosApi, receituarioEnfermagemApi } from '@/api/resources';
 import { apiErrorMessage } from '@/api/client';
@@ -102,15 +102,12 @@ export function ReceituarioEnfermagemDialog({
               <div className="grid grid-cols-[1fr_auto] gap-2 items-end">
                 <div className="space-y-1.5">
                   <Label>Item</Label>
-                  <Select value={item.produtoId} onValueChange={(v) => selecionarProduto(idx, v)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={CATALOGO_LIVRE}>Insumo fora do catálogo (digitar)</SelectItem>
-                      {produtosCurativo.map((p) => (
-                        <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <ProdutoCombobox
+                    produtos={produtosCurativo}
+                    value={item.produtoId}
+                    onSelect={(v) => selecionarProduto(idx, v)}
+                    extraOption={{ value: CATALOGO_LIVRE, label: 'Insumo fora do catálogo (digitar)' }}
+                  />
                 </div>
                 {itens.length > 1 && (
                   <Button

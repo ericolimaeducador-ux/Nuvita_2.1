@@ -392,6 +392,7 @@ export const indicadoresApi = {
 // ---------- Produtos ----------
 export interface ProdutoPayload {
   nome: string;
+  codigo?: string;
   tipo: string;
   precoVenda: number;
   custo?: number;
@@ -402,8 +403,12 @@ export interface ProdutoPayload {
 }
 
 export const produtosApi = {
-  list: (tipo?: string) =>
-    api.get<Produto[]>('/produtos', { params: tipo ? { tipo } : {} }).then((r) => r.data),
+  list: (tipo?: string, incluirInativos = false) =>
+    api
+      .get<Produto[]>('/produtos', {
+        params: { ...(tipo ? { tipo } : {}), ...(incluirInativos ? { incluirInativos: 'true' } : {}) },
+      })
+      .then((r) => r.data),
   get: (id: string) => api.get<Produto>(`/produtos/${id}`).then((r) => r.data),
   create: (payload: ProdutoPayload) => api.post<Produto>('/produtos', payload).then((r) => r.data),
   update: (id: string, payload: Partial<ProdutoPayload> & { ativo?: boolean }) =>
