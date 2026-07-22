@@ -10,13 +10,7 @@ import { documentosApi } from '@/api/resources';
 import { apiErrorMessage } from '@/api/client';
 import { toast } from '@/components/ui/use-toast';
 import { useAuth } from '@/auth/AuthContext';
-import { DOCUMENTOS_PADRAO, TipoDocumento, TIPO_DOCUMENTO_LABEL } from '@/types';
-
-// Sugestão de tipo quando o nome escolhido bate com um item da lista padrão —
-// o usuário ainda pode trocar manualmente depois.
-const SUGESTAO_TIPO: Record<string, TipoDocumento> = {
-  'Relatório médico': TipoDocumento.LAUDO,
-};
+import { TipoDocumento, TIPO_DOCUMENTO_LABEL } from '@/types';
 
 async function sha256Hex(file: File): Promise<string> {
   const buf = await file.arrayBuffer();
@@ -57,11 +51,6 @@ export function NovoDocumentoDialog({
 
   function reset() {
     setNome(''); setTipo(tipoInicial ?? TipoDocumento.OUTRO); setFile(null); setEtapa('idle');
-  }
-
-  function selecionarSugestao(valor: string) {
-    setNome(valor);
-    setTipo(SUGESTAO_TIPO[valor] ?? TipoDocumento.OUTRO);
   }
 
   const mut = useMutation({
@@ -128,13 +117,7 @@ export function NovoDocumentoDialog({
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>Nome do documento</Label>
-            <Select value={DOCUMENTOS_PADRAO.includes(nome) ? nome : undefined} onValueChange={selecionarSugestao}>
-              <SelectTrigger><SelectValue placeholder="Escolha um documento da lista ou digite abaixo" /></SelectTrigger>
-              <SelectContent>
-                {DOCUMENTOS_PADRAO.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Input placeholder="Ou digite um nome personalizado" value={nome} onChange={(e) => setNome(e.target.value)} />
+            <Input placeholder="Ex.: RG, comprovante de endereço, relatório médico..." value={nome} onChange={(e) => setNome(e.target.value)} />
           </div>
           <div className="space-y-2">
             <Label>Categoria</Label>

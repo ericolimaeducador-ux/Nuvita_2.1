@@ -452,16 +452,6 @@ export interface Documento {
   criadoEm: string;
 }
 
-// Sugestões de nome ao anexar um documento (dropdown do NovoDocumentoDialog).
-export const DOCUMENTOS_PADRAO: string[] = [
-  'RG ou CNH (documento de identificação com foto)',
-  'Comprovante de endereço',
-  'Comprovante de rendimentos',
-  'Cópia da carteirinha do SUS',
-  'Relatório médico',
-  'Negativa administrativa',
-];
-
 export interface PresignUploadResponse {
   documento: Documento;
   uploadUrl: string;
