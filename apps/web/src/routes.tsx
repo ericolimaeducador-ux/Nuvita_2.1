@@ -6,7 +6,6 @@ import { DashboardPage } from '@/pages/DashboardPage';
 import { PacientesPage } from '@/pages/PacientesPage';
 import { PacienteDetailPage } from '@/pages/PacienteDetailPage';
 import { AgendaPage } from '@/pages/AgendaPage';
-import { ProntuariosPage } from '@/pages/ProntuariosPage';
 import { DocumentosPage } from '@/pages/DocumentosPage';
 import { NotificacoesPage } from '@/pages/NotificacoesPage';
 import { FinanceiroPage } from '@/pages/FinanceiroPage';
@@ -65,9 +64,6 @@ export function AppRoutes() {
           </Route>
           <Route element={<ProtectedRoute modulo={Modulo.AGENDA} />}>
             <Route path="/agenda" element={<AgendaPage />} />
-          </Route>
-          <Route element={<ProtectedRoute modulo={Modulo.PRONTUARIOS} />}>
-            <Route path="/prontuarios" element={<ProntuariosPage />} />
           </Route>
           <Route element={<ProtectedRoute modulo={Modulo.DOCUMENTOS} />}>
             <Route path="/documentos" element={<DocumentosPage />} />

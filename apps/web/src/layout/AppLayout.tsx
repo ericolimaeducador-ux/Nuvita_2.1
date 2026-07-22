@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   LayoutDashboard, Users, Calendar, Bell, DollarSign,
   Video, Building2, LogOut, ChevronLeft, ChevronRight, Shield, Bandage, Menu, X, Stethoscope,
-  FileText, FolderOpen, BarChart3,
+  FolderOpen, BarChart3,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -23,7 +23,6 @@ const navItems: { to: string; icon: React.ElementType; label: string; modulo: Mo
   { to: '/pacientes', icon: Users, label: 'Pacientes', modulo: Modulo.PACIENTES },
   { to: '/agenda', icon: Calendar, label: 'Agenda', modulo: Modulo.AGENDA },
   { to: '/feridas', icon: Bandage, label: 'Feridas', modulo: Modulo.FERIDAS },
-  { to: '/prontuarios', icon: FileText, label: 'Prontuários', modulo: Modulo.PRONTUARIOS },
   { to: '/documentos', icon: FolderOpen, label: 'Documentos', modulo: Modulo.DOCUMENTOS },
   { to: '/notificacoes', icon: Bell, label: 'Notificações', modulo: Modulo.NOTIFICACOES },
   { to: '/financeiro', icon: DollarSign, label: 'Financeiro', modulo: Modulo.FINANCEIRO },
