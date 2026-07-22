@@ -48,9 +48,6 @@ export class S3DocumentStorageService implements DocumentStorage {
       Key: input.key,
       ContentType: input.mimeType,
       ContentLength: input.tamanho,
-      Metadata: {
-        sha256: input.hash,
-      },
     });
 
     return {
