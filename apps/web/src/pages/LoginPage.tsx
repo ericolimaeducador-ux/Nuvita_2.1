@@ -62,25 +62,33 @@ export function LoginPage() {
      * de lg a coluna vira largura total, porque 1/3 de tela estreita nao
      * comportaria o formulario.
      */
-    <div className="relative flex min-h-screen w-full flex-col lg:h-screen lg:overflow-hidden">
-      {/* Ate lg a arte vira um banner no topo (a foto e horizontal e nao caberia
-          ao lado do formulario); de lg em diante ocupa a tela inteira por tras. */}
-      <picture>
-        <source media="(max-width: 640px)" srcSet={fundoWoundcareSm} />
-        <img
-          src={fundoWoundcare}
-          alt=""
-          aria-hidden="true"
-          className="h-44 w-full shrink-0 object-cover object-top sm:h-56
-                     lg:absolute lg:inset-0 lg:h-full lg:object-center"
-        />
-      </picture>
+    <div className="relative flex min-h-screen w-full flex-col bg-slate-50 lg:h-screen lg:flex-row lg:overflow-hidden">
+      {/*
+       * A arte e uma composicao fechada (faixa da marca + cena clinica), entao
+       * usa `contain`: preenchendo a tela com `cover` ela era ampliada muito
+       * alem do tamanho natural em telas baixas (1280x800, 1440x900), deixando
+       * o rosto enorme e cortando a peca. Assim ela aparece inteira, no maior
+       * tamanho que couber, e o espaco em volta e respiro proposital.
+       * Ate lg vira um banner no topo, onde a foto horizontal nao caberia ao lado.
+       */}
+      <div className="flex shrink-0 items-center justify-center lg:h-full lg:min-w-0 lg:flex-1 lg:p-10">
+        <picture className="contents">
+          <source media="(max-width: 640px)" srcSet={fundoWoundcareSm} />
+          <img
+            src={fundoWoundcare}
+            alt=""
+            aria-hidden="true"
+            className="h-44 w-full object-cover object-top sm:h-56
+                       lg:h-auto lg:max-h-[76vh] lg:w-auto lg:max-w-[820px] lg:rounded-2xl
+                       lg:object-contain lg:shadow-[0_18px_50px_rgba(11,17,32,0.13)]"
+          />
+        </picture>
+      </div>
 
       <div
         className="relative flex w-full flex-1 flex-col justify-center bg-white px-6 py-10 sm:px-10
-                   lg:ml-auto lg:h-full lg:w-1/3 lg:min-w-[400px] lg:max-w-[560px] lg:flex-none
-                   lg:overflow-y-auto lg:border-l lg:border-white/60 lg:bg-white/90
-                   lg:shadow-[-16px_0_48px_rgba(11,17,32,0.10)] lg:backdrop-blur-xl"
+                   lg:h-full lg:w-1/3 lg:min-w-[380px] lg:max-w-[520px] lg:flex-none
+                   lg:overflow-y-auto lg:border-l lg:border-slate-200 lg:px-12"
       >
         <div className="mx-auto w-full max-w-sm">
           {/* Marca do software — unico ponto onde o Nuvita aparece nesta tela. */}
