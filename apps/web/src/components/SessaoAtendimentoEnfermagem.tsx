@@ -19,7 +19,7 @@ import { feridasApi, pacientesApi, prontuariosApi } from '@/api/resources';
 import { apiErrorMessage } from '@/api/client';
 import { formatData, formatEndereco, linkDaSala, toItems } from '@/utils';
 import {
-  Agendamento, Ferida, Paciente, RegistroEnfermagem, STATUS_FERIDA_LABEL,
+  Agendamento, Ferida, Paciente, Papel, RegistroEnfermagem, STATUS_FERIDA_LABEL,
   SalaTelemedicina, TipoAtendimento, TIPO_AGENDAMENTO_LABEL,
 } from '@/types';
 
@@ -235,6 +235,7 @@ export function RegistroEnfermagemForm({
 
 function PainelFeridas({ pacienteId, clinicaId }: { pacienteId: string; clinicaId?: string }) {
   const qc = useQueryClient();
+  const { user } = useAuth();
   const [novaFeridaOpen, setNovaFeridaOpen] = useState(false);
   const [feridaSelecionadaId, setFeridaSelecionadaId] = useState<string | null>(null);
   const [receituarioOpen, setReceituarioOpen] = useState(false);
@@ -256,9 +257,13 @@ function PainelFeridas({ pacienteId, clinicaId }: { pacienteId: string; clinicaI
           <Bandage className="h-3.5 w-3.5" /> Feridas do paciente
         </p>
         <div className="flex gap-1">
-          <Button variant="ghost" size="sm" onClick={() => setReceituarioOpen(true)}>
-            <Plus className="h-3.5 w-3.5 mr-1.5" /> Receituário
-          </Button>
+          {/* Só ENFERMEIRO prescreve (POST /receituario-enfermagem é @Roles(ENFERMEIRO));
+              sem esta trava o botão aparecia para admin/secretaria e o envio morria em 403. */}
+          {user?.papel === Papel.ENFERMEIRO && (
+            <Button variant="ghost" size="sm" onClick={() => setReceituarioOpen(true)}>
+              <Plus className="h-3.5 w-3.5 mr-1.5" /> Receituário
+            </Button>
+          )}
           <Button variant="ghost" size="sm" onClick={() => setNovaFeridaOpen(true)}>
             <Plus className="h-3.5 w-3.5 mr-1.5" /> Nova ferida
           </Button>

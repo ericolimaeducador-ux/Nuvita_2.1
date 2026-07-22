@@ -51,7 +51,7 @@ export function ReceituarioEnfermagemDialog({
   const mut = useMutation({
     mutationFn: () => {
       const payload: ItemReceituario[] = itens
-        .filter((i) => i.nome.trim() && Number(i.quantidade) > 0)
+        .filter((i) => i.nome.trim())
         .map((i) => ({
           produtoId: i.produtoId === CATALOGO_LIVRE ? undefined : i.produtoId,
           nome: i.nome.trim(),
@@ -88,7 +88,29 @@ export function ReceituarioEnfermagemDialog({
     atualizarItem(idx, { produtoId, nome: produto?.nome ?? '' });
   }
 
-  const podeSubmeter = itens.some((i) => i.nome.trim() && Number(i.quantidade) > 0 && i.instrucoesUso.trim());
+  /**
+   * Valida no clique, dizendo o que falta — o botão antes ficava `disabled`
+   * enquanto faltasse qualquer campo, então clicar nele simplesmente nao fazia
+   * nada e nao explicava o porque (relatado como "emitir receita nao funciona").
+   */
+  function submeter() {
+    const preenchidos = itens.filter((i) => i.nome.trim());
+    if (preenchidos.length === 0) {
+      toast.error('Informe ao menos um item', 'Escolha um produto do catalogo ou digite o nome do insumo.');
+      return;
+    }
+    const semQuantidade = preenchidos.find((i) => !(Number(i.quantidade) > 0));
+    if (semQuantidade) {
+      toast.error('Quantidade invalida', `Informe uma quantidade maior que zero para "${semQuantidade.nome.trim()}".`);
+      return;
+    }
+    const semInstrucoes = preenchidos.find((i) => !i.instrucoesUso.trim());
+    if (semInstrucoes) {
+      toast.error('Instrucoes de uso obrigatorias', `Preencha as instrucoes de uso de "${semInstrucoes.nome.trim()}".`);
+      return;
+    }
+    mut.mutate();
+  }
 
   return (
     <Dialog open={open} onOpenChange={(o) => { onOpenChange(o); if (!o) { setItens([itemVazio()]); setObservacoes(''); } }}>
@@ -137,7 +159,7 @@ export function ReceituarioEnfermagemDialog({
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Instruções de uso</Label>
+                  <Label>Instruções de uso *</Label>
                   <Input
                     placeholder="Ex.: trocar a cada 48h, limpar com SF 0,9%..."
                     value={item.instrucoesUso}
@@ -157,7 +179,7 @@ export function ReceituarioEnfermagemDialog({
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button disabled={!podeSubmeter || mut.isPending} onClick={() => mut.mutate()}>
+          <Button disabled={mut.isPending} onClick={submeter}>
             {mut.isPending ? 'Emitindo…' : 'Emitir receituário'}
           </Button>
         </DialogFooter>
