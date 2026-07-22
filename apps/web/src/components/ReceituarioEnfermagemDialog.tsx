@@ -96,17 +96,17 @@ export function ReceituarioEnfermagemDialog({
   function submeter() {
     const preenchidos = itens.filter((i) => i.nome.trim());
     if (preenchidos.length === 0) {
-      toast.error('Informe ao menos um item', 'Escolha um produto do catalogo ou digite o nome do insumo.');
+      toast.error('Informe ao menos um item', 'Escolha um produto do catálogo ou digite o nome do insumo.');
       return;
     }
     const semQuantidade = preenchidos.find((i) => !(Number(i.quantidade) > 0));
     if (semQuantidade) {
-      toast.error('Quantidade invalida', `Informe uma quantidade maior que zero para "${semQuantidade.nome.trim()}".`);
+      toast.error('Quantidade inválida', `Informe uma quantidade maior que zero para "${semQuantidade.nome.trim()}".`);
       return;
     }
     const semInstrucoes = preenchidos.find((i) => !i.instrucoesUso.trim());
     if (semInstrucoes) {
-      toast.error('Instrucoes de uso obrigatorias', `Preencha as instrucoes de uso de "${semInstrucoes.nome.trim()}".`);
+      toast.error('Instruções de uso obrigatórias', `Preencha as instruções de uso de "${semInstrucoes.nome.trim()}".`);
       return;
     }
     mut.mutate();
