@@ -16,6 +16,7 @@ estomaterapia (avaliação e acompanhamento de feridas).
 [Arquitetura](#%EF%B8%8F-arquitetura) ·
 [Segurança](#-segurança--lgpd) ·
 [Rodando localmente](#-rodando-localmente) ·
+[Novidades](#-o-que-mudou-recentemente) ·
 [Documentação](#-documentação-complementar)
 
 </div>
@@ -42,13 +43,15 @@ provisionamento e gestão fina de permissões.
 | 🧑‍⚕️ **Pacientes** | Cadastro completo com **criptografia de dados pessoais (LGPD)** em repouso; busca por hash cego; observações clínicas |
 | 📅 **Agenda** | Calendário e visão em lista; cada profissional vê a própria agenda |
 | 📋 **Prontuário eletrônico** | Evoluções **SOAP** e consulta de enfermagem em estomaterapia (motivo, comorbidades, mobilidade, escore de Braden, curativo atual, adesão ao tratamento, evolução, plano); **assinatura digital imutável** — prontuário assinado não se altera, correções entram como addendum |
-| 🩹 **Feridas** | Cadastro de feridas por paciente, avaliações estruturadas (medidas, perfil tecidual, exsudato, achados perilesionais), motor de risco auditável, escalas clínicas **PUSH 3.0** e **RESVECH 2.0** calculadas automaticamente, timeline com tendência de cicatrização |
+| 🩹 **Feridas** | Cadastro de feridas por paciente, avaliações estruturadas (medidas, perfil tecidual, exsudato, achados perilesionais), motor de risco auditável, escalas clínicas **PUSH 3.0** e **RESVECH 2.0** calculadas automaticamente, timeline com tendência de cicatrização. **Medição pela foto**: fotografe a ferida ao lado de um objeto de tamanho conhecido (moeda, régua, cartão), marque as pontas dele para dar a escala e depois o comprimento/largura — a marcação é manual e revisável antes de virar número |
 | 🎥 **Telemedicina** | Vídeo **WebRTC P2P** com sinalização própria; paciente entra **sem login** via link tokenizado (`/tele/:token`); tela de atendimento em **split-screen** (vídeo + prontuário de enfermagem + avaliação de ferida lado a lado, sem sair da consulta); eventos de sala auditados |
-| 📄 **Documentos** | Upload/download seguro via **presigned URLs** (Cloudflare R2/S3); verificação server-side (magic bytes + hash), remoção de metadados EXIF/GPS de fotos; checklist de documentos por paciente |
-| 💰 **Financeiro** | Lançamentos por categoria (consulta, venda/compra de produto, telemedicina avulsa, consultoria a hospitais e clínicas de idosos), composição por categoria e evolução mensal em gráfico |
+| 📄 **Documentos** | Upload/download seguro via **presigned URLs** (Cloudflare R2/S3); verificação server-side (magic bytes + hash), remoção de metadados EXIF/GPS de fotos |
+| 🧾 **Receituário de enfermagem** | Prescrição de insumos/curativos pelo enfermeiro (competência COFEN, distinta de receita médica): itens vindos do catálogo ou digitados livres, quantidade e instruções de uso; **sem edição nem exclusão** — retificar significa emitir um novo receituário, como num talão de papel; impressão em timbre da clínica |
+| ✍️ **Termos de consentimento** | **TCLE digital** de fotografia de lesão e uso científico/educacional anonimizado; o paciente assina digitando o nome completo, com **assinatura HMAC imutável**; a assinatura guarda a **versão do texto** vigente (hoje `fotografia-pesquisa-1.1.0`) e um snapshot do **nome + COREN** do enfermeiro responsável, para que mudanças futuras nunca alterem retroativamente o que já foi assinado |
+| 💰 **Financeiro** | Lançamentos por categoria (consulta, venda/compra de produto, telemedicina avulsa, consultoria a hospitais e clínicas de idosos), tabela de preços, recorrências, composição por categoria e evolução mensal em gráfico; relatório exportável em **CSV e PDF**. **Lucro por produto com custo congelado na venda** — reajustar o custo do catálogo amanhã não reescreve a margem de ontem, e a margem só aparece quando *todas* as vendas do período tinham custo registrado (margem parcial parece lucro real e engana) |
 | 🔔 **Notificações** | E-mail (Resend) e **WhatsApp** processados por **fila** (BullMQ), com janela de envio 8h–22h |
-| 📊 **Analytics** | Painéis e indicadores operacionais da clínica |
-| 🛒 **Produtos** | Catálogo de produtos usados no cuidado de feridas (curativos, coberturas etc.) |
+| 📊 **Indicadores** | Tela única de indicadores operacionais da clínica (agenda, notificações, feridas), servida pelo módulo `analytics` |
+| 🛒 **Produtos** | Catálogo do cuidado de feridas — **62 itens** (44 curativos/coberturas + 18 ostomia) importados por `scripts/import-produtos-curativos-ostomia.mjs`. A busca aceita **vários termos em qualquer ordem** sobre nome, código, subcategoria clínica e fabricante: o nome do produto costuma ser a marca comercial (Duoderm, Mepilex…), então procurar por "espuma", "alginato" ou "prata" só funciona porque categoria e fabricante entram no índice |
 
 ### Administração e acesso
 
@@ -98,10 +101,10 @@ presentation/     Controllers, guards e decorators HTTP
 ```
 
 Módulos: `auth`, `clinicas`, `pacientes`, `agendamentos`, `prontuarios`,
-`feridas`, `documentos`, `notificacoes`, `financeiro`, `telemedicina`,
-`analytics`, `produtos`, `checklist-documentos`, `observacoes-paciente`,
-`super-admin`, `health` — mais `common/tenancy` (resolução de tenant por
-request) e `common/security`.
+`feridas`, `documentos`, `receituario-enfermagem`, `termos-consentimento`,
+`notificacoes`, `financeiro`, `telemedicina`, `analytics`, `produtos`,
+`observacoes-paciente`, `super-admin`, `health` — mais `common/tenancy`
+(resolução de tenant por request) e `common/security`.
 
 ```mermaid
 flowchart TB
@@ -132,6 +135,11 @@ flowchart TB
   com hash cego (`PATIENT_DATA_HASH_KEY`) para busca sem descriptografar.
 - **Prontuário assinado é imutável** (`PRONTUARIO_SIGNATURE_SECRET`) — qualquer
   correção entra como addendum, preservando a trilha de auditoria.
+- **Consentimento e prescrição também são imutáveis**: o TCLE assinado nunca é
+  reaberto (mudou de ideia → novo termo) e o receituário de enfermagem não tem
+  update nem delete. Cada assinatura de termo persiste a **versão do texto**
+  legal e o **nome/COREN** do enfermeiro no momento da assinatura — mesmo
+  racional do `ESCALAS_VERSION` gravado por avaliação de ferida.
 - **Autenticação**: JWT de acesso curto + refresh em cookie `httpOnly`
   (`path=/auth`), senhas com bcrypt, **2FA TOTP obrigatório** para papéis
   privilegiados, throttle global + lockout progressivo por conta e detecção
@@ -204,11 +212,18 @@ docker compose up -d    # mongodb + redis + api + web
   (formatar com dayjs local mostraria o dia anterior no fuso do Brasil).
   Timestamps de evento (`criadoEm`, `dataAtendimento`…) usam dayjs local normal.
 - **Prontuário assinado é imutável** — correções entram como addendum.
-- **Identidade visual**: fonte única de marca em `apps/web/src/lib/brand.ts`
-  (logos, CNPJ, endereço); documentos impressos usam
-  `DocumentoTimbre`/`DocumentoRodape`. O logo vetorial atual (o mesmo do app)
-  fica em `apps/web/src/components/Logo.tsx`; os PNGs de `brand.ts` servem só
-  para documentos impressos.
+- **Duas marcas, não confunda**: a da **Nuvita** (o produto) e a da **clínica**
+  (o tenant). A da Nuvita é fonte única em `apps/web/src/lib/brand.ts` (logos,
+  CNPJ, endereço, telefone) e imprime via `DocumentoTimbre`/`DocumentoRodape`;
+  o logo vetorial do app fica em `apps/web/src/components/Logo.tsx` e os PNGs
+  de `brand.ts` servem só para documentos impressos. Já os documentos que
+  representam a **clínica** (receituário, TCLE, declaração de comparecimento)
+  usam `DocumentoTimbreClinica`/`DocumentoRodapeClinica`, que lê
+  `configuracoes.logoUrl` do tenant — o logo já traz o nome da clínica
+  desenhado, então o nome em texto só aparece no fallback de quem não tem
+  logo. Os arquivos da Woundcare Brasil estão em `apps/web/public/marca/`.
+- **Telefone é gravado só com dígitos** — sempre exiba com `formatTelefone()`
+  de `apps/web/src/utils.ts`, senão o documento imprime `11947391805`.
 - **Commits**: conventional commits em pt-BR (`fix(feridas): …`,
   `feat(financeiro): …`), como no histórico.
 
@@ -250,6 +265,22 @@ npm run build -w @nuvita/web        # tsc --noEmit + build de produção do fron
 
 A lista completa e comentada está em [`.env.example`](.env.example).
 **Nunca** commite segredos.
+
+## 🆕 O que mudou recentemente
+
+**Julho de 2026** — resumo do que entrou em `main` (o histórico completo está
+no `git log`, em conventional commits pt-BR):
+
+| Data | Mudança |
+|---|---|
+| 22/07 | **Nova tela de login**: a arte da Woundcare ocupa 2/3 à esquerda e a coluna de acesso 1/3 à direita, com a assinatura da Nuvita discreta no pé. A arte é uma composição fechada (faixa da marca, cena clínica e slogan) — daí `object-contain`, e não `cover`, que ampliaria a peça e cortaria justamente o slogan. Abaixo de `lg` a arte vira banner no topo e o formulário ocupa a largura toda |
+| 21/07 | **Marca da clínica no timbre dos documentos** — as três variantes da Woundcare em `apps/web/public/marca/`; os arquivos vieram como JPEG de fundo chapado, que num documento branco viraria um retângulo visível, então o fundo virou alpha por luminância. Telefone passou a imprimir formatado |
+| 21/07 | **Receituário de enfermagem** e **TCLE de fotografia v1.1.0** com identificação do profissional (nome + COREN) |
+| 21/07 | **Catálogo de curativos e ostomia** importado (62 itens) e busca por múltiplos termos sobre nome, código, subcategoria clínica e fabricante |
+| 21/07 | **Atendimento de enfermagem** extraído em `SessaoAtendimentoEnfermagem` (split-screen reaproveitado dentro e fora da telemedicina) |
+| 21/07 | Menu: **"Prontuários" sai da barra lateral** (já vive dentro de Pacientes) e **"Atendimento"** sobe para logo abaixo do Dashboard |
+| 20/07 | **Financeiro**: tabela de preços, consultoria B2B, recorrências, relatório com gráficos + CSV/PDF e lucro por produto com custo congelado na venda; tela de **Indicadores** substitui os painéis antigos de analytics/financeiro |
+| 19/07 | **Medição de ferida pela foto** (Fase 7) e **remoção dos papéis vestigiais** `MEDICO`, `ADVOGADO` e `PSICOLOGO` do RBAC |
 
 ## 📚 Documentação complementar
 
