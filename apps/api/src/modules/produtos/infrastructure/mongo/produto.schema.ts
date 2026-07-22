@@ -15,6 +15,9 @@ export class ProdutoMongo {
   @Prop()
   codigo?: string;
 
+  @Prop({ index: true })
+  subcategoria?: string;
+
   @Prop({ required: true, enum: Object.values(TipoProduto), index: true })
   tipo!: TipoProduto;
 

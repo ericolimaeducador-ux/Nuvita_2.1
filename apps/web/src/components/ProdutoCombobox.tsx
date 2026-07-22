@@ -35,12 +35,20 @@ export function ProdutoCombobox({
   const [open, setOpen] = useState(false);
   const [busca, setBusca] = useState('');
 
+  /**
+   * Busca por qualquer termo, em qualquer ordem, sobre nome + codigo +
+   * categoria clinica + fabricante. O `nome` do produto e a marca comercial
+   * (Duoderm, Mepilex...), entao buscar so por ele nao encontra nada quando o
+   * enfermeiro digita o vocabulario da pratica ("curativo", "espuma",
+   * "alginato", "prata") — dai a categoria e o fabricante entrarem no indice.
+   */
   const filtrados = useMemo(() => {
-    const termo = normalizar(busca.trim());
-    if (!termo) return produtos;
-    return produtos.filter(
-      (p) => normalizar(p.nome).includes(termo) || (p.codigo && normalizar(p.codigo).includes(termo)),
-    );
+    const termos = normalizar(busca).split(/\s+/).filter(Boolean);
+    if (termos.length === 0) return produtos;
+    return produtos.filter((p) => {
+      const alvo = normalizar([p.nome, p.codigo, p.subcategoria, p.fabricante].filter(Boolean).join(' '));
+      return termos.every((t) => alvo.includes(t));
+    });
   }, [produtos, busca]);
 
   const selecionado = produtos.find((p) => p.id === value);
@@ -86,7 +94,12 @@ export function ProdutoCombobox({
               className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-left hover:bg-accent"
             >
               <Check className={cn('h-4 w-4 shrink-0', value === p.id ? 'opacity-100' : 'opacity-0')} />
-              <span className="flex-1 truncate">{p.nome}</span>
+              <span className="flex-1 min-w-0">
+                <span className="block truncate">{p.nome}</span>
+                {p.subcategoria && (
+                  <span className="block truncate text-xs text-muted-foreground">{p.subcategoria}</span>
+                )}
+              </span>
               {p.codigo && <span className="shrink-0 text-xs text-muted-foreground">{p.codigo}</span>}
             </button>
           ))}

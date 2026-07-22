@@ -1128,6 +1128,8 @@ export interface Produto {
   clinicaId: string;
   nome: string;
   codigo?: string;
+  /** Categoria clínica (Hidrocoloide, Espuma, Alginato...) — o nome é a marca comercial. */
+  subcategoria?: string;
   tipo: TipoProduto;
   precoVenda: number;
   custo?: number;

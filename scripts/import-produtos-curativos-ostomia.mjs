@@ -63,6 +63,9 @@ function carregarProdutos(arquivo, prefixoCodigo, tipoPorSubcategoria) {
     clinicaId,
     nome: l.nomeComercial,
     codigo: `${prefixoCodigo}-${String(i + 1).padStart(3, '0')}`,
+    // Categoria clinica da planilha: e por ela que o enfermeiro busca
+    // ("espuma", "alginato", "prata"), ja que o nome e a marca comercial.
+    subcategoria: l.subcategoria || undefined,
     tipo: tipoPorSubcategoria[l.subcategoria] ?? 'outro',
     precoVenda: 0,
     fabricante: l.fabricante || undefined,

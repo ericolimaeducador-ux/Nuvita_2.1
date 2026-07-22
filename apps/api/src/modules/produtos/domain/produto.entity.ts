@@ -28,6 +28,13 @@ export interface Produto {
   nome: string;
   /** Codigo interno para busca rapida no receituario (unico por clinica, nao globalmente). */
   codigo?: string;
+  /**
+   * Categoria clinica do item (ex.: "Hidrocoloide", "Espuma de Poliuretano",
+   * "Curativo com Prata"). O nome do produto e a marca comercial (Duoderm,
+   * Mepilex...), entao e por este campo que o enfermeiro consegue buscar pelo
+   * vocabulario que ele usa na pratica.
+   */
+  subcategoria?: string;
   tipo: TipoProduto;
   /** Preco cobrado do paciente, em reais. */
   precoVenda: number;

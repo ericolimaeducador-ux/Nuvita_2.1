@@ -19,6 +19,11 @@ export class CreateProdutoDto {
   @MaxLength(40)
   codigo?: string;
 
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  subcategoria?: string;
+
   @IsEnum(TipoProduto)
   tipo!: TipoProduto;
 
@@ -62,6 +67,11 @@ export class UpdateProdutoDto {
   @IsString()
   @MaxLength(40)
   codigo?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  subcategoria?: string;
 
   @IsOptional()
   @IsEnum(TipoProduto)

@@ -88,6 +88,7 @@ export class ProdutosService implements OnApplicationBootstrap {
       clinicaId: resolveTenantClinicaId(user, clinicaId),
       nome: dto.nome,
       codigo: dto.codigo,
+      subcategoria: dto.subcategoria,
       tipo: dto.tipo,
       precoVenda: dto.precoVenda,
       custo: dto.custo,

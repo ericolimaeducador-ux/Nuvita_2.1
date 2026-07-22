@@ -393,6 +393,7 @@ export const indicadoresApi = {
 export interface ProdutoPayload {
   nome: string;
   codigo?: string;
+  subcategoria?: string;
   tipo: string;
   precoVenda: number;
   custo?: number;
