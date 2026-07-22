@@ -56,22 +56,17 @@ export function LoginPage() {
 
   return (
     /*
-     * A arte da Woundcare ocupa a tela inteira; a coluna de acesso ancora na
-     * direita, sobre a faixa clara e sem conteudo da imagem (so marcas d'agua),
-     * deixando a cena clinica dos ~2/3 da esquerda inteiramente visivel. Abaixo
-     * de lg a coluna vira largura total, porque 1/3 de tela estreita nao
-     * comportaria o formulario.
+     * Duas colunas exatas: a arte da Woundcare ocupa 2/3 a esquerda e o acesso
+     * 1/3 a direita. Abaixo de lg a coluna vira largura total (1/3 de tela
+     * estreita nao comportaria o formulario) e a arte vira banner no topo.
      */
     <div className="relative flex min-h-screen w-full flex-col bg-slate-50 lg:h-screen lg:flex-row lg:overflow-hidden">
       {/*
-       * A arte e uma composicao fechada (faixa da marca + cena clinica), entao
-       * usa `contain`: preenchendo a tela com `cover` ela era ampliada muito
-       * alem do tamanho natural em telas baixas (1280x800, 1440x900), deixando
-       * o rosto enorme e cortando a peca. Assim ela aparece inteira, no maior
-       * tamanho que couber, e o espaco em volta e respiro proposital.
-       * Ate lg vira um banner no topo, onde a foto horizontal nao caberia ao lado.
+       * `contain`: a arte e uma composicao fechada (faixa da marca, cena clinica
+       * e slogan). Com `cover` preenchendo a coluna, ela seria ampliada e o
+       * corte lateral comeria justamente o slogan, que fica na direita da peca.
        */}
-      <div className="flex shrink-0 items-center justify-center lg:h-full lg:min-w-0 lg:flex-1 lg:p-10">
+      <div className="flex shrink-0 items-center justify-center lg:h-full lg:w-2/3 lg:p-8">
         <picture className="contents">
           <source media="(max-width: 640px)" srcSet={fundoWoundcareSm} />
           <img
@@ -79,26 +74,18 @@ export function LoginPage() {
             alt=""
             aria-hidden="true"
             className="h-44 w-full object-cover object-top sm:h-56
-                       lg:h-auto lg:max-h-[76vh] lg:w-auto lg:max-w-[820px] lg:rounded-2xl
+                       lg:h-auto lg:max-h-full lg:w-auto lg:max-w-full lg:rounded-2xl
                        lg:object-contain lg:shadow-[0_18px_50px_rgba(11,17,32,0.13)]"
           />
         </picture>
       </div>
 
       <div
-        className="relative flex w-full flex-1 flex-col justify-center bg-white px-6 py-10 sm:px-10
-                   lg:h-full lg:w-1/3 lg:min-w-[380px] lg:max-w-[520px] lg:flex-none
-                   lg:overflow-y-auto lg:border-l lg:border-slate-200 lg:px-12"
+        className="relative flex w-full flex-1 flex-col bg-white px-6 py-10 sm:px-10
+                   lg:h-full lg:w-1/3 lg:flex-none lg:overflow-y-auto
+                   lg:border-l lg:border-slate-200 lg:px-12"
       >
-        <div className="mx-auto w-full max-w-sm">
-          {/* Marca do software — unico ponto onde o Nuvita aparece nesta tela. */}
-          <div className="mb-9">
-            <Logo width={168} iconColor="#E6A600" textColor="#0B1120" />
-            <p className="mt-2 text-[0.8rem] leading-snug text-slate-500">
-              Plataforma de gestão clínica · versão 2.1
-            </p>
-          </div>
-
+        <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center">
           <h2 className="text-[1.6rem] font-semibold leading-tight text-slate-900">Acessar painel</h2>
           <p className="mb-7 mt-1 text-sm text-slate-500">Entre com suas credenciais corporativas.</p>
 
@@ -159,11 +146,18 @@ export function LoginPage() {
               )}
             </Button>
           </form>
-
-          <p className="mt-10 text-xs text-slate-400">
-            © {new Date().getFullYear()} Nuvita · Plataforma de saúde
-          </p>
         </div>
+
+        {/* Assinatura do software: discreta, no pe da coluna de acesso. */}
+        <footer className="mx-auto mt-10 flex w-full max-w-sm flex-col items-end gap-0.5 text-right">
+          <Logo width={78} iconColor="#E6A600" textColor="#0B1120" className="opacity-80" />
+          <p className="text-[9px] leading-tight text-slate-400">
+            Plataforma de gestão clínica · versão 2.1
+          </p>
+          <p className="text-[9px] leading-tight text-slate-400">
+            © {new Date().getFullYear()} · CNPJ 55.747.955/0001-07
+          </p>
+        </footer>
       </div>
     </div>
   );
