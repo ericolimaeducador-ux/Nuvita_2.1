@@ -22,6 +22,15 @@ export function formatCnpj(cnpj?: string): string {
   return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`;
 }
 
+/** (11) 94739-1805 / (11) 3333-4444 — o banco guarda so digitos. */
+export function formatTelefone(telefone?: string): string {
+  if (!telefone) return '—';
+  const d = telefone.replace(/\D/g, '').replace(/^55(?=\d{10,11}$)/, '');
+  if (d.length === 11) return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+  if (d.length === 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+  return telefone;
+}
+
 export function idade(dataNascimento?: string): string {
   if (!dataNascimento) return '—';
   const nasc = new Date(dataNascimento);

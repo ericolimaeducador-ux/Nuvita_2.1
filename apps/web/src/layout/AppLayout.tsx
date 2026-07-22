@@ -20,6 +20,7 @@ import { Logo, LogoIcon } from '@/components/Logo';
 // ajustáveis por checkbox no Super Admin). `roles` fica só como trava dura extra.
 const navItems: { to: string; icon: React.ElementType; label: string; modulo: Modulo; roles?: Papel[] }[] = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', modulo: Modulo.DASHBOARD },
+  { to: '/atendimento-enfermagem', icon: Stethoscope, label: 'Atendimento', modulo: Modulo.TELEMEDICINA },
   { to: '/pacientes', icon: Users, label: 'Pacientes', modulo: Modulo.PACIENTES },
   { to: '/agenda', icon: Calendar, label: 'Agenda', modulo: Modulo.AGENDA },
   { to: '/feridas', icon: Bandage, label: 'Feridas', modulo: Modulo.FERIDAS },
@@ -28,7 +29,6 @@ const navItems: { to: string; icon: React.ElementType; label: string; modulo: Mo
   { to: '/financeiro', icon: DollarSign, label: 'Financeiro', modulo: Modulo.FINANCEIRO },
   { to: '/indicadores', icon: BarChart3, label: 'Indicadores', modulo: Modulo.ANALYTICS },
   { to: '/telemedicina', icon: Video, label: 'Telemedicina', modulo: Modulo.TELEMEDICINA },
-  { to: '/atendimento-enfermagem', icon: Stethoscope, label: 'Atendimento', modulo: Modulo.TELEMEDICINA },
   { to: '/clinica', icon: Building2, label: 'Clínica', modulo: Modulo.CLINICA },
   { to: '/super-admin', icon: Shield, label: 'Super Admin', modulo: Modulo.SUPER_ADMIN, roles: [Papel.SUPER_ADMIN] },
 ];
