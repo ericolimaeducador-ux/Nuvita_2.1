@@ -1,7 +1,11 @@
-import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, Logger, NotFoundException, Optional } from '@nestjs/common';
 import { createHmac } from 'crypto';
 import { ConfigService } from '@nestjs/config';
 import { AppConfigService } from '../../../common/security/config.service';
+import {
+  AvaliacaoFeridaRequestContext,
+  AvaliacaoFeridaService,
+} from '../../feridas/application/avaliacao-ferida.service';
 import {
   CATALOGO_CLINICO_REPOSITORY,
   MAX_DIAGNOSTICOS_PADRAO,
@@ -32,6 +36,7 @@ import {
 } from '../domain/plano-cuidados.entity';
 import { CatalogoClinicoRepository } from './ports/catalogo-clinico.repository';
 import { PlanoCuidadosRepository } from './ports/plano-cuidados.repository';
+import { AnalisarFotoDto } from './dto/analisar-foto.dto';
 import { GerarPlanoDto } from './dto/gerar-plano.dto';
 import { ReavaliarPlanoDto } from './dto/reavaliar-plano.dto';
 import { PlanoCuidadosAiService } from './plano-cuidados-ai.service';
@@ -49,12 +54,14 @@ export class PlanoCuidadosService {
     private readonly planos: PlanoCuidadosRepository,
     @Inject(CATALOGO_CLINICO_REPOSITORY)
     private readonly catalogo: CatalogoClinicoRepository,
+    @Optional() private readonly avaliacoesFerida?: AvaliacaoFeridaService,
   ) {}
 
   async gerar(
     dto: GerarPlanoDto,
     clinicaId: string,
     enfermeiroId: string,
+    contextoRequisicao?: AvaliacaoFeridaRequestContext,
   ): Promise<PlanoCuidados> {
     const auditoria: RegistroAuditoriaIa[] = [];
 
@@ -66,6 +73,15 @@ export class PlanoCuidadosService {
     const extracao = await this.ai.extrairDadosClinicos(textoCompleto);
     auditoria.push(extracao.auditoria);
     const dadosEstruturados = extracao.resultado;
+
+    // 1b. Se o enfermeiro apontou uma avaliação de ferida, aproveita o que o
+    // motor de risco já calculou (escalas versionadas e recomendações com
+    // rationale) em vez de pedir ao modelo que reestime pelo texto. A direção
+    // da dependência é só esta: plano lê de feridas, nunca o contrário.
+    const avaliacao = await this.carregarAvaliacaoFerida(dto, clinicaId, contextoRequisicao);
+    if (avaliacao) {
+      dadosEstruturados.avaliacaoFeridaEstruturada = avaliacao;
+    }
 
     // 2. Busca no catálogo local a partir das palavras-chave extraídas.
     const palavrasChave = Array.isArray(dadosEstruturados.palavrasChaveClinicas)
@@ -158,6 +174,16 @@ export class PlanoCuidadosService {
     return this.catalogo.buscarTermos(query, tipo, 10);
   }
 
+  /**
+   * Análise auxiliar de foto. Devolve rascunho para o formulário de avaliação —
+   * nada é persistido aqui; quem grava a avaliação é o módulo de feridas, com
+   * os valores que o enfermeiro confirmou.
+   */
+  async analisarFoto(dto: AnalisarFotoDto) {
+    const { resultado } = await this.ai.analisarFotoFerida(dto.imagemBase64, dto.mediaType);
+    return resultado;
+  }
+
   async evoluir(
     id: string,
     dto: ReavaliarPlanoDto,
@@ -182,6 +208,48 @@ export class PlanoCuidadosService {
     const atualizado = await this.planos.appendEvolucao(clinicaId, id, evolucao);
     if (!atualizado) throw new NotFoundException('Plano de cuidados não encontrado');
     return atualizado;
+  }
+
+  /**
+   * Traz da avaliação de ferida só o que ajuda o raciocínio: escalas com a
+   * versão do instrumento e as recomendações do motor de risco, com o regraId
+   * que as justifica. Falha aqui não derruba a geração — a avaliação é
+   * enriquecimento, não pré-requisito.
+   */
+  private async carregarAvaliacaoFerida(
+    dto: GerarPlanoDto,
+    clinicaId: string,
+    contexto?: AvaliacaoFeridaRequestContext,
+  ): Promise<Record<string, unknown> | null> {
+    if (!dto.avaliacaoFeridaId || !this.avaliacoesFerida || !contexto) return null;
+
+    try {
+      const a = await this.avaliacoesFerida.findOne(dto.avaliacaoFeridaId, clinicaId, contexto);
+      return {
+        medicao: a.medicao,
+        tecido: a.tecido,
+        exsudato: a.exsudato,
+        escalaDor: a.escalaDor,
+        odor: a.odor,
+        achadosPerilesionais: a.achadosPerilesionais,
+        escalas: a.escalas,
+        motorClinico: a.motorClinico,
+        recomendacoes: a.recomendacoes.map((r) => ({
+          risco: r.risco,
+          titulo: r.titulo,
+          justificativa: r.justificativa,
+          acao: r.acao,
+          regraId: r.regraId,
+        })),
+      };
+    } catch (erro) {
+      this.logger.warn({
+        evento: 'avaliacao_ferida_nao_carregada',
+        avaliacaoFeridaId: dto.avaliacaoFeridaId,
+        motivo: (erro as Error).message,
+      });
+      return null;
+    }
   }
 
   // --- mapeamento e travas -------------------------------------------------

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation } from '@tanstack/react-query';
-import { Camera } from 'lucide-react';
+import { Camera, Sparkles } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/components/ui/use-toast';
-import { avaliacaoFeridaApi, feridasApi } from '@/api/resources';
+import { analiseFotoApi, avaliacaoFeridaApi, feridasApi, type AnaliseFotoFerida } from '@/api/resources';
 import { apiErrorMessage } from '@/api/client';
 import {
   AchadoPerilesional, ACHADO_PERILESIONAL_LABEL,
@@ -20,6 +20,74 @@ import {
   SinalInfeccaoResvech, SINAL_INFECCAO_RESVECH_LABEL,
   TecidosAfetados, TECIDOS_AFETADOS_LABEL,
 } from '@/types';
+
+/** Vocabulário da análise de foto → níveis de exsudato do formulário. */
+const EXSUDATO_POR_ANALISE: Record<string, NivelExsudato> = {
+  ausente: NivelExsudato.NENHUM,
+  escasso: NivelExsudato.BAIXO,
+  moderado: NivelExsudato.MODERADO,
+  abundante: NivelExsudato.ALTO,
+};
+
+/**
+ * Botão de análise auxiliar da foto. Pré-preenche o perfil tecidual e o
+ * exsudato; não salva nada e não substitui o exame do enfermeiro — daí o aviso
+ * de confiança no toast e a insistência em conferir antes de salvar.
+ *
+ * A imagem é enviada a um serviço de IA de terceiro. Vale a mesma exigência de
+ * base legal do restante do dado clínico, com o agravante de ser imagem
+ * corporal identificável.
+ */
+function AnalisarFotoButton({ onAnalisado }: { onAnalisado: (a: AnaliseFotoFerida) => void }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const mut = useMutation({
+    mutationFn: async (file: File) => {
+      const permitidos = ['image/jpeg', 'image/png', 'image/webp'] as const;
+      const tipo = permitidos.find((t) => t === file.type);
+      if (!tipo) throw new Error('Use uma imagem JPEG, PNG ou WebP.');
+
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        // readAsDataURL devolve "data:<mime>;base64,<dados>"; a API quer só os dados.
+        reader.onload = () => resolve(String(reader.result).split(',')[1] ?? '');
+        reader.onerror = () => reject(new Error('Não foi possível ler o arquivo.'));
+        reader.readAsDataURL(file);
+      });
+
+      return analiseFotoApi.analisar(base64, tipo);
+    },
+    onSuccess: onAnalisado,
+    onError: (e) => toast.error('Não foi possível analisar a foto', apiErrorMessage(e)),
+  });
+
+  return (
+    <>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          // Limpa o valor para permitir reenviar o mesmo arquivo depois.
+          e.target.value = '';
+          if (file) mut.mutate(file);
+        }}
+      />
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        disabled={mut.isPending}
+        onClick={() => inputRef.current?.click()}
+      >
+        <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+        {mut.isPending ? 'Analisando...' : 'Analisar foto com IA'}
+      </Button>
+    </>
+  );
+}
 
 // Valor sentinela dos selects do RESVECH — Radix Select não aceita item com
 // value vazio, e "não avaliar" precisa ser uma escolha explícita e reversível.
@@ -453,9 +521,28 @@ export function AvaliacaoFeridaForm({
           />
 
           <div className="space-y-2">
-            <Label className={somaTecido > 100 ? 'text-destructive' : undefined}>
-              Perfil tecidual (%) — soma: {somaTecido}{somaTecido > 100 ? ' (excede 100!)' : ''}
-            </Label>
+            <div className="flex items-center justify-between">
+              <Label className={somaTecido > 100 ? 'text-destructive' : undefined}>
+                Perfil tecidual (%) — soma: {somaTecido}{somaTecido > 100 ? ' (excede 100!)' : ''}
+              </Label>
+              <AnalisarFotoButton
+                onAnalisado={(a) => {
+                  const t = a.percentuaisTecido;
+                  if (t) {
+                    setValue('granulacaoPct', t.granulacao);
+                    setValue('epitelizacaoPct', t.epitelizacao);
+                    // "fibrina" no vocabulário da análise = esfacelo no formulário.
+                    setValue('esfaceloPct', t.fibrina);
+                    setValue('necrosePct', t.necrose);
+                  }
+                  if (a.exsudatoVisivel) setValue('exsudato', EXSUDATO_POR_ANALISE[a.exsudatoVisivel]);
+                  toast.success(
+                    `Campos pré-preenchidos (confiança ${a.confianca ?? 'não informada'}).`,
+                    'Análise auxiliar — confira cada campo antes de salvar.',
+                  );
+                }}
+              />
+            </div>
             <div className="grid grid-cols-4 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs">Granulação</Label>

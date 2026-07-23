@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { SecurityModule } from '../../common/security/security.module';
+import { FeridasModule } from '../feridas/feridas.module';
 import { JwtAuthGuard } from '../auth/presentation/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/presentation/guards/roles.guard';
 import { PlanoCuidadosAiService } from './application/plano-cuidados-ai.service';
@@ -29,6 +30,9 @@ import { PlanoCuidadosController } from './presentation/plano-cuidados.controlle
     ]),
     // AppConfigService — origem do PRONTUARIO_SIGNATURE_SECRET usado no HMAC.
     SecurityModule,
+    // Leitura da avaliação de ferida para enriquecer o contexto clínico.
+    // Dependência de mão única: plano lê de feridas, feridas não conhece plano.
+    FeridasModule,
   ],
   controllers: [PlanoCuidadosController],
   providers: [

@@ -593,3 +593,30 @@ export const planosCuidadosApi = {
   buscarCatalogo: (q: string, tipo: 'fenomeno' | 'acao' | 'resultado' = 'fenomeno') =>
     api.get<TermoCatalogo[]>('/planos-cuidados/catalogo', { params: { q, tipo } }).then((r) => r.data),
 };
+
+/**
+ * Análise auxiliar de foto de ferida. Não persiste nada — devolve rascunho
+ * para o enfermeiro conferir e ajustar antes de salvar a avaliação.
+ */
+export interface AnaliseFotoFerida {
+  tipoFerida?: string;
+  localizacaoEstimada?: string | null;
+  percentuaisTecido?: { granulacao: number; fibrina: number; necrose: number; epitelizacao: number };
+  tecidoPredominante?: string;
+  exsudatoVisivel?: 'ausente' | 'escasso' | 'moderado' | 'abundante';
+  tipoExsudato?: string | null;
+  bordas?: string;
+  pelePerilesional?: string;
+  areaCm2Estimada?: number | null;
+  sinaisInfeccaoLocais?: string[];
+  confianca?: 'alta' | 'media' | 'baixa';
+  observacoes?: string;
+  exigeRevisaoHumana: true;
+}
+
+export const analiseFotoApi = {
+  analisar: (imagemBase64: string, mediaType: 'image/jpeg' | 'image/png' | 'image/webp') =>
+    api
+      .post<AnaliseFotoFerida>('/planos-cuidados/analise-foto', { imagemBase64, mediaType })
+      .then((r) => r.data),
+};

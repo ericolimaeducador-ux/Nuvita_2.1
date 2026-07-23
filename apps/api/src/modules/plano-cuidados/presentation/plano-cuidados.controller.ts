@@ -1,5 +1,7 @@
-import { BadRequestException, Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Request } from 'express';
 import { Throttle } from '@nestjs/throttler';
+import { extractRequestMeta } from '../../../common/http/client-ip';
 import { AuthTokenPayload, Modulo, Papel } from '../../../../../../packages/shared/src/auth';
 import { CurrentUser } from '../../auth/presentation/decorators/current-user.decorator';
 import { RequerModulo } from '../../auth/presentation/decorators/requer-modulo.decorator';
@@ -10,6 +12,7 @@ import { RolesGuard } from '../../auth/presentation/guards/roles.guard';
 import { TenantRequiredGuard } from '../../../common/tenancy/tenant-required.guard';
 import { resolveTenantClinicaId } from '../../../common/tenancy/resolve-clinica-id';
 import { TipoTermoCatalogo } from '../domain/catalogo-clinico.entity';
+import { AnalisarFotoDto } from '../application/dto/analisar-foto.dto';
 import { GerarPlanoDto } from '../application/dto/gerar-plano.dto';
 import { ReavaliarPlanoDto } from '../application/dto/reavaliar-plano.dto';
 import { PlanoCuidadosService } from '../application/plano-cuidados.service';
@@ -40,8 +43,23 @@ export class PlanoCuidadosController {
     @Body() dto: GerarPlanoDto,
     @Query('clinicaId') clinicaId: string | undefined,
     @CurrentUser() user: AuthTokenPayload,
+    @Req() request: Request,
   ) {
-    return this.service.gerar(dto, this.resolverClinica(clinicaId, user), user.sub);
+    return this.service.gerar(dto, this.resolverClinica(clinicaId, user), user.sub, {
+      ...extractRequestMeta(request),
+      user,
+    });
+  }
+
+  /**
+   * Análise auxiliar de foto para pré-preencher a avaliação de ferida.
+   * Não persiste nada: devolve o rascunho e o enfermeiro decide o que aproveitar.
+   */
+  @Post('analise-foto')
+  @Roles(...MUTACAO)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  analisarFoto(@Body() dto: AnalisarFotoDto) {
+    return this.service.analisarFoto(dto);
   }
 
   @Get('catalogo')

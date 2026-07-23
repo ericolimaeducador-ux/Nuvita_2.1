@@ -14,6 +14,7 @@ import {
   SKILL_03_RESULTADOS,
   SKILL_04_PRESCRICOES,
   SKILL_05_EVOLUCAO,
+  SKILL_06_ANALISE_FOTO,
 } from './plano-cuidados-skills.constants';
 
 export interface ResultadoSkill<T = Record<string, unknown>> {
@@ -214,5 +215,70 @@ export class PlanoCuidadosAiService {
       JSON.stringify({ planoOriginal, relatoEvolucao, avaliacaoAtual }, null, 2),
       6000,
     );
+  }
+
+  /**
+   * Análise auxiliar de foto de ferida.
+   *
+   * Pré-preenche o formulário de avaliação; NÃO substitui o exame do
+   * enfermeiro. Por isso o retorno carrega `exigeRevisaoHumana: true` e
+   * `confianca`, honrando o contrato já definido em
+   * `feridas/domain/ia-contracts.entity.ts` — o formato foi decidido lá e não
+   * se inventa um paralelo aqui.
+   *
+   * Atenção LGPD: imagem de lesão corporal é dado de saúde identificável. Vale
+   * a mesma exigência de base legal do texto clínico, com agravante de ser
+   * imagem — e o TCLE de fotografia já existente precisa cobrir o envio a
+   * terceiro.
+   */
+  async analisarFotoFerida(
+    imagemBase64: string,
+    mediaType: 'image/jpeg' | 'image/png' | 'image/webp',
+  ): Promise<ResultadoSkill<Record<string, unknown>>> {
+    const client = this.getClient();
+    const skill = 'analise_foto';
+
+    let resposta: Anthropic.Message;
+    try {
+      resposta = await client.messages.create({
+        model: this.modelo,
+        max_tokens: 2000,
+        system: SKILL_06_ANALISE_FOTO,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              { type: 'image', source: { type: 'base64', media_type: mediaType, data: imagemBase64 } },
+              { type: 'text', text: 'Analise esta foto de ferida e retorne o JSON especificado.' },
+            ],
+          },
+        ],
+      });
+    } catch (erro) {
+      if (erro instanceof Anthropic.APIError) {
+        this.logger.error({ evento: 'ia_api_error', skill, status: erro.status });
+        throw new ServiceUnavailableException(
+          'Análise de imagem temporariamente indisponível. Tente novamente em instantes.',
+        );
+      }
+      throw new ServiceUnavailableException('Falha inesperada na análise de imagem.');
+    }
+
+    const auditoria: RegistroAuditoriaIa = {
+      skill,
+      modelo: this.modelo,
+      tokensEntrada: resposta.usage.input_tokens,
+      tokensSaida: resposta.usage.output_tokens,
+      em: new Date(),
+    };
+
+    if (resposta.stop_reason === 'refusal') {
+      throw new UnprocessableEntityException('A análise desta imagem foi recusada.');
+    }
+
+    const bruto = this.extrairJson<Record<string, unknown>>(resposta, skill);
+    // Nunca sai daqui sem a marca de revisão obrigatória, independentemente do
+    // que o modelo tenha devolvido.
+    return { resultado: { ...bruto, exigeRevisaoHumana: true }, auditoria };
   }
 }
