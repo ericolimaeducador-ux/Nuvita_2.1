@@ -1,18 +1,21 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Plus, Camera } from 'lucide-react';
+import { ArrowLeft, Plus, Camera, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { feridasApi, avaliacaoFeridaApi, documentosApi, pacientesApi } from '@/api/resources';
 import { NovaAvaliacaoFeridaDialog } from '@/components/FeridaDialogs';
 import { NovoDocumentoDialog } from '@/components/NovoDocumentoDialog';
 import { formatData, toItems } from '@/utils';
 import {
-  ETIOLOGIA_LABEL, STATUS_FERIDA_LABEL, NIVEL_RISCO_LABEL, TipoDocumento, NivelRisco, type Documento,
+  ETIOLOGIA_LABEL, STATUS_FERIDA_LABEL, NIVEL_RISCO_LABEL, NIVEL_EXSUDATO_LABEL,
+  ACHADO_PERILESIONAL_LABEL, BORDAS_FERIDA_LABEL, TECIDOS_AFETADOS_LABEL, SINAL_INFECCAO_RESVECH_LABEL,
+  TIPO_DOCUMENTO_LABEL, TipoDocumento, NivelRisco, type Documento, type AvaliacaoFerida,
 } from '@/types';
 
 const RISCO_VARIANT: Record<NivelRisco, 'success' | 'warning' | 'destructive'> = {
@@ -27,6 +30,232 @@ const TENDENCIA_LABEL: Record<string, string> = {
   piorando: 'Piorando',
   estavel: 'Estável',
 };
+
+// Formatos que o navegador renderiza inline em <img>. HEIC (comum em iPhone) não
+// é um deles: o backend só gera thumbnail de JPEG/PNG e o Chrome não decodifica
+// HEIC — por isso o card cai no fallback "abrir arquivo" quando é esse o caso.
+const MIME_RENDERIZAVEL = new Set(['image/jpeg', 'image/png', 'image/webp']);
+
+/**
+ * Miniatura de uma foto de ferida. A imagem no R2 é privada; para exibi-la é
+ * preciso uma URL de leitura assinada (curta) — sem isso o card só mostrava o
+ * nome do arquivo num quadrado cinza (a foto "não aparecia"). Clicar amplia num
+ * lightbox para o estomaterapeuta rever o registro fotográfico.
+ */
+function FotoFeridaCard({ doc }: { doc: Documento }) {
+  const [aberto, setAberto] = useState(false);
+  const [erroImg, setErroImg] = useState(false);
+  const acessoQ = useQuery({
+    queryKey: ['documento-access', doc.id],
+    queryFn: () => documentosApi.accessUrl(doc.id),
+    // A URL assinada expira; staleTime abaixo do TTL evita servir link vencido
+    // à miniatura ou ao lightbox.
+    staleTime: 4 * 60 * 1000,
+  });
+  const url = acessoQ.data?.accessUrl;
+  const renderizavel = MIME_RENDERIZAVEL.has(doc.mimeType) && !erroImg;
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setAberto(true)}
+        title={`${doc.nome} — ${formatData(doc.criadoEm)}`}
+        className="group relative w-24 h-24 rounded border border-border bg-muted overflow-hidden flex items-center justify-center"
+      >
+        {url && renderizavel ? (
+          <img
+            src={url}
+            alt={doc.nome}
+            className="w-full h-full object-cover transition group-hover:scale-105"
+            onError={() => setErroImg(true)}
+          />
+        ) : (
+          <span className="px-1 text-center text-[10px] leading-tight text-muted-foreground">
+            {acessoQ.isLoading ? 'Carregando…' : doc.nome}
+          </span>
+        )}
+      </button>
+
+      <Dialog open={aberto} onOpenChange={setAberto}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>{doc.nome}</DialogTitle>
+            <DialogDescription>
+              {formatData(doc.criadoEm)} · {TIPO_DOCUMENTO_LABEL[doc.tipo]}
+            </DialogDescription>
+          </DialogHeader>
+          {!url ? (
+            <Skeleton className="h-64 w-full" />
+          ) : renderizavel ? (
+            <img
+              src={url}
+              alt={doc.nome}
+              className="mx-auto max-h-[70vh] w-auto rounded"
+              onError={() => setErroImg(true)}
+            />
+          ) : (
+            <div className="space-y-3 py-8 text-center">
+              <p className="text-sm text-muted-foreground">
+                Prévia não disponível para este formato ({doc.mimeType}).
+              </p>
+              <Button type="button" onClick={() => window.open(url, '_blank')}>
+                <ExternalLink className="mr-2 h-4 w-4" /> Abrir arquivo
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+/** Uma linha "rótulo: valor" do registro escrito; some quando não há valor. */
+function Campo({ rotulo, valor }: { rotulo: string; valor: ReactNode }) {
+  if (valor === undefined || valor === null || valor === '' || (Array.isArray(valor) && valor.length === 0)) {
+    return null;
+  }
+  return (
+    <div className="flex gap-2">
+      <span className="shrink-0 font-medium text-muted-foreground">{rotulo}:</span>
+      <span>{valor}</span>
+    </div>
+  );
+}
+
+/**
+ * Card de uma avaliação. O cabeçalho (data, risco, medidas, escalas) fica sempre
+ * visível; "Ver registro completo" abre o registro escrito inteiro — perfil
+ * tecidual, exsudato, achados, sinais, RESVECH e as recomendações com
+ * justificativa — que o estomaterapeuta precisa para rever a consulta. Os dados
+ * já vêm da listagem; a expansão só os revela (sem nova requisição).
+ */
+function CardAvaliacao({ a }: { a: AvaliacaoFerida }) {
+  const [aberto, setAberto] = useState(false);
+  const risco = a.recomendacoes[0]?.risco ?? NivelRisco.BAIXO;
+  const alarmes = [
+    a.sinaisSistemicos && 'Sinais sistêmicos',
+    a.perfusaoRuim && 'Perfusão ruim',
+    a.ossoOuTendaoExposto && 'Osso ou tendão exposto',
+  ].filter(Boolean) as string[];
+
+  return (
+    <div className="rounded-lg border border-border p-4">
+      <div className="mb-2 flex items-center justify-between">
+        <span className="text-sm font-medium">{formatData(a.criadoEm)}</span>
+        <Badge variant={RISCO_VARIANT[risco]}>{NIVEL_RISCO_LABEL[risco]}</Badge>
+      </div>
+      <p className="text-sm text-muted-foreground">
+        {a.medicao.comprimentoCm}×{a.medicao.larguraCm}×{a.medicao.profundidadeCm}cm
+        {a.medicao.areaCm2 !== undefined && ` (área: ${a.medicao.areaCm2}cm²)`}
+      </p>
+      {a.escalas && (
+        <div className="mt-1 flex gap-2">
+          <Badge variant="outline">PUSH {a.escalas.push.total}/17</Badge>
+          {a.escalas.resvech && <Badge variant="outline">RESVECH {a.escalas.resvech.total}/35</Badge>}
+        </div>
+      )}
+
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className="mt-2 h-8 px-2 text-xs"
+        onClick={() => setAberto((v) => !v)}
+        aria-expanded={aberto}
+      >
+        {aberto ? <ChevronUp className="mr-1 h-3.5 w-3.5" /> : <ChevronDown className="mr-1 h-3.5 w-3.5" />}
+        {aberto ? 'Ocultar registro completo' : 'Ver registro completo'}
+      </Button>
+
+      {aberto && (
+        <div className="mt-3 space-y-4 border-t pt-3 text-sm">
+          <section className="space-y-1">
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Perfil tecidual</h4>
+            <Campo rotulo="Granulação" valor={`${a.tecido.granulacaoPct}%`} />
+            <Campo rotulo="Epitelização" valor={`${a.tecido.epitelizacaoPct}%`} />
+            <Campo rotulo="Esfacelo" valor={`${a.tecido.esfaceloPct}%`} />
+            <Campo rotulo="Necrose" valor={`${a.tecido.necrosePct}%`} />
+          </section>
+
+          <section className="space-y-1">
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Exsudato e sintomas</h4>
+            <Campo rotulo="Exsudato" valor={NIVEL_EXSUDATO_LABEL[a.exsudato]} />
+            <Campo rotulo="Dor (0-10)" valor={a.escalaDor} />
+            <Campo rotulo="Odor" valor={a.odor ? 'Presente' : 'Ausente'} />
+            <Campo
+              rotulo="Achados perilesionais"
+              valor={a.achadosPerilesionais.map((x) => ACHADO_PERILESIONAL_LABEL[x]).join(', ')}
+            />
+            <Campo rotulo="Sinais de alarme" valor={alarmes.join(', ')} />
+          </section>
+
+          {(a.bordas || a.tecidosAfetados || (a.sinaisInfeccao && a.sinaisInfeccao.length > 0)) && (
+            <section className="space-y-1">
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">RESVECH 2.0</h4>
+              <Campo rotulo="Bordas" valor={a.bordas ? BORDAS_FERIDA_LABEL[a.bordas] : undefined} />
+              <Campo
+                rotulo="Tecido mais profundo"
+                valor={a.tecidosAfetados ? TECIDOS_AFETADOS_LABEL[a.tecidosAfetados] : undefined}
+              />
+              <Campo
+                rotulo="Sinais de infecção"
+                valor={a.sinaisInfeccao?.map((x) => SINAL_INFECCAO_RESVECH_LABEL[x]).join(', ')}
+              />
+            </section>
+          )}
+
+          {(a.pioraAreaPct30Dias !== undefined || a.diasCicatrizacaoEstagnada !== undefined) && (
+            <section className="space-y-1">
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Progressão</h4>
+              <Campo
+                rotulo="Piora de área (30 dias)"
+                valor={a.pioraAreaPct30Dias !== undefined ? `${a.pioraAreaPct30Dias}%` : undefined}
+              />
+              <Campo
+                rotulo="Dias sem cicatrizar"
+                valor={a.diasCicatrizacaoEstagnada}
+              />
+            </section>
+          )}
+
+          {a.escalas && (
+            <section className="space-y-1">
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Escalas</h4>
+              <Campo
+                rotulo="PUSH 3.0"
+                valor={`${a.escalas.push.total}/17 (área ${a.escalas.push.area} · exsudato ${a.escalas.push.exsudato} · tecido ${a.escalas.push.tipoTecido})`}
+              />
+              {a.escalas.resvech && (
+                <Campo
+                  rotulo="RESVECH 2.0"
+                  valor={`${a.escalas.resvech.total}/35 (dimensão ${a.escalas.resvech.dimensao} · profundidade ${a.escalas.resvech.profundidade} · bordas ${a.escalas.resvech.bordas} · leito ${a.escalas.resvech.tecidoLeito} · exsudato ${a.escalas.resvech.exsudato} · infecção ${a.escalas.resvech.infeccaoInflamacao})`}
+                />
+              )}
+              <Campo rotulo="Versão das escalas" valor={a.escalas.versao} />
+            </section>
+          )}
+
+          <section className="space-y-2">
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Recomendações do motor clínico
+            </h4>
+            {a.recomendacoes.map((r) => (
+              <div key={r.regraId} className="rounded border-l-2 border-border pl-3">
+                <p className="font-medium">{r.titulo}</p>
+                <p className="text-muted-foreground">{r.justificativa}</p>
+                <p><span className="font-medium">Ação:</span> {r.acao}</p>
+              </div>
+            ))}
+            <p className="pt-1 text-xs text-muted-foreground">
+              Motor {a.motorClinico} · apoio à decisão, não substitui o julgamento profissional.
+            </p>
+          </section>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function FeridaDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -59,6 +288,7 @@ export function FeridaDetailPage() {
   function refetchTudo() {
     void qc.invalidateQueries({ queryKey: ['avaliacoes-ferida', id] });
     void qc.invalidateQueries({ queryKey: ['ferida-timeline', id] });
+    void qc.invalidateQueries({ queryKey: ['documentos', 'ferida', id] });
   }
 
   if (feridaQ.isLoading || !feridaQ.data) {
@@ -141,9 +371,7 @@ export function FeridaDetailPage() {
                 <p className="text-sm text-muted-foreground">Nenhuma foto anexada ainda.</p>
               )}
               {fotos.map((doc) => (
-                <div key={doc.id} className="w-24 h-24 rounded border border-border bg-muted flex items-center justify-center text-xs text-muted-foreground overflow-hidden">
-                  {doc.nome}
-                </div>
+                <FotoFeridaCard key={doc.id} doc={doc} />
               ))}
             </div>
           )}
@@ -159,31 +387,7 @@ export function FeridaDetailPage() {
                 <p className="text-sm text-muted-foreground py-4">Nenhuma avaliação registrada ainda.</p>
               )}
               {avaliacoes.map((a) => (
-                <div key={a.id} className="border border-border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium">{formatData(a.criadoEm)}</span>
-                    <Badge variant={RISCO_VARIANT[a.recomendacoes[0]?.risco ?? NivelRisco.BAIXO]}>
-                      {NIVEL_RISCO_LABEL[a.recomendacoes[0]?.risco ?? NivelRisco.BAIXO]}
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {a.medicao.comprimentoCm}×{a.medicao.larguraCm}×{a.medicao.profundidadeCm}cm
-                    {a.medicao.areaCm2 !== undefined && ` (área: ${a.medicao.areaCm2}cm²)`}
-                  </p>
-                  {a.escalas && (
-                    <div className="mt-1 flex gap-2">
-                      <Badge variant="outline">PUSH {a.escalas.push.total}/17</Badge>
-                      {a.escalas.resvech && <Badge variant="outline">RESVECH {a.escalas.resvech.total}/35</Badge>}
-                    </div>
-                  )}
-                  <ul className="mt-2 space-y-1">
-                    {a.recomendacoes.map((r) => (
-                      <li key={r.regraId} className="text-sm">
-                        <span className="font-medium">{r.titulo}:</span> {r.acao}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                <CardAvaliacao key={a.id} a={a} />
               ))}
             </div>
           )}
