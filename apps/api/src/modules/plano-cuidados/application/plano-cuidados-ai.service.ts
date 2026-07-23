@@ -172,8 +172,13 @@ export class PlanoCuidadosAiService {
     }
   }
 
+  // maxTokens generoso de propósito: com thinking adaptive, o "pensamento" do
+  // modelo consome do mesmo orçamento do max_tokens (não há budget_tokens
+  // separado nesse modo) — um caso mais complexo pode gastar o limite inteiro
+  // só pensando e cortar o JSON de resposta no meio (stop_reason max_tokens).
+  // Visto em produção em 2026-07-23 com o limite antigo de 4000.
   extrairDadosClinicos(textoLivre: string) {
-    return this.chamar<Record<string, unknown>>('extracao', SKILL_01_EXTRACAO, textoLivre, 4000);
+    return this.chamar<Record<string, unknown>>('extracao', SKILL_01_EXTRACAO, textoLivre, 16000);
   }
 
   gerarDiagnosticos(dadosEstruturados: unknown, fenomenosCandidatos: unknown[]) {
@@ -181,7 +186,7 @@ export class PlanoCuidadosAiService {
       'diagnosticos',
       SKILL_02_DIAGNOSTICOS,
       JSON.stringify({ dadosEstruturados, fenomenosCandidatos }, null, 2),
-      6000,
+      16000,
     );
   }
 
@@ -190,7 +195,7 @@ export class PlanoCuidadosAiService {
       'resultados',
       SKILL_03_RESULTADOS,
       JSON.stringify({ diagnosticos, resultadosDisponiveis }, null, 2),
-      6000,
+      16000,
     );
   }
 
@@ -204,7 +209,7 @@ export class PlanoCuidadosAiService {
       'prescricoes',
       SKILL_04_PRESCRICOES,
       JSON.stringify({ diagnosticos, resultados, acoesDisponiveis, contextoClinico }, null, 2),
-      8000,
+      20000,
     );
   }
 
@@ -213,7 +218,7 @@ export class PlanoCuidadosAiService {
       'evolucao',
       SKILL_05_EVOLUCAO,
       JSON.stringify({ planoOriginal, relatoEvolucao, avaliacaoAtual }, null, 2),
-      6000,
+      16000,
     );
   }
 
