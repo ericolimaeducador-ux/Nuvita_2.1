@@ -12,8 +12,6 @@ import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
 import { Label } from '@/components/ui/label';
 import { Logo } from '@/components/Logo';
-import fundoWoundcare from '@/assets/login-woundcare.webp';
-import fundoWoundcareSm from '@/assets/login-woundcare-sm.webp';
 
 const loginSchema = z.object({
   email: z.string().min(1, 'Informe o e-mail.').email('E-mail inválido.'),
@@ -56,36 +54,58 @@ export function LoginPage() {
 
   return (
     /*
-     * Duas colunas exatas: a arte da Woundcare ocupa 2/3 a esquerda e o acesso
-     * 1/3 a direita. Abaixo de lg a coluna vira largura total (1/3 de tela
-     * estreita nao comportaria o formulario) e a arte vira banner no topo.
+     * Duas colunas: o hero da marca Nuvita ocupa 2/3 à esquerda e a coluna de
+     * acesso 1/3 à direita. Abaixo de lg o hero fica oculto (não comporta o
+     * gradiente + slogan numa tela estreita) e o formulário ganha um logo no
+     * topo, mostrando a largura inteira.
      */
-    <div className="relative flex min-h-screen w-full flex-col bg-slate-50 lg:h-screen lg:flex-row lg:overflow-hidden">
-      {/*
-       * `contain`: a arte e uma composicao fechada (faixa da marca, cena clinica
-       * e slogan). Com `cover` preenchendo a coluna, ela seria ampliada e o
-       * corte lateral comeria justamente o slogan, que fica na direita da peca.
-       */}
-      <div className="flex shrink-0 items-center justify-center lg:h-full lg:w-2/3 lg:p-8">
-        <picture className="contents">
-          <source media="(max-width: 640px)" srcSet={fundoWoundcareSm} />
-          <img
-            src={fundoWoundcare}
-            alt=""
-            aria-hidden="true"
-            className="h-44 w-full object-cover object-top sm:h-56
-                       lg:h-auto lg:max-h-full lg:w-auto lg:max-w-full lg:rounded-2xl
-                       lg:object-contain lg:shadow-[0_18px_50px_rgba(11,17,32,0.13)]"
+    <div className="relative flex min-h-screen w-full flex-col bg-background lg:h-screen lg:flex-row lg:overflow-hidden">
+      {/* Esquerda — hero da marca (2/3) */}
+      <div className="relative hidden flex-col justify-between overflow-hidden bg-gradient-to-br from-bg-dark to-brand-cobalt p-12 lg:flex lg:w-2/3">
+        {/* Halos decorativos */}
+        <div className="absolute -top-24 -left-24 h-96 w-96 rounded-full bg-brand-cobalt/30 blur-3xl" />
+        <div className="absolute -bottom-24 -right-24 h-96 w-96 rounded-full bg-accent-gold/10 blur-3xl" />
+
+        <div className="relative flex items-center">
+          <Logo
+            width={260}
+            iconColor="#FFB800"
+            textColor="#FFFFFF"
+            className="drop-shadow-[0_2px_16px_rgba(255,184,0,0.35)]"
           />
-        </picture>
+        </div>
+
+        <div className="relative max-w-2xl">
+          <h1 className="mb-4 text-[3rem] font-medium leading-tight text-white">
+            Gestão clínica
+            <br />
+            <span className="text-accent-gold">que cuida</span> de
+            <br />
+            quem cuida.
+          </h1>
+          <p className="text-lg leading-relaxed text-blue-100/90">
+            Prontuário eletrônico, agenda, pacientes e documentos em uma
+            plataforma segura, multi-tenant e em conformidade com a LGPD.
+          </p>
+        </div>
+
+        <p className="relative text-sm text-blue-300/70">
+          © {new Date().getFullYear()} Nuvita · Plataforma de saúde
+        </p>
       </div>
 
+      {/* Direita — formulário de acesso (1/3) */}
       <div
         className="relative flex w-full flex-1 flex-col bg-white px-6 py-10 sm:px-10
                    lg:h-full lg:w-1/3 lg:flex-none lg:overflow-y-auto
                    lg:border-l lg:border-slate-200 lg:px-12"
       >
         <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center">
+          {/* Logo no topo apenas no mobile — o hero à esquerda some abaixo de lg */}
+          <div className="mb-8 flex items-center lg:hidden">
+            <Logo width={150} iconColor="#E6A600" textColor="#1F2937" />
+          </div>
+
           <h2 className="text-[1.6rem] font-semibold leading-tight text-slate-900">Acessar painel</h2>
           <p className="mb-7 mt-1 text-sm text-slate-500">Entre com suas credenciais corporativas.</p>
 
@@ -148,9 +168,8 @@ export function LoginPage() {
           </form>
         </div>
 
-        {/* Assinatura do software: discreta, no pe da coluna de acesso. */}
+        {/* Assinatura discreta no pé da coluna de acesso. */}
         <footer className="mx-auto mt-10 flex w-full max-w-sm flex-col items-end gap-0.5 text-right">
-          <Logo width={78} iconColor="#E6A600" textColor="#0B1120" className="opacity-80" />
           <p className="text-[9px] leading-tight text-slate-400">
             Plataforma de gestão clínica · versão 2.1
           </p>
