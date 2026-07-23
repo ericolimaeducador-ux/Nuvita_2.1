@@ -56,7 +56,7 @@ describe('calcularBraden — limites do instrumento', () => {
 
 describe('calcularBraden — avaliação incompleta', () => {
   it('não calcula com subescala faltando', () => {
-    const { nutricao, ...semNutricao } = piorCaso;
+    const { nutricao: _nutricao, ...semNutricao } = piorCaso;
     expect(calcularBraden(semNutricao)).toBeUndefined();
     expect(bradenCompleto(semNutricao)).toBe(false);
   });
