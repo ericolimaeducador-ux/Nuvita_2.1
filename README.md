@@ -15,9 +15,7 @@ estomaterapia (avaliação e acompanhamento de feridas).
 [Funcionalidades](#-funcionalidades) ·
 [Arquitetura](#%EF%B8%8F-arquitetura) ·
 [Segurança](#-segurança--lgpd) ·
-[Rodando localmente](#-rodando-localmente) ·
-[Novidades](#-o-que-mudou-recentemente) ·
-[Documentação](#-documentação-complementar)
+[Rodando localmente](#-rodando-localmente)
 
 </div>
 
@@ -265,29 +263,6 @@ npm run build -w @nuvita/web        # tsc --noEmit + build de produção do fron
 
 A lista completa e comentada está em [`.env.example`](.env.example).
 **Nunca** commite segredos.
-
-## 🆕 O que mudou recentemente
-
-**Julho de 2026** — resumo do que entrou em `main` (o histórico completo está
-no `git log`, em conventional commits pt-BR):
-
-| Data | Mudança |
-|---|---|
-| 22/07 | **Nova tela de login**: a arte da Woundcare ocupa 2/3 à esquerda e a coluna de acesso 1/3 à direita, com a assinatura da Nuvita discreta no pé. A arte é uma composição fechada (faixa da marca, cena clínica e slogan) — daí `object-contain`, e não `cover`, que ampliaria a peça e cortaria justamente o slogan. Abaixo de `lg` a arte vira banner no topo e o formulário ocupa a largura toda |
-| 21/07 | **Marca da clínica no timbre dos documentos** — as três variantes da Woundcare em `apps/web/public/marca/`; os arquivos vieram como JPEG de fundo chapado, que num documento branco viraria um retângulo visível, então o fundo virou alpha por luminância. Telefone passou a imprimir formatado |
-| 21/07 | **Receituário de enfermagem** e **TCLE de fotografia v1.1.0** com identificação do profissional (nome + COREN) |
-| 21/07 | **Catálogo de curativos e ostomia** importado (62 itens) e busca por múltiplos termos sobre nome, código, subcategoria clínica e fabricante |
-| 21/07 | **Atendimento de enfermagem** extraído em `SessaoAtendimentoEnfermagem` (split-screen reaproveitado dentro e fora da telemedicina) |
-| 21/07 | Menu: **"Prontuários" sai da barra lateral** (já vive dentro de Pacientes) e **"Atendimento"** sobe para logo abaixo do Dashboard |
-| 20/07 | **Financeiro**: tabela de preços, consultoria B2B, recorrências, relatório com gráficos + CSV/PDF e lucro por produto com custo congelado na venda; tela de **Indicadores** substitui os painéis antigos de analytics/financeiro |
-| 19/07 | **Medição de ferida pela foto** (Fase 7) e **remoção dos papéis vestigiais** `MEDICO`, `ADVOGADO` e `PSICOLOGO` do RBAC |
-
-## 📚 Documentação complementar
-
-- [`docs/ULTRAPLAN.md`](docs/ULTRAPLAN.md) — plano de migração e roadmap
-- [`docs/SECURITY-E-MODERNIZACAO-2026-07.md`](docs/SECURITY-E-MODERNIZACAO-2026-07.md) — varredura de segurança e roadmap de modernização
-- [`apps/web/README.md`](apps/web/README.md) — detalhes do frontend
-- [`infra/`](infra/) — checklist de produção
 
 ## 📄 Propriedade intelectual
 
