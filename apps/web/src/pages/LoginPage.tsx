@@ -177,9 +177,9 @@ export function LoginPage() {
             variants={surgir}
             initial="hidden"
             animate="show"
-            className="mt-8 font-display text-[2.6rem] font-semibold leading-[1.06] tracking-tight text-white sm:text-[3.15rem]"
+            className="mt-8 font-display text-[2.4rem] font-bold leading-[1.05] tracking-[-0.025em] text-white sm:text-[2.9rem]"
           >
-            Gestão clínica <span className="text-accent-gold">que cuida</span>
+            Gestão clínica <span className="whitespace-nowrap text-accent-gold">que cuida</span>
             <br /> de quem cuida.
           </motion.h1>
 
