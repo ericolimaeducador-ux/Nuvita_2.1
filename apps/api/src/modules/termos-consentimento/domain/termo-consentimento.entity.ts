@@ -9,9 +9,14 @@ export enum TipoTermo {
  * ESCALAS_VERSION persistido por avaliação de ferida).
  */
 export const VERSAO_TEXTO_TERMO: Record<TipoTermo, string> = {
-  [TipoTermo.FOTOGRAFIA_PESQUISA]: 'fotografia-pesquisa-1.1.0',
+  [TipoTermo.FOTOGRAFIA_PESQUISA]: 'fotografia-pesquisa-1.2.0',
 };
 
+/**
+ * Item 2 (IA) é novo na versão 1.2.0, adicionado quando ANTHROPIC_API_KEY foi
+ * habilitada em produção — redação ainda não passou por revisão jurídica
+ * formal, só reflete o que o código de `PlanoCuidadosAiService` já fazia.
+ */
 export const TEXTO_TERMO: Record<TipoTermo, string> = {
   [TipoTermo.FOTOGRAFIA_PESQUISA]: `TERMO DE CONSENTIMENTO LIVRE E ESCLARECIDO — FOTOGRAFIA DE LESÃO E USO EM PESQUISA CIENTÍFICA
 
@@ -20,13 +25,16 @@ Eu, paciente (ou responsável legal) desta clínica de estomaterapia, declaro te
 1. Objetivo clínico
 Serão realizadas fotografias da(s) minha(s) lesão(ões) como parte do acompanhamento do meu tratamento. Essas imagens comporão o meu prontuário eletrônico, documentando a evolução clínica e permitindo a avaliação da cicatrização e a escolha das melhores condutas terapêuticas.
 
-2. Uso científico e educacional
+2. Apoio de inteligência artificial no plano de cuidados
+Para apoiar a elaboração do meu plano de cuidados, o(a) enfermeiro(a) pode utilizar uma ferramenta de inteligência artificial que processa o meu histórico clínico e os achados do exame físico registrados no prontuário. Esse processamento é feito por um serviço de terceiro (Anthropic), sediado fora do Brasil, o que caracteriza transferência internacional dos meus dados de saúde, em conformidade com a Lei Geral de Proteção de Dados Pessoais (Lei nº 13.709/2018). Diferentemente do uso científico descrito no item 3, este processamento não é anonimizado — depende dos detalhes do meu caso para gerar recomendações clínicas úteis — e os dados enviados são usados apenas para essa finalidade, não para treinar outros modelos de IA. A decisão clínica final é sempre do(a) profissional responsável pelo meu atendimento, nunca da ferramenta de IA isoladamente.
+
+3. Uso científico e educacional
 Autorizo, adicionalmente, que estas imagens e os dados clínicos associados (idade, etiologia da lesão, características da ferida e evolução do tratamento) sejam utilizados, de forma anonimizada, em congressos, jornadas, simpósios, publicações em revistas científicas, livros, materiais didáticos e discussão de casos entre profissionais de saúde para fins de aprimoramento técnico.
 
-3. Anonimato e privacidade (LGPD)
+4. Anonimato e privacidade (LGPD)
 Minha identidade será preservada em sigilo em qualquer publicação ou apresentação. As fotografias focarão estritamente a área da lesão, sem meu rosto, tatuagens ou marcas que permitam minha identificação. Meus dados e imagens serão armazenados de forma segura, em conformidade com a Lei Geral de Proteção de Dados Pessoais (Lei nº 13.709/2018), com acesso restrito à equipe assistencial responsável pelo meu tratamento.
 
-4. Voluntariedade e revogação
+5. Voluntariedade e revogação
 Este consentimento para uso científico é voluntário e não é condição para meu atendimento — a recusa não implica qualquer prejuízo ao meu tratamento. Posso revogar esta autorização a qualquer momento, mediante solicitação à clínica, sem que isso afete meu acompanhamento em curso.
 
 Ao confirmar minha identidade digitando meu nome completo, declaro que li e compreendi as informações acima e que autorizo, de forma livre e esclarecida, a fotografia da(s) minha(s) lesão(ões) e o uso dos dados nos termos descritos.`,
