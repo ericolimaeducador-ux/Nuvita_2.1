@@ -103,7 +103,7 @@ export class CatalogoMongoRepository implements CatalogoClinicoRepository {
   }
 
   private toEntity<T>(doc: Record<string, unknown>): T {
-    const { _id, score, createdAt, updatedAt, ...rest } = doc as Record<string, unknown> & {
+    const { _id, score: _score, createdAt: _createdAt, updatedAt: _updatedAt, ...rest } = doc as Record<string, unknown> & {
       _id: { toString(): string };
     };
     return { id: _id.toString(), ...rest } as T;

@@ -47,7 +47,7 @@ export class PlanoCuidadosMongoRepository implements PlanoCuidadosRepository {
   }
 
   private toEntity(doc: Record<string, unknown>): PlanoCuidados {
-    const { _id, updatedAt, createdAt, ...rest } = doc as Record<string, unknown> & {
+    const { _id, updatedAt, createdAt: _createdAt, ...rest } = doc as Record<string, unknown> & {
       _id: { toString(): string };
       updatedAt?: Date;
       createdAt?: Date;
