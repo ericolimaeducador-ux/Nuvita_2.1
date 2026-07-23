@@ -71,10 +71,13 @@ export function LoginPage() {
   }
 
   return (
+    // Cada coluna gerencia a própria altura e rola por dentro (lg:overflow-y-auto)
+    // quando o conteúdo é mais alto que a tela — assim nada é cortado nas margens
+    // superior/inferior em telas mais baixas.
     <div className="relative flex min-h-screen w-full flex-col bg-white lg:h-screen lg:flex-row lg:overflow-hidden">
       {/* ───────── Formulário (esquerda no desktop) ───────── */}
-      <div className="order-2 flex w-full flex-1 flex-col justify-center px-6 py-10 sm:px-10 lg:order-1 lg:w-[42%] lg:flex-none lg:px-16">
-        <div className="mx-auto w-full max-w-sm">
+      <div className="order-2 flex w-full flex-col justify-center px-6 py-10 sm:px-10 lg:order-1 lg:h-full lg:w-[42%] lg:overflow-y-auto lg:px-16 lg:py-12">
+        <div className="mx-auto my-auto w-full max-w-sm">
           <div className="mb-8 lg:hidden">
             <Logo width={150} iconColor="#E6A600" textColor="#1F2937" />
           </div>
@@ -147,94 +150,101 @@ export function LoginPage() {
       </div>
 
       {/* ───────── Vitrine da marca (direita no desktop) ───────── */}
-      <div className="relative order-1 flex flex-col justify-center overflow-hidden bg-gradient-to-br from-bg-dark via-[#0a1a4d] to-brand-cobalt px-8 py-14 sm:px-12 lg:order-2 lg:w-[58%] lg:px-20 lg:py-0">
-        {/* Halos e glow decorativos */}
-        <div className="pointer-events-none absolute -top-40 -right-24 h-[28rem] w-[28rem] rounded-full bg-accent-gold/15 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-32 -left-24 h-[26rem] w-[26rem] rounded-full bg-brand-cobalt/40 blur-3xl" />
-        <div className="pointer-events-none absolute left-1/2 top-1/3 h-72 w-72 -translate-x-1/2 rounded-full bg-white/5 blur-3xl" />
+      <div className="relative order-1 overflow-hidden bg-gradient-to-br from-bg-dark via-[#0a1a4d] to-brand-cobalt lg:order-2 lg:h-full lg:w-[58%]">
+        {/* Camada de fundo: halos e glow — não interferem no fluxo do conteúdo */}
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -top-40 -right-24 h-[28rem] w-[28rem] rounded-full bg-accent-gold/15 blur-3xl" />
+          <div className="absolute -bottom-32 -left-24 h-[26rem] w-[26rem] rounded-full bg-brand-cobalt/40 blur-3xl" />
+          <div className="absolute left-1/2 top-1/3 h-72 w-72 -translate-x-1/2 rounded-full bg-white/5 blur-3xl" />
+        </div>
 
-        <div className="relative mx-auto flex w-full max-w-xl flex-col">
-          {/* Badge do módulo */}
-          <motion.div custom={0} variants={surgir} initial="hidden" animate="show">
-            <span className="inline-flex items-center gap-2 rounded-full border border-accent-gold/40 bg-accent-gold/10 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-accent-gold">
-              <Sparkles className="h-3.5 w-3.5" /> Módulo Estomaterapia
-            </span>
-          </motion.div>
-
-          {/* Logo grande */}
-          <motion.div custom={1} variants={surgir} initial="hidden" animate="show" className="mt-7">
-            <Logo
-              width={340}
-              iconColor="#FFB800"
-              textColor="#FFFFFF"
-              className="max-w-full drop-shadow-[0_4px_24px_rgba(255,184,0,0.32)]"
-            />
-          </motion.div>
-
-          {/* Slogan */}
-          <motion.h1
-            custom={2}
-            variants={surgir}
-            initial="hidden"
-            animate="show"
-            className="mt-8 font-display text-[2.4rem] font-bold leading-[1.05] tracking-[-0.025em] text-white sm:text-[2.9rem]"
-          >
-            Gestão clínica <span className="whitespace-nowrap text-accent-gold">que cuida</span>
-            <br /> de quem cuida.
-          </motion.h1>
-
-          <motion.p
-            custom={3}
-            variants={surgir}
-            initial="hidden"
-            animate="show"
-            className="mt-6 max-w-lg text-[1.05rem] leading-relaxed tracking-[-0.005em] text-blue-100/80"
-          >
-            Prontuário, avaliação de feridas com escalas validadas, agenda e
-            documentos — seguro, multi-tenant e em conformidade com a LGPD.
-          </motion.p>
-
-          {/* Chips dos pilares */}
-          <motion.div custom={4} variants={surgir} initial="hidden" animate="show" className="mt-7 flex flex-wrap gap-2.5">
-            {PILARES.map((p) => (
-              <span key={p} className="rounded-lg border border-white/10 bg-white/5 px-3.5 py-1.5 text-[0.8rem] font-medium tracking-wide text-blue-50/90">
-                {p}
+        {/* Camada de conteúdo: rola por dentro se não couber, com margem preservada.
+            O padding lateral fica AQUI (fora do max-w-xl) para o slogan ter a
+            largura cheia e quebrar em duas linhas, não três. */}
+        <div className="relative h-full overflow-y-auto px-8 sm:px-12 lg:px-20">
+          <div className="mx-auto flex min-h-full w-full max-w-xl flex-col justify-center py-14 lg:py-12">
+            {/* Badge do módulo */}
+            <motion.div custom={0} variants={surgir} initial="hidden" animate="show">
+              <span className="inline-flex items-center gap-2 rounded-full border border-accent-gold/40 bg-accent-gold/10 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-accent-gold">
+                <Sparkles className="h-3.5 w-3.5" /> Módulo Estomaterapia
               </span>
-            ))}
-          </motion.div>
+            </motion.div>
 
-          {/* Claim + CTA para a landing */}
-          <motion.div
-            custom={5}
-            variants={surgir}
-            initial="hidden"
-            animate="show"
-            className="mt-11 rounded-2xl border border-white/10 bg-white/[0.06] p-5 backdrop-blur-sm sm:p-6"
-          >
-            <p className="font-display text-[0.95rem] font-semibold tracking-tight text-white">Ainda não conhece o Nuvita?</p>
-            <p className="mt-1.5 text-[0.875rem] leading-relaxed text-blue-100/75">
-              Descubra como o módulo de Estomaterapia apoia a assistência do primeiro
-              atendimento à alta.
-            </p>
-            <a
-              href={LANDING_URL}
-              {...(landingAtiva ? { target: '_blank', rel: 'noreferrer' } : {})}
-              onClick={(e) => {
-                if (!landingAtiva) {
-                  e.preventDefault();
-                  toast.info('Página em breve', 'A landing do módulo Estomaterapia está a caminho.');
-                }
-              }}
-              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-accent-gold px-4 py-2.5 text-sm font-semibold text-bg-dark shadow-lg shadow-accent-gold/20 transition hover:bg-accent-gold-hover"
+            {/* Logo grande */}
+            <motion.div custom={1} variants={surgir} initial="hidden" animate="show" className="mt-6">
+              <Logo
+                width={340}
+                iconColor="#FFB800"
+                textColor="#FFFFFF"
+                className="max-w-full drop-shadow-[0_4px_24px_rgba(255,184,0,0.32)]"
+              />
+            </motion.div>
+
+            {/* Slogan */}
+            <motion.h1
+              custom={2}
+              variants={surgir}
+              initial="hidden"
+              animate="show"
+              className="mt-7 font-display text-[2.4rem] font-bold leading-[1.05] tracking-[-0.025em] text-white sm:text-[2.9rem]"
             >
-              Conhecer a plataforma
-              <ArrowRight className="h-4 w-4" />
-            </a>
-          </motion.div>
+              Gestão clínica <span className="whitespace-nowrap text-accent-gold">que cuida</span>
+              <br /> de quem cuida.
+            </motion.h1>
 
-          <motion.p custom={6} variants={surgir} initial="hidden" animate="show" className="mt-11 text-[0.8rem] tracking-wide text-blue-300/60">
-            © {new Date().getFullYear()} Nuvita · Plataforma de saúde
-          </motion.p>
+            <motion.p
+              custom={3}
+              variants={surgir}
+              initial="hidden"
+              animate="show"
+              className="mt-6 max-w-lg text-[1.05rem] leading-relaxed tracking-[-0.005em] text-blue-100/80"
+            >
+              Prontuário, avaliação de feridas com escalas validadas, agenda e
+              documentos — seguro, multi-tenant e em conformidade com a LGPD.
+            </motion.p>
+
+            {/* Chips dos pilares */}
+            <motion.div custom={4} variants={surgir} initial="hidden" animate="show" className="mt-7 flex flex-wrap gap-2.5">
+              {PILARES.map((p) => (
+                <span key={p} className="rounded-lg border border-white/10 bg-white/5 px-3.5 py-1.5 text-[0.8rem] font-medium tracking-wide text-blue-50/90">
+                  {p}
+                </span>
+              ))}
+            </motion.div>
+
+            {/* Claim + CTA para a landing */}
+            <motion.div
+              custom={5}
+              variants={surgir}
+              initial="hidden"
+              animate="show"
+              className="mt-9 rounded-2xl border border-white/10 bg-white/[0.06] p-5 backdrop-blur-sm sm:p-6"
+            >
+              <p className="font-display text-[0.95rem] font-semibold tracking-tight text-white">Ainda não conhece o Nuvita?</p>
+              <p className="mt-1.5 text-[0.875rem] leading-relaxed text-blue-100/75">
+                Descubra como o módulo de Estomaterapia apoia a assistência do primeiro
+                atendimento à alta.
+              </p>
+              <a
+                href={LANDING_URL}
+                {...(landingAtiva ? { target: '_blank', rel: 'noreferrer' } : {})}
+                onClick={(e) => {
+                  if (!landingAtiva) {
+                    e.preventDefault();
+                    toast.info('Página em breve', 'A landing do módulo Estomaterapia está a caminho.');
+                  }
+                }}
+                className="mt-4 inline-flex items-center gap-2 rounded-lg bg-accent-gold px-4 py-2.5 text-sm font-semibold text-bg-dark shadow-lg shadow-accent-gold/20 transition hover:bg-accent-gold-hover"
+              >
+                Conhecer a plataforma
+                <ArrowRight className="h-4 w-4" />
+              </a>
+            </motion.div>
+
+            <motion.p custom={6} variants={surgir} initial="hidden" animate="show" className="mt-8 text-[0.8rem] tracking-wide text-blue-300/60">
+              © {new Date().getFullYear()} Nuvita · Plataforma de saúde
+            </motion.p>
+          </div>
         </div>
       </div>
     </div>
