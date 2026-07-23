@@ -53,6 +53,10 @@ import type {
   TipoAtendimento,
   TipoDocumento,
   UsuarioAdmin,
+  PlanoCuidados,
+  GerarPlanoPayload,
+  ReavaliarPlanoPayload,
+  TermoCatalogo,
 } from '@/types';
 
 // ---------- Auth ----------
@@ -571,4 +575,21 @@ export const superAdminApi = {
     api.get<{ items: ClinicaAdmin[]; total: number }>('/super-admin/clinicas').then((r) => r.data),
   updateClinica: (id: string, payload: UpdateClinicaPayload) =>
     api.patch<ClinicaAdmin>(`/super-admin/clinicas/${id}`, payload).then((r) => r.data),
+};
+
+export const planosCuidadosApi = {
+  /**
+   * Geração encadeia até 4 chamadas ao motor de raciocínio; o backend limita a
+   * 5 por minuto. Prever espera longa na UI (dezenas de segundos).
+   */
+  gerar: (payload: GerarPlanoPayload) =>
+    api.post<PlanoCuidados>('/planos-cuidados', payload).then((r) => r.data),
+  listarPorPaciente: (pacienteId: string) =>
+    api.get<PlanoCuidados[]>(`/planos-cuidados/paciente/${pacienteId}`).then((r) => r.data),
+  buscar: (id: string) =>
+    api.get<PlanoCuidados>(`/planos-cuidados/${id}`).then((r) => r.data),
+  evoluir: (id: string, payload: ReavaliarPlanoPayload) =>
+    api.post<PlanoCuidados>(`/planos-cuidados/${id}/evolucoes`, payload).then((r) => r.data),
+  buscarCatalogo: (q: string, tipo: 'fenomeno' | 'acao' | 'resultado' = 'fenomeno') =>
+    api.get<TermoCatalogo[]>('/planos-cuidados/catalogo', { params: { q, tipo } }).then((r) => r.data),
 };

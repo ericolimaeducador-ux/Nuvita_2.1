@@ -124,6 +124,7 @@ export enum Modulo {
   NOTIFICACOES = 'NOTIFICACOES',
   TELEMEDICINA = 'TELEMEDICINA',
   FERIDAS = 'FERIDAS',
+  PLANO_CUIDADOS = 'PLANO_CUIDADOS',
   ANALYTICS = 'ANALYTICS',
   CLINICA = 'CLINICA',
   SUPER_ADMIN = 'SUPER_ADMIN',
@@ -141,6 +142,7 @@ export const MODULO_LABEL: Record<Modulo, string> = {
   [Modulo.NOTIFICACOES]: 'Notificações',
   [Modulo.TELEMEDICINA]: 'Telemedicina',
   [Modulo.FERIDAS]: 'Feridas',
+  [Modulo.PLANO_CUIDADOS]: 'Planos de cuidados',
   [Modulo.ANALYTICS]: 'Relatórios / analytics',
   [Modulo.CLINICA]: 'Configuração da clínica',
   [Modulo.SUPER_ADMIN]: 'Super Admin',
@@ -153,12 +155,12 @@ export const PERMISSOES_PADRAO_POR_PAPEL: Record<Papel, Modulo[]> = {
   [Papel.SUPER_ADMIN]: TODOS_MODULOS,
   [Papel.ADMIN]: [
     M.DASHBOARD, M.PACIENTES, M.AGENDA, M.PRONTUARIOS, M.DOCUMENTOS, M.FINANCEIRO,
-    M.NOTIFICACOES, M.TELEMEDICINA, M.FERIDAS,
+    M.NOTIFICACOES, M.TELEMEDICINA, M.FERIDAS, M.PLANO_CUIDADOS,
     M.ANALYTICS, M.CLINICA,
   ],
   [Papel.ENFERMEIRO]: [
     M.DASHBOARD, M.PACIENTES, M.AGENDA, M.PRONTUARIOS, M.DOCUMENTOS,
-    M.FERIDAS, M.TELEMEDICINA,
+    M.FERIDAS, M.PLANO_CUIDADOS, M.TELEMEDICINA,
   ],
   [Papel.SECRETARIA]: [
     M.DASHBOARD, M.PACIENTES, M.AGENDA, M.DOCUMENTOS, M.FINANCEIRO, M.NOTIFICACOES,
@@ -1210,4 +1212,165 @@ export interface ListUsuariosResult {
   total: number;
   skip: number;
   limit: number;
+}
+
+// ---------- Plano de cuidados ----------
+
+/**
+ * Procedência do termo clínico. Enquanto for LOCAL_PROVISORIO, a UI não pode
+ * chamar o catálogo de CIPE® — a taxonomia do ICN é licenciada e o cruzamento
+ * ainda não foi feito.
+ */
+export type TaxonomiaTermo = 'LOCAL_PROVISORIO' | 'CIPE_VALIDADO';
+
+export type PrioridadeDiagnostico = 'ALTA' | 'MEDIA' | 'BAIXA';
+export type StatusDiagnostico = 'CONFIRMADO' | 'HIPOTESE_PROVISORIA';
+export type StatusPlano = 'ativo' | 'encerrado' | 'suspenso';
+export type NivelCuidado = 'uti' | 'enfermaria' | 'ambulatorio' | 'domicilio';
+export type UrgenciaAcao = 'IMEDIATA' | 'CURTO_PRAZO' | 'ROTINA';
+export type TipoAcao = 'autonoma' | 'interdependente' | 'delegada';
+export type DecisaoEvolucao = 'A' | 'B' | 'C' | 'D';
+
+export type ContextoEstomaterapia =
+  | 'ferida_cronica'
+  | 'ferida_aguda'
+  | 'lesao_pressao'
+  | 'estoma_colostomia'
+  | 'estoma_ileostomia'
+  | 'estoma_urostomia'
+  | 'incontinencia'
+  | 'fistula';
+
+export interface DiagnosticoEnfermagem {
+  prioridade: PrioridadeDiagnostico;
+  codigoFenomeno: string;
+  enunciado: string;
+  relacionadoA: string[];
+  evidenciadoPor: string[];
+  status: StatusDiagnostico;
+  raciocinioClinico: string;
+  taxonomia: TaxonomiaTermo;
+}
+
+export interface IndicadorMeta {
+  descricao: string;
+  valorBaseline: string;
+  valorMeta: string;
+  metodoAvaliacao: string;
+  frequencia: string;
+}
+
+export interface ResultadoEsperado {
+  diagnosticoRef: string;
+  codigo: string;
+  titulo: string;
+  escoreBaseline: number;
+  justificativaBaseline?: string;
+  escoreMeta: number;
+  prazo: string;
+  indicadores: IndicadorMeta[];
+  taxonomia: TaxonomiaTermo;
+}
+
+export interface AtividadePrescrita {
+  descricao: string;
+  frequencia: string;
+  responsavel: string;
+  registro: string;
+}
+
+export interface AcaoPrescrita {
+  codigo: string;
+  titulo: string;
+  tipo: TipoAcao;
+  urgencia: UrgenciaAcao;
+  atividades: AtividadePrescrita[];
+  alertasReavaliacao: string[];
+  taxonomia: TaxonomiaTermo;
+}
+
+export interface PrescricaoEnfermagem {
+  diagnosticoRef: string;
+  resultadoRef: string;
+  acoes: AcaoPrescrita[];
+  orientacoesPacienteCuidador: string[];
+}
+
+export interface DecisaoDiagnostico {
+  diagnosticoRef: string;
+  decisao: DecisaoEvolucao;
+  justificativa: string;
+  escoreAnterior: number;
+  escoreAtual: number;
+  progressoPct?: number;
+}
+
+export interface NotaSoap {
+  s: string;
+  o: string;
+  a: string;
+  p: string;
+}
+
+export interface EvolucaoPlano {
+  data: string;
+  enfermeiroId: string;
+  relatoTexto: string;
+  decisoes: DecisaoDiagnostico[];
+  textoSoap: NotaSoap;
+  novosFenomenos: { titulo: string; justificativa: string }[];
+}
+
+export interface RegistroAuditoriaIa {
+  skill: string;
+  modelo: string;
+  tokensEntrada: number;
+  tokensSaida: number;
+  em: string;
+}
+
+export interface PlanoCuidados {
+  id: string;
+  pacienteId: string;
+  clinicaId: string;
+  enfermeiroId: string;
+  historicoTexto: string;
+  exameFisicoTexto?: string;
+  nivelCuidado?: NivelCuidado;
+  avaliacaoFeridaId?: string;
+  dadosEstruturados: Record<string, unknown>;
+  diagnosticos: DiagnosticoEnfermagem[];
+  resultadosEsperados: ResultadoEsperado[];
+  prescricoes: PrescricaoEnfermagem[];
+  evolucoes: EvolucaoPlano[];
+  status: StatusPlano;
+  versaoCatalogo: string;
+  /** HMAC — prova de integridade com trilha de auditoria, não assinatura digital. */
+  hashIntegridade?: string;
+  auditoriaIa: RegistroAuditoriaIa[];
+  criadoEm: string;
+  atualizadoEm: string;
+}
+
+export interface GerarPlanoPayload {
+  pacienteId: string;
+  historicoTexto: string;
+  exameFisicoTexto?: string;
+  avaliacaoFeridaId?: string;
+  nivelCuidado?: NivelCuidado;
+  contextoEstomaterapia?: ContextoEstomaterapia;
+}
+
+export interface ReavaliarPlanoPayload {
+  relatoEvolucao: string;
+  avaliacaoAtual?: Record<string, unknown>;
+}
+
+export interface TermoCatalogo {
+  id: string;
+  codigo: string;
+  titulo: string;
+  definicao?: string;
+  taxonomia: TaxonomiaTermo;
+  codigoCipeOficial: string | null;
 }

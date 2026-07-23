@@ -23,6 +23,8 @@ import { ReceituarioEnfermagemImpressaoPage } from '@/pages/ReceituarioEnfermage
 import { TermoConsentimentoImpressaoPage } from '@/pages/TermoConsentimentoImpressaoPage';
 import { FeridasPage } from '@/pages/FeridasPage';
 import { FeridaDetailPage } from '@/pages/FeridaDetailPage';
+import { PlanosCuidadosPage } from '@/pages/PlanosCuidadosPage';
+import { PlanoCuidadosDetailPage } from '@/pages/PlanoCuidadosDetailPage';
 import { SuperAdminPage } from '@/pages/SuperAdminPage';
 import { Modulo, Papel } from '@/types';
 
@@ -82,6 +84,10 @@ export function AppRoutes() {
           <Route element={<ProtectedRoute modulo={Modulo.FERIDAS} />}>
             <Route path="/feridas" element={<FeridasPage />} />
             <Route path="/feridas/:id" element={<FeridaDetailPage />} />
+          </Route>
+          <Route element={<ProtectedRoute modulo={Modulo.PLANO_CUIDADOS} />}>
+            <Route path="/planos-cuidados" element={<PlanosCuidadosPage />} />
+            <Route path="/planos-cuidados/:id" element={<PlanoCuidadosDetailPage />} />
           </Route>
           <Route element={<ProtectedRoute modulo={Modulo.TELEMEDICINA} />}>
             <Route path="/telemedicina" element={<TelemedicinaPage />} />
