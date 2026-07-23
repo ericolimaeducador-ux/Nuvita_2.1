@@ -79,8 +79,8 @@ export function LoginPage() {
             <Logo width={150} iconColor="#E6A600" textColor="#1F2937" />
           </div>
 
-          <h2 className="text-2xl font-semibold leading-tight text-slate-900">Acessar painel</h2>
-          <p className="mb-8 mt-1.5 text-sm text-slate-500">Entre com suas credenciais corporativas.</p>
+          <h2 className="font-display text-[1.75rem] font-semibold leading-tight tracking-tight text-slate-900">Acessar painel</h2>
+          <p className="mb-9 mt-2 text-[0.9rem] leading-relaxed text-slate-500">Entre com suas credenciais corporativas.</p>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
@@ -140,7 +140,7 @@ export function LoginPage() {
             </Button>
           </form>
 
-          <p className="mt-10 text-[11px] text-slate-400">
+          <p className="mt-12 text-[11px] leading-relaxed tracking-wide text-slate-400">
             Plataforma de gestão clínica · versão 2.1 · © {new Date().getFullYear()} · CNPJ 55.747.955/0001-07
           </p>
         </div>
@@ -156,7 +156,7 @@ export function LoginPage() {
         <div className="relative mx-auto flex w-full max-w-xl flex-col">
           {/* Badge do módulo */}
           <motion.div custom={0} variants={surgir} initial="hidden" animate="show">
-            <span className="inline-flex items-center gap-2 rounded-full border border-accent-gold/40 bg-accent-gold/10 px-3.5 py-1.5 text-xs font-medium tracking-wide text-accent-gold">
+            <span className="inline-flex items-center gap-2 rounded-full border border-accent-gold/40 bg-accent-gold/10 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-accent-gold">
               <Sparkles className="h-3.5 w-3.5" /> Módulo Estomaterapia
             </span>
           </motion.div>
@@ -177,7 +177,7 @@ export function LoginPage() {
             variants={surgir}
             initial="hidden"
             animate="show"
-            className="mt-8 text-[2.5rem] font-medium leading-[1.1] text-white sm:text-[3rem]"
+            className="mt-8 font-display text-[2.6rem] font-semibold leading-[1.06] tracking-tight text-white sm:text-[3.15rem]"
           >
             Gestão clínica <span className="text-accent-gold">que cuida</span>
             <br /> de quem cuida.
@@ -188,16 +188,16 @@ export function LoginPage() {
             variants={surgir}
             initial="hidden"
             animate="show"
-            className="mt-5 max-w-lg text-lg leading-relaxed text-blue-100/85"
+            className="mt-6 max-w-lg text-[1.05rem] leading-relaxed tracking-[-0.005em] text-blue-100/80"
           >
             Prontuário, avaliação de feridas com escalas validadas, agenda e
             documentos — seguro, multi-tenant e em conformidade com a LGPD.
           </motion.p>
 
           {/* Chips dos pilares */}
-          <motion.div custom={4} variants={surgir} initial="hidden" animate="show" className="mt-6 flex flex-wrap gap-2">
+          <motion.div custom={4} variants={surgir} initial="hidden" animate="show" className="mt-7 flex flex-wrap gap-2.5">
             {PILARES.map((p) => (
-              <span key={p} className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-blue-50/90">
+              <span key={p} className="rounded-lg border border-white/10 bg-white/5 px-3.5 py-1.5 text-[0.8rem] font-medium tracking-wide text-blue-50/90">
                 {p}
               </span>
             ))}
@@ -209,10 +209,10 @@ export function LoginPage() {
             variants={surgir}
             initial="hidden"
             animate="show"
-            className="mt-10 rounded-2xl border border-white/10 bg-white/[0.06] p-5 backdrop-blur-sm sm:p-6"
+            className="mt-11 rounded-2xl border border-white/10 bg-white/[0.06] p-5 backdrop-blur-sm sm:p-6"
           >
-            <p className="text-sm font-semibold text-white">Ainda não conhece o Nuvita?</p>
-            <p className="mt-1 text-sm leading-relaxed text-blue-100/75">
+            <p className="font-display text-[0.95rem] font-semibold tracking-tight text-white">Ainda não conhece o Nuvita?</p>
+            <p className="mt-1.5 text-[0.875rem] leading-relaxed text-blue-100/75">
               Descubra como o módulo de Estomaterapia apoia a assistência do primeiro
               atendimento à alta.
             </p>
@@ -232,7 +232,7 @@ export function LoginPage() {
             </a>
           </motion.div>
 
-          <motion.p custom={6} variants={surgir} initial="hidden" animate="show" className="mt-10 text-sm text-blue-300/60">
+          <motion.p custom={6} variants={surgir} initial="hidden" animate="show" className="mt-11 text-[0.8rem] tracking-wide text-blue-300/60">
             © {new Date().getFullYear()} Nuvita · Plataforma de saúde
           </motion.p>
         </div>
