@@ -121,10 +121,15 @@ Duas consequências que não são detalhe de implementação:
    internacional de dado de saúde. Isso precisa de base legal explícita, registro
    no ROPA e — provavelmente — menção no TCLE. Não é bloqueio técnico, é decisão
    da usuária, e está sinalizado aqui porque o prompt não o menciona.
-2. **Modelo especificado não existe.** O prompt fixa `claude-sonnet-4-6`. Esse id
-   não é válido. Os ids reais da família atual são `claude-sonnet-5`,
-   `claude-opus-4-8` e `claude-haiku-4-5-20251001`. Adotado `claude-sonnet-5`
-   como padrão, configurável por `CIPE_AI_MODEL`.
+2. **Modelo especificado é válido — mantido.** `claude-sonnet-4-6` é um id ativo
+   e foi escolhido explicitamente na especificação; fica como padrão,
+   configurável por `CIPE_AI_MODEL`. Duas notas de implementação que o prompt
+   não cobre: (a) o Sonnet 4.6 **não** suporta *structured outputs*
+   (`output_config.format`), então a obtenção de JSON continua sendo por
+   instrução no system prompt, como o prompt já faz — correto; (b) com
+   *adaptive thinking* ligado, `response.content[0]` pode ser um bloco
+   `thinking`, e não o texto. O cast `(response.content[0] as { text: string })`
+   do prompt quebraria nesse caso. A implementação localiza o bloco `text`.
 
 ### 2.7 — Os códigos CIPE® do seed são inventados ⛔ TRAVA DO CLAUDE.md
 

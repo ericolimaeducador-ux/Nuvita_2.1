@@ -22,6 +22,7 @@ import { ProdutosModule } from './modules/produtos/produtos.module';
 import { SuperAdminModule } from './modules/super-admin/super-admin.module';
 import { ObservacoesPacienteModule } from './modules/observacoes-paciente/observacoes-paciente.module';
 import { FeridasModule } from './modules/feridas/feridas.module';
+import { PlanoCuidadosModule } from './modules/plano-cuidados/plano-cuidados.module';
 import { ReceituarioEnfermagemModule } from './modules/receituario-enfermagem/receituario-enfermagem.module';
 import { TermosConsentimentoModule } from './modules/termos-consentimento/termos-consentimento.module';
 
@@ -61,6 +62,7 @@ import { TermosConsentimentoModule } from './modules/termos-consentimento/termos
     SuperAdminModule,
     ObservacoesPacienteModule,
     FeridasModule,
+    PlanoCuidadosModule,
     ReceituarioEnfermagemModule,
     TermosConsentimentoModule,
   ],

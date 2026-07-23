@@ -15,6 +15,7 @@
     "seed:cid10": "ts-node -r tsconfig-paths/register src/cli/seed-cid10.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.113.0",
     "@aws-sdk/client-s3": "^3.600.0",
     "@aws-sdk/s3-request-presigner": "^3.600.0",
     "@google-cloud/kms": "^4.3.0",
