@@ -217,8 +217,15 @@ function MedicaoPorFotoDialog({
     if (!canvas) return;
     const atuais = pontosPorPasso[passo];
     if (atuais.length >= 2) return; // passo já completo — usar "Refazer" pra corrigir
+    // O canvas é exibido com `w-full` (esticado ao container), mas o buffer
+    // interno tem largura fixa (`canvas.width`, até 560). getBoundingClientRect
+    // dá o tamanho EXIBIDO — sem reescalar para o buffer, o ponto marcado
+    // desliza do ponto clicado, com erro crescente longe do canto superior
+    // esquerdo. A escala buffer/exibição alinha o clique ao pixel real.
     const rect = canvas.getBoundingClientRect();
-    const ponto = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    const escalaX = canvas.width / rect.width;
+    const escalaY = canvas.height / rect.height;
+    const ponto = { x: (e.clientX - rect.left) * escalaX, y: (e.clientY - rect.top) * escalaY };
     setPontosPorPasso((prev) => ({ ...prev, [passo]: [...prev[passo], ponto] }));
   }
 

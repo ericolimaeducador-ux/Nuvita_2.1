@@ -7,7 +7,14 @@ import {
 } from '@aws-sdk/client-s3';
 import { AppConfigService } from '../../../../common/security/config.service';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import sharp from 'sharp';
+// sharp 0.33 exporta via `export =` (CommonJS): `require('sharp')` já é a
+// função. Sem `esModuleInterop` no tsconfig, `import sharp from 'sharp'` compila
+// para `sharp_1.default` — undefined em runtime (500 no confirmar-upload).
+// `import = require` é a forma canônica de importar um módulo `export =` sem o
+// flag; ligar esModuleInterop global quebraria os `import * as cookieParser`
+// chamados como função em main.ts.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+import sharp = require('sharp');
 import { Readable } from 'stream';
 import { DOCUMENT_ACCESS_URL_TTL_SECONDS } from '../../documentos.constants';
 import { Documento } from '../../domain/documento.entity';
