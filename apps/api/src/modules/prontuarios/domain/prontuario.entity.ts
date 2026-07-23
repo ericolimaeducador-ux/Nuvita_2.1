@@ -1,3 +1,5 @@
+import { BradenScore } from './braden';
+
 export enum TipoAtendimento {
   CONSULTA = 'consulta',
   RETORNO = 'retorno',
@@ -92,7 +94,16 @@ export interface RegistroEnfermagem {
   comorbidadesRelevantes?: string;
   /** Acamado, cadeira de rodas, deambula com ou sem auxílio. */
   mobilidade?: string;
-  /** Risco de lesão por pressão (Braden), 6 a 23. */
+  /**
+   * Escala de Braden completa: as seis subescalas escolhidas, o total, o risco
+   * e a versão da lógica. Calculada no servidor a partir das subescalas.
+   */
+  braden?: BradenScore;
+  /**
+   * Risco de lesão por pressão (Braden), 6 a 23. Espelha `braden.total` quando
+   * há avaliação completa; permanece sozinho nos registros anteriores a
+   * `braden-0.1.0`, que guardavam só o número digitado.
+   */
   escoreBraden?: number;
   estadoNutricional?: string;
   /** Dor geral do paciente, 0 a 10 (distinta da dor local já registrada por ferida). */

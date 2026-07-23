@@ -191,11 +191,40 @@ export class ArquivosProntuarioDto {
   arquivos?: ArquivoProntuarioDto[];
 }
 
+/**
+ * Subescalas da escala de Braden, como o enfermeiro as seleciona na tela.
+ *
+ * O DTO aceita apenas as seis escolhas — o total e a classificação de risco são
+ * calculados no servidor (`domain/braden.ts`) e nunca aceitos do cliente, mesmo
+ * racional das escalas de ferida.
+ */
+export class BradenSubescalasDto {
+  @IsInt() @Min(1) @Max(4) percepcaoSensorial!: number;
+  @IsInt() @Min(1) @Max(4) umidade!: number;
+  @IsInt() @Min(1) @Max(4) atividade!: number;
+  @IsInt() @Min(1) @Max(4) mobilidade!: number;
+  @IsInt() @Min(1) @Max(4) nutricao!: number;
+  /** Única subescala de 3 níveis. */
+  @IsInt() @Min(1) @Max(3) friccaoCisalhamento!: number;
+}
+
 /** Registro da consulta de enfermagem em estomaterapia (complementa a AvaliacaoFerida). */
 export class RegistroEnfermagemDto {
   @IsOptional() @IsString() motivoAtendimento?: string;
   @IsOptional() @IsString() comorbidadesRelevantes?: string;
   @IsOptional() @IsString() mobilidade?: string;
+
+  /** Seleções da escala; o servidor deriva `escoreBraden` a partir daqui. */
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => BradenSubescalasDto)
+  braden?: BradenSubescalasDto;
+
+  /**
+   * Escore de Braden 6-23. Continua aceito para registros antigos e para
+   * digitação direta, mas quando `braden` vem preenchido o valor calculado
+   * pelo servidor prevalece.
+   */
   @IsOptional() @IsInt() @Min(6) @Max(23) escoreBraden?: number;
   @IsOptional() @IsString() estadoNutricional?: string;
   @IsOptional() @IsInt() @Min(0) @Max(10) dorGeral?: number;

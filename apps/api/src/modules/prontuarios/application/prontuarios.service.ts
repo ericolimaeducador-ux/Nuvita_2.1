@@ -18,7 +18,9 @@ import { CreateProntuarioDto } from './dto/create-prontuario.dto';
 import { ListProntuariosQueryDto } from './dto/list-prontuarios-query.dto';
 import { UpdateProntuarioDto } from './dto/update-prontuario.dto';
 import { CID10_REPOSITORY, PRONTUARIO_REPOSITORY } from '../prontuarios.constants';
-import { Prontuario } from '../domain/prontuario.entity';
+import { Prontuario, RegistroEnfermagem } from '../domain/prontuario.entity';
+import { RegistroEnfermagemDto } from './dto/soap.dto';
+import { calcularBraden } from '../domain/braden';
 import { Cid10Repository, ProntuarioRepository } from './ports/prontuario.repository';
 
 export interface ProntuarioRequestContext {
@@ -51,7 +53,7 @@ export class ProntuariosService {
       objetivo: dto.objetivo ?? {},
       avaliacao: dto.avaliacao ?? {},
       plano: dto.plano ?? {},
-      registroEnfermagem: dto.registroEnfermagem,
+      registroEnfermagem: this.comBradenCalculado(dto.registroEnfermagem),
       arquivos: dto.arquivos ?? [],
     });
 
@@ -121,6 +123,7 @@ export class ProntuariosService {
     const updated = await this.prontuarios.updateDraft(current.clinicaId, prontuarioId, {
       ...dto,
       dataAtendimento: dto.dataAtendimento ? new Date(dto.dataAtendimento) : undefined,
+      registroEnfermagem: this.comBradenCalculado(dto.registroEnfermagem),
     });
 
     if (!updated) {
@@ -309,6 +312,28 @@ export class ProntuariosService {
     };
 
     return createHmac('sha256', secret).update(this.stableStringify(payload)).digest('hex');
+  }
+
+  /**
+   * Deriva o escore de Braden das subescalas escolhidas pelo enfermeiro.
+   *
+   * O total nunca vem do cliente: se `braden` está completo, o valor calculado
+   * aqui sobrescreve qualquer `escoreBraden` que tenha vindo no corpo. Com
+   * avaliação incompleta, mantém o que veio — é o caminho de quem digita só o
+   * número, que continua válido.
+   */
+  private comBradenCalculado(
+    registro: RegistroEnfermagemDto | undefined,
+  ): RegistroEnfermagem | undefined {
+    if (!registro) return undefined;
+    const { braden: subescalas, ...resto } = registro;
+
+    const braden = calcularBraden(subescalas);
+    if (!braden) return resto;
+
+    // escoreBraden segue espelhado para não quebrar impressão, listagem e
+    // registros anteriores a braden-0.1.0, que só tinham o número.
+    return { ...resto, braden, escoreBraden: braden.total };
   }
 
   private stableStringify(value: unknown): string {
