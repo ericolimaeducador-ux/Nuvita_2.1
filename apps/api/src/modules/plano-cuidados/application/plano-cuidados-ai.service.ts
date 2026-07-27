@@ -6,7 +6,7 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { MODELO_IA_PADRAO } from '../plano-cuidados.constants';
+import { MODELO_IA_EXTRACAO_PADRAO, MODELO_IA_PADRAO } from '../plano-cuidados.constants';
 import { RegistroAuditoriaIa } from '../domain/plano-cuidados.entity';
 import {
   SKILL_01_EXTRACAO,
@@ -36,10 +36,14 @@ export interface ResultadoSkill<T = Record<string, unknown>> {
 export class PlanoCuidadosAiService {
   private readonly logger = new Logger(PlanoCuidadosAiService.name);
   private readonly modelo: string;
+  /** Só para a extração (skill 1) — ver `MODELO_IA_EXTRACAO_PADRAO`. */
+  private readonly modeloExtracao: string;
   private client?: Anthropic;
 
   constructor(private readonly config: ConfigService) {
     this.modelo = this.config.get<string>('CIPE_AI_MODEL') ?? MODELO_IA_PADRAO;
+    this.modeloExtracao =
+      this.config.get<string>('CIPE_AI_MODEL_EXTRACAO') ?? MODELO_IA_EXTRACAO_PADRAO;
   }
 
   /**
@@ -64,13 +68,14 @@ export class PlanoCuidadosAiService {
     system: string,
     conteudo: string,
     maxTokens: number,
+    modelo: string = this.modelo,
   ): Promise<ResultadoSkill<T>> {
     const client = this.getClient();
 
     let resposta: Anthropic.Message;
     try {
       resposta = await client.messages.create({
-        model: this.modelo,
+        model: modelo,
         max_tokens: maxTokens,
         system,
         // Raciocínio clínico se beneficia de deliberação; adaptive deixa o
@@ -108,7 +113,7 @@ export class PlanoCuidadosAiService {
 
     const auditoria: RegistroAuditoriaIa = {
       skill,
-      modelo: this.modelo,
+      modelo,
       tokensEntrada: resposta.usage.input_tokens,
       tokensSaida: resposta.usage.output_tokens,
       em: new Date(),
@@ -117,7 +122,7 @@ export class PlanoCuidadosAiService {
     this.logger.log({
       evento: 'ia_chamada',
       skill,
-      modelo: this.modelo,
+      modelo,
       tokensEntrada: auditoria.tokensEntrada,
       tokensSaida: auditoria.tokensSaida,
       stopReason: resposta.stop_reason,
@@ -178,7 +183,13 @@ export class PlanoCuidadosAiService {
   // só pensando e cortar o JSON de resposta no meio (stop_reason max_tokens).
   // Visto em produção em 2026-07-23 com o limite antigo de 4000.
   extrairDadosClinicos(textoLivre: string) {
-    return this.chamar<Record<string, unknown>>('extracao', SKILL_01_EXTRACAO, textoLivre, 16000);
+    return this.chamar<Record<string, unknown>>(
+      'extracao',
+      SKILL_01_EXTRACAO,
+      textoLivre,
+      16000,
+      this.modeloExtracao,
+    );
   }
 
   gerarDiagnosticos(dadosEstruturados: unknown, fenomenosCandidatos: unknown[]) {

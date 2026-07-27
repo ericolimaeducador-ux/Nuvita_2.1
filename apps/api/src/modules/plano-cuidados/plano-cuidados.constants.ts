@@ -8,7 +8,16 @@ export const MAX_FENOMENOS_CANDIDATOS_PADRAO = 15;
 export const MAX_DIAGNOSTICOS_PADRAO = 5;
 
 /**
- * Modelo padrão. `claude-sonnet-4-6` foi a escolha explícita da especificação;
- * trocável por `CIPE_AI_MODEL` sem alterar código.
+ * Modelo padrão para as etapas de raciocínio clínico (diagnósticos, resultados,
+ * prescrições, evolução). `claude-sonnet-4-6` foi a escolha explícita da
+ * especificação; trocável por `CIPE_AI_MODEL` sem alterar código.
  */
 export const MODELO_IA_PADRAO = 'claude-sonnet-4-6';
+
+/**
+ * Modelo para a etapa de extração (skill 1) — só estrutura o texto livre em
+ * campos, sem julgamento clínico. Tarefa mais mecânica, por isso um modelo
+ * mais barato aqui; as etapas de raciocínio continuam em `MODELO_IA_PADRAO`.
+ * Trocável por `CIPE_AI_MODEL_EXTRACAO`.
+ */
+export const MODELO_IA_EXTRACAO_PADRAO = 'claude-haiku-4-5';
