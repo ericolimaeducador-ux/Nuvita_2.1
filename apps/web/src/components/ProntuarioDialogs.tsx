@@ -252,13 +252,13 @@ export function NovoAtendimentoDialog({
   const qc = useQueryClient();
   const { user } = useAuth();
   const [data, setData] = useState(initialData ?? dayjs().format('YYYY-MM-DDTHH:mm'));
-  const [tipo, setTipo] = useState<TipoAtendimento>(initialTipo ?? TipoAtendimento.CONSULTA);
+  const [tipo, setTipo] = useState<TipoAtendimento>(initialTipo ?? TipoAtendimento.CONSULTA_ENFERMAGEM);
   const isEnfermagem = tipo === TipoAtendimento.CONSULTA_ENFERMAGEM;
 
   useEffect(() => {
     if (open) {
       setData(initialData ?? dayjs().format('YYYY-MM-DDTHH:mm'));
-      setTipo(initialTipo ?? TipoAtendimento.CONSULTA);
+      setTipo(initialTipo ?? TipoAtendimento.CONSULTA_ENFERMAGEM);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, initialTipo, initialData]);
@@ -287,7 +287,7 @@ export function NovoAtendimentoDialog({
   const num = (v: string): number | undefined => (v ? Number(v) : undefined);
 
   function reset() {
-    setData(dayjs().format('YYYY-MM-DDTHH:mm')); setTipo(TipoAtendimento.CONSULTA);
+    setData(dayjs().format('YYYY-MM-DDTHH:mm')); setTipo(TipoAtendimento.CONSULTA_ENFERMAGEM);
     setSubjetivo({}); setSinais({}); setEstadoGeral(''); setSeg({}); setExameOutros('');
     setAvaliacao({}); setPlano({});
     setCidSearch(''); setCidSelected([]); setCidOpts([]);
