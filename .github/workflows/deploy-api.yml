@@ -62,11 +62,18 @@ jobs:
 
       - name: Deploy to Cloud Run
         run: |
+          # --timeout 900: o padrão do Cloud Run (300s) é curto demais para o
+          # plano de cuidados, que encadeia até 4 chamadas sequenciais à
+          # Anthropic com thinking adaptativo. Sem isso, o proxy derruba a
+          # conexão (504) enquanto o processo segue rodando e salva o plano
+          # minutos depois — o usuário vê erro mas o plano aparece sozinho
+          # depois. Visto em produção em 2026-07-27.
           gcloud run deploy "$SERVICE" \
             --source . \
             --project "${{ secrets.GCP_PROJECT_ID }}" \
             --region "$REGION" \
             --allow-unauthenticated \
+            --timeout 900 \
             --env-vars-file cloudrun.env.yaml \
             --quiet
 
