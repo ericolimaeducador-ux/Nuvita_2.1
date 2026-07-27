@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { ProntuarioDetailDialog, NovoAtendimentoDialog } from '@/components/ProntuarioDialogs';
 import { NovoDocumentoDialog } from '@/components/NovoDocumentoDialog';
-import { NovaFeridaDialog } from '@/components/FeridaDialogs';
+import { NovaFeridaDialog, AvaliacaoFeridaForm } from '@/components/FeridaDialogs';
 import { ReceituarioEnfermagemDialog } from '@/components/ReceituarioEnfermagemDialog';
 import { TermoConsentimentoDialog } from '@/components/TermoConsentimentoDialog';
 import { Card, CardContent } from '@/components/ui/card';
@@ -486,9 +486,9 @@ const STATUS_FERIDA_VARIANT: Record<StatusFerida, 'default' | 'success' | 'secon
 };
 
 function FeridasSecao({ pacienteId }: { pacienteId: string }) {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const [novaOpen, setNovaOpen] = useState(false);
+  const [feridaSelecionadaId, setFeridaSelecionadaId] = useState<string | null>(null);
 
   const listQ = useQuery({
     queryKey: ['feridas', pacienteId],
@@ -501,7 +501,6 @@ function FeridasSecao({ pacienteId }: { pacienteId: string }) {
       icon={<Bandage className="h-4 w-4" />}
       titulo="Feridas"
       contagem={feridas.length}
-      defaultOpen={false}
       acao={
         <Button size="sm" variant="outline" onClick={() => setNovaOpen(true)}>
           <Plus className="mr-2 h-4 w-4" /> Nova ferida
@@ -520,20 +519,50 @@ function FeridasSecao({ pacienteId }: { pacienteId: string }) {
               <TableHead>Etiologia</TableHead>
               <TableHead>Localização</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead className="text-right">Avaliação</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {feridas.map((f) => (
-              <TableRow key={f.id} className="cursor-pointer" onClick={() => navigate(`/feridas/${f.id}`)}>
+              <TableRow
+                key={f.id}
+                className={`cursor-pointer ${feridaSelecionadaId === f.id ? 'bg-primary/5' : ''}`}
+                onClick={() => setFeridaSelecionadaId(feridaSelecionadaId === f.id ? null : f.id)}
+              >
                 <TableCell className="font-medium">{f.rotulo}</TableCell>
                 <TableCell>{ETIOLOGIA_LABEL[f.etiologia]}</TableCell>
                 <TableCell>{f.localizacao}</TableCell>
                 <TableCell><Badge variant={STATUS_FERIDA_VARIANT[f.status]}>{STATUS_FERIDA_LABEL[f.status]}</Badge></TableCell>
+                <TableCell className="text-right">
+                  <Button variant="ghost" size="sm">
+                    <Plus className="h-3.5 w-3.5 mr-1.5" />
+                    {feridaSelecionadaId === f.id ? 'Fechar' : 'Registrar medidas'}
+                  </Button>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       )}
+
+      {feridaSelecionadaId && (
+        <div className="rounded-xl border p-4 mt-3">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Nova avaliação — {feridas.find((f) => f.id === feridaSelecionadaId)?.rotulo}
+            </p>
+            <Button variant="ghost" size="sm" asChild>
+              <Link to={`/feridas/${feridaSelecionadaId}`}>Ver ficha completa e histórico</Link>
+            </Button>
+          </div>
+          <AvaliacaoFeridaForm
+            feridaId={feridaSelecionadaId}
+            onCancel={() => setFeridaSelecionadaId(null)}
+            onCreated={() => { setFeridaSelecionadaId(null); void listQ.refetch(); }}
+          />
+        </div>
+      )}
+
       <NovaFeridaDialog
         open={novaOpen}
         onOpenChange={setNovaOpen}
