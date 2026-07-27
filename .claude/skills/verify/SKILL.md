@@ -6,15 +6,8 @@ Como subir e dirigir o app localmente para verificar mudanças.
 
 1. Docker Desktop precisa estar rodando (`docker info`); senão: `Start-Process "C:\Program Files\Docker\Docker\Docker Desktop.exe"` e aguardar ~60s.
 2. `docker compose up -d mongodb redis`.
-3. **ATENÇÃO — mongod nativo grudado em 27017:** existe um `mongod.exe` nativo do Windows (serviço esquecido, dados antigos) que fica ligado especificamente em `127.0.0.1:27017`, enquanto o container Docker publica em `0.0.0.0:27017`. No Windows, o bind mais específico (127.0.0.1) vence o wildcard — então `mongodb://127.0.0.1:27017` do host **cai no mongod nativo, não no container**, mesmo com `docker compose ps` mostrando o mapeamento "certo". Sintoma: dados antigos/inesperados, ou uma migração/seed que "não fez nada" porque rodou no banco errado. Confirmar com `docker exec nuvita2-mongodb mongosh nuvita2 --eval "db.<collection>.findOne()"` (esse comando *sempre* fala com o container) e comparar com uma conexão do host — se os `_id`/campos forem diferentes, é o conflito.
-   Fix reprodutível sem mexer no serviço nativo: crie `docker-compose.override.yml` (não commitar) remapeando a porta —
-   ```yaml
-   services:
-     mongodb:
-       ports:
-         - "27018:27017"
-   ```
-   depois `docker compose up -d mongodb` (recria o container) e use `MONGODB_URI=mongodb://127.0.0.1:27018/nuvita2`. Ao terminar, apague o override e rode `docker compose up -d mongodb` de novo para voltar à porta 27017 padrão.
+3. **Mongod nativo grudado em 27017 — já resolvido de vez:** existe um `mongod.exe` nativo do Windows (serviço esquecido, dados antigos) que fica ligado especificamente em `127.0.0.1:27017`. No Windows, o bind mais específico (127.0.0.1) vence o wildcard — então um container Docker publicando em `0.0.0.0:27017` perderia para ele. Por isso o `docker-compose.yml` do repo já publica o Mongo em **`27018:27017`** permanentemente (não é preciso criar `docker-compose.override.yml` nem desfazer nada depois — isso era um workaround de sessão, hoje obsoleto). Use sempre `MONGODB_URI=mongodb://127.0.0.1:27018/nuvita2`.
+   Se algum dia os dados parecerem errados de novo (migração/seed que "não fez nada"), confirme com `docker exec nuvita2-mongodb mongosh nuvita2 --eval "db.<collection>.findOne()"` (esse comando *sempre* fala com o container) e compare com uma conexão do host pela porta que você está usando — `_id`/campos diferentes = caiu no mongod nativo, não no container.
    **Nomes reais** (confirmado 2026-07-22): containers `nuvita2-mongodb` e `nuvita2-redis`; banco **`nuvita2`**; Redis publicado em **6380**, não 6379; coleção de usuários é **`users`**.
 4. **ATENÇÃO:** `apps/api/.env` aponta `MONGODB_URI` para o **Atlas (produção)**. Na prática `apps/api/.env.local` vence (`envFilePath: ['.env.local', '.env']`) e já aponta para o local, mas sobrescrever por env var é a garantia:
    `$env:MONGODB_URI='mongodb://127.0.0.1:27018/nuvita2'; $env:REDIS_URL='redis://127.0.0.1:6380'; npm run api:dev`. Nunca dirigir testes contra o Atlas.
