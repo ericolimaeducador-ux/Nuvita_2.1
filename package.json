@@ -11,11 +11,18 @@
     "api:build": "npm run build --workspace=apps/api",
     "api:start": "npm run start --workspace=apps/api",
     "gcp:init-secrets": "node scripts/init-gcp-secrets.mjs",
-    "gcp:rotate-secrets": "node scripts/rotate-secrets-worker.mjs"
+    "gcp:rotate-secrets": "node scripts/rotate-secrets-worker.mjs",
+    "seed:db": "ts-node scripts/seed-db.ts"
   },
   "devDependencies": {
+    "@types/bcrypt": "^5.0.0",
+    "@types/node": "^20.0.0",
+    "bcrypt": "^5.1.0",
     "chalk": "^5.3.0",
-    "mongodb": "^7.3.0"
+    "mongodb": "^7.3.0",
+    "mongoose": "^8.0.0",
+    "playwright": "^1.62.0",
+    "ts-node": "^10.9.0"
   },
   "overrides": {
     "@nestjs/core": "10.4.22"
